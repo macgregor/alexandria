@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -21,10 +22,15 @@ public class MarkdownConverter {
     private Optional<Path> outputDir;
     private Optional<Boolean> overwriteFiles;
 
-    public MarkdownConverter(Collection<String> documentDirectories, String outputDir, Optional<Boolean> overwriteFiles) throws FileNotFoundException {
+    public MarkdownConverter(Collection<String> documentDirectories, Optional<String> outputDir, Optional<Boolean> overwriteFiles) throws IOException {
         this.documentDirectories = Resources.directoryPaths(documentDirectories, true);
         this.overwriteFiles = overwriteFiles;
-        this.outputDir = Optional.of(Resources.path(outputDir));
+
+        if(outputDir.isPresent()){
+            this.outputDir = Optional.of(Paths.get(outputDir.get()));
+        } else{
+            this.outputDir = Optional.empty();
+        }
     }
 
     public MarkdownConverter(Collection<String> documentDirectories, String outputDir) throws FileNotFoundException {
@@ -39,8 +45,8 @@ public class MarkdownConverter {
         this.overwriteFiles = Optional.of(true);
     }
 
-    public List<Path> convert() throws IOException {
-        List<Path> convertedFiles = new ArrayList<>();
+    public List<Metadata> convert() throws IOException {
+        List<Metadata> convertedFiles = new ArrayList<>();
 
         MutableDataSet options = new MutableDataSet();
         options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create()));
@@ -50,12 +56,20 @@ public class MarkdownConverter {
 
         for(Path inputDir : documentDirectories){
             Path output = outputDir.orElse(inputDir);
+            if(!Files.exists(output)){
+                Files.createDirectories(output);
+            }
             for(File in : Resources.files(inputDir, Resources.MATCH_MD_FILES)){
+                Metadata metadata = Metadata.extract(in);
+
+                // render html
                 Node document = parser.parseReader(new FileReader(in));
                 String outFileName = in.getName().substring(0, in.getName().lastIndexOf('.')) + ".html";
                 Path outputFile = Paths.get(output.toString(), outFileName);
                 Resources.save(outputFile, renderer.render(document), overwriteFiles.get());
-                convertedFiles.add(outputFile);
+
+                metadata.setConverted(Optional.of(outputFile));
+                convertedFiles.add(metadata);
             }
         }
 
