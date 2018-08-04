@@ -7,7 +7,6 @@
     <artifactId>alexandria-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Alexandria</name>
     <description>Convert and publish project documentation from markdown to hosted html.</description>
     <url>https://github.com/macgregor/alexandria</url>
     <scm>
@@ -35,12 +34,17 @@
 
     <modules>
         <module>alexandria-core</module>
-        <module>maven-alexandria-plugin</module>
+        <module>alexandria-maven-plugin</module>
         <module>alexandria-cli</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.github.macgregor</groupId>
+                <artifactId>alexandria-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.vladsch.flexmark</groupId>
                 <artifactId>flexmark-all</artifactId>
@@ -50,6 +54,27 @@
                 <groupId>info.picocli</groupId>
                 <artifactId>picocli</artifactId>
                 <version>3.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>3.7</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>3.5.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.plugin-tools</groupId>
+                <artifactId>maven-plugin-annotations</artifactId>
+                <version>3.5.2</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-project</artifactId>
+                <version>2.2.1</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
@@ -110,40 +135,40 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>shade</goal>
+                            </goals>
+                            <configuration>
+                                <minimizeJar>true</minimizeJar>
+                                <dependencyReducedPomLocation>
+                                    ${project.build.directory}/dependency-reduced-pom.xml
+                                </dependencyReducedPomLocation>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <configuration>
                         <archive>
                             <addMavenDescriptor>true</addMavenDescriptor>
                             <manifest>
+                                <addClasspath>true</addClasspath>
                                 <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                                 <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             </manifest>
                             <manifestEntries>
-                                <Project-Group-Id>${project.groupId}</Project-Group-Id>
-                                <Project-Artifact-Id>${project.artifactId}</Project-Artifact-Id>
-                                <Project-Packaging>${project.packaging}</Project-Packaging>
-                                <Project-Name>${project.name}</Project-Name>
-                                <Project-Description>${project.description}</Project-Description>
-                                <Project-URL>${project.url}</Project-URL>
-                                <Project-Version>${project.version}</Project-Version>
+                                <Implementation-Packaging>${project.packaging}</Implementation-Packaging>
+                                <Implementation-Description>${project.description}</Implementation-Description>
+                                <Implementation-URL>${project.url}</Implementation-URL>
                             </manifestEntries>
                         </archive>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <configuration>
-                        <classifier>boot</classifier>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>repackage</goal>
-                                <goal>build-info</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -179,6 +204,16 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>3.5.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.macgregor</groupId>
+                    <artifactId>alexandria-maven-plugin</artifactId>
+                    <version>${project.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
