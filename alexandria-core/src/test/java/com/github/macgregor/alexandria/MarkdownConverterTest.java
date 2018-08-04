@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,6 +70,18 @@ public class MarkdownConverterTest {
     }
 
     @Test
+    public void testConvertCreatesOutputDir() throws IOException {
+        File subDir = folder.newFolder("foo");
+        File f = new File(subDir, "readme.md");
+        f.createNewFile();
+        File outDir = new File(folder.getRoot(), "output");
+
+        MarkdownConverter converter = new MarkdownConverter(Arrays.asList(subDir.getPath()), outDir.getPath());
+        assertThat(converter.convert().size()).isEqualTo(1);
+        assertThat(Paths.get(outDir.toString(), "readme.html")).exists();
+    }
+
+    @Test
     public void testConvertHeadersToHtml() throws IOException {
         File subDir = folder.newFolder("foo");
         File f = new File(subDir, "readme.md");
@@ -92,5 +105,31 @@ public class MarkdownConverterTest {
         assertThat(converter.convert().size()).isEqualTo(1);
         assertThat(Paths.get(outDir.toString(), "readme.html")).exists();
         assertThat(Resources.load(Paths.get(outDir.toString(), "readme.html"))).isEqualTo("<p><del>strikethrough</del></p>\n");
+    }
+
+    @Test
+    public void testConvertExtractedMetadataSetsSource() throws IOException {
+        File subDir = folder.newFolder("foo");
+        File f = new File(subDir, "readme.md");
+        Resources.save(f.getPath(), "~~strikethrough~~");
+        File outDir = folder.newFolder("output");
+
+        MarkdownConverter converter = new MarkdownConverter(Arrays.asList(subDir.getPath()), outDir.getPath());
+        List<Metadata> metadata = converter.convert();
+        assertThat(metadata.size()).isEqualTo(1);
+        assertThat(metadata.get(0).getSource()).isEqualTo(f.toPath());
+    }
+
+    @Test
+    public void testConvertExtractedMetadataSetsConverted() throws IOException {
+        File subDir = folder.newFolder("foo");
+        File f = new File(subDir, "readme.md");
+        Resources.save(f.getPath(), "~~strikethrough~~");
+        File outDir = folder.newFolder("output");
+
+        MarkdownConverter converter = new MarkdownConverter(Arrays.asList(subDir.getPath()), outDir.getPath());
+        List<Metadata> metadata = converter.convert();
+        assertThat(metadata.size()).isEqualTo(1);
+        assertThat(metadata.get(0).getConverted().get()).isEqualTo(Paths.get(outDir.toString(), "readme.html"));
     }
 }
