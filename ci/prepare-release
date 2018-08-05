@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+
+help(){
+    echo -e "Prepare repository for release by removing SNAPSHOT, tagging branch, pushing the tags and incrementing the project"
+    echo -e "version and adding SNAPSHOT. The actual build and deploy is handled by travis which is triggered by the tag.\n"
+    echo -e "Usage:"
+    echo -e "./prepare-release [--major] [--minor] [--patch] [--dry-run]"
+    echo -e "--major\t\tIncrement major version."
+    echo -e "--minor\t\tIncrement minor version."
+    echo -e "--patch\t\tIncrement patch version. If no arguments are provided, the patch version will be incremented."
+    echo -e "--dry-run\tRun without making modifications to repository."
+}
+
+while [[ $# > 0 ]]
+do
+key="$1"
+
+MAJOR=0
+MINOR=0
+PATCH=0
+DRY_RUN=0
+
+case $key in
+		-h|--help)
+		help
+		exit 0
+		;;
+    --major)
+    MAJOR=1
+    shift
+    ;;
+    --minor)
+    MINOR=1
+    shift
+    ;;
+    --patch)
+    PATCH=1
+    shift
+    ;;
+    --dry-run)
+    DRY_RUN=1
+    shift
+    ;;
+    *)
+    # unknown option
+    ;;
+esac
+shift
+done
+
+if [[ $MAJOR -eq 0 && $MINOR -eq 0 && $PATCH -eq 0 ]]
+then PATCH=1
+fi
+
+mvn versions:set -DremoveSnapshot &> /dev/null
+echo -e "Preparing release"
+
+if [[ $DRY_RUN -eq 0 ]]
+then
+    git commit -am "preparing release"
+    mvn scm:tag &> /dev/null
+    mvn versions:commit &> /dev/null
+    git push -u origin HEAD:master --tags
+else
+    echo -e "mvn scm:tag &> /dev/null"
+    echo -e "git commit -am 'preparing release'"
+    echo -e "mvn versions:commit &> /dev/null"
+    echo -e "git push -u origin HEAD:master --tags"
+    mvn versions:revert &> /dev/null
+fi
+
+if [[ $MAJOR -eq 1 ]]
+then NEW_MAJOR_VERSION='${parsedVersion.nextMajorVersion}'
+else NEW_MAJOR_VERSION='${parsedVersion.majorVersion}'
+fi
+
+if [[ $MINOR -eq 1 ]]
+then NEW_MINOR_VERSION='${parsedVersion.nextMinorVersion}'
+else NEW_MINOR_VERSION='${parsedVersion.minorVersion}'
+fi
+
+if [[ $PATCH -eq 1 ]]
+then NEW_PATCH_VERSION='${parsedVersion.nextIncrementalVersion}'
+else NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
+fi
+
+mvn build-helper:parse-version versions:set -DnewVersion=$NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION-SNAPSHOT &> /dev/null
+echo -e "Setting version for development."
+
+if [[ $DRY_RUN -eq 0 ]]
+then
+    git commit -am "Setting version $project_version for development."
+    mvn versions:commit &> /dev/null
+    git push -u origin HEAD:master
+else
+    echo -e "git commit -am 'Setting version for development.'"
+    echo -e "mvn versions:commit &> /dev/null"
+    echo -e "git push -u origin HEAD:master"
+    mvn versions:revert &> /dev/null
+fi
