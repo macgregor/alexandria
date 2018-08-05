@@ -1,0 +1,38 @@
+language: java
+jdk:
+- oraclejdk8
+env:
+  global:
+    - secure: "I33KMzHtkAU4rO31EjgSISkfhJO/yv4a5sy4oAqKtISOQZlVKcfIW8ZEHz5DK+uVEWK5rQFF9MC2HMFp0r1JJ4dEjhkuNEJ+EhFLBGDSokao0wd/gHbFkBS0rpqEDWozLyoWVwfBN0hUsAV2GE90kmomBxHVhr4nZkLlX7lLZUyylbi+/YMdE5ZYiljsayv5g+mCAA8ytTewCvhEo1eQLka/u0+n94jeivU/qxrhjQOYzKe1kqt7eIllOUlIqc3OMtpcGzvgVXdvcRZEOnWCdGqRx1OUJPdiUWKF5XRJjs47TARzanHyh32OtdIkKmFQRRBe7HpHV/v1hIgpHapIOQcSBxTcqWKtLEKuwM54mf5lHkcECv3Im/uBP9eI32tinEdbxHUQCCFllugiwtAXnn1q6qykALjs1anBk7rYFlogL+DQO91Pva8VH4VV7KvkxLRnMIiOwOIf2vhl3VV6e8Paw7cO1d2wTjOrpouS+6ebLW08A7INGKHpgkpxD3eVyP7qQoaWar/IYoktHnmdBdVKZ0nzvS8Wo+GPBoaHV9obG3icQvYGSmON6YXKRzkEXp8mJZlzsdTc74uBGuyEXR/VJDOWQnOl8/oXiGAlve4K5INDMZ52n7+KOYewxokELse+UPCp7UJhmyS/hiJmNZ215Y+7MH9hFYs0JPs94qs="
+    - # ^^ SONATYPE_USERNAME
+    - secure: "YXJQTM9mnZZYsQ4GuWP2rPcQo7uQP1sHJyY1/AE6dpqb4nLUEltpCJzkewBXBI6AQ9p3+6LkXhB4TlySznjFurF4y1d+Nn0V1MmXW4agGVJCjJzIyuPmmvmjpRPu08CfrMo0H9+olYjij9uE5h5lLxx2sIZDbTZYyUFcb8pNExCdzzejP+tMcFnHqGKQyAaD/xZcZKQNNEQmvCIjhfgpo8X/OVwem1BhfJVs77d4OayWyAXumEfunzyvJ5fYjzkZ91jjvJKD4IZv/8fDojOnx27nHXRPE6/GFWXZk/L5LUkZEv1CGsw1qyLFqTzFY/uieUH99trz6lezJbdU9bhiViG7NYJxWti1WRMu5emWM4A1LAkaUJqPKHX2JR7inDsZ18iKQxjCKzSbXcY4rzcK8+zIjfFZPWDBIewT2O3HWz3vzLHdHjbHj7nLZ5Nx2j47mgZh/DJ3FLng37Ni765fWWlU1XynNOyyfol72qpgu5kpX9Kyp4Ayji8ALPPCDon3ftsP1ZbCfVWiHdsn4wUWpHuG2Lbgrv3LwSeEL7tFWln1WbzeOllflhc/82vnucTslwWetjOYluc6/pVrq/cNRog3HBVYmhrPVNIo2qUN316i55a2A9x7Tb5yE6NsR8PCCbt58jT96anzEOdbVaCqhPsmIrqWjwpiNjeBiPBZaYw="
+    - # ^^ SONATYPE_PASSWORD
+    secure: "PLLu+kd7BNgB2zckYd2W0llY3SM9GdO8ORvQKXHp+ZYHVxm60VBFcEH49oLb/M3A1Z56jmI4W5ICONpeqUpV58BHwnuE4ONyZk9YH6mgM9oCiWueEk1151Zfcfm3+pu1icbBQfbU9vpTwk+ShDfmG4Dj0zgf/261Z+jUPxGNTqWeLEzlvenxeLJUrM/fbJ8APcetw0NyDwlIP0dSTL9HsL+mB+LPzlIJYiPweU3GLbcp8ONtFIqWNSaaWDyqyFbHpIJ+M8cFfAIGDw8PsZsQkbr849NEFAHS1PAfSG5Cm2R5uEtlmz1aBKsJdR/2LNDuk8/4009rMkDDveGweSb1cCL//CA3b1MQn69C3crdJ3f7FmsV6Yp115tfqE46Mr9o/Fy9N3aJjGK5CVb8qR4m4LQ2MIdi/oZV97DzELwlP39J58/ma63PMNnAeLT4oX0YwJD+IAsusamglZQvdHj54TVazajI9i9Rgq6dfDccr/vA9k1ttR3NXkDBnNgyYT6iTG6O9CXX1/TIF3y4oOLjLEQaFJrWvm8+Cd9/GHcpO1CjLTlVGU9zkVI/0A2kxbsxKh8970g9Acd6kGeEmVSo9Ifd57JB3vR8fiGuy1jJQ5jvbn342gXxbnpH29ImEXcHucEWfFnIMJvhrzK7j5KlOXgRBkS1kBSuao33kzpZq3Y="
+    - # ^^ SIGNING_KEY_NAME
+    secure: "Gv5D8z/pRPeC2B4L1G5w+iuXGHoZdXRx5iwMPRKBaKbrULWGgJkh9UmqhnFbsS3Wj5maGFYzkPHzNW8a6m/8J5PudF1qGuF96SC9ztTFj3y/O+CE/FkAzwivw3zMHDnqZj3nDX5io1n0d6INGJn9Mmj8R9e8tRGm8T9pA1Go3C4BOSQjSOlhlFvLmn87lbBYCX+34Zt0KN4TghRnBb0w/YW4xu+H7FLwl7COgI4hFeorV+hIij5lVn902Ulp0f/SBFRbMXcUfRQMQZXiCnl5+VcZmHzWBNoD3uCgjfFyeCc0oHdeZTY8mCI2c8SPgQimtNnO2kmm54W/PBKjBg5gu5cJc/exV5nIVtfyX7oIST6bcjLVZWsgwtSYAajNJrzYknhbcTDH1IRndToJAqzObeaavj1IdCtySgKjM/UZRUUBdOGZqG7U3ObUDMSANcr2KBhe81loKCEqkVawFpaRM2842OpOnOREPzFzj6odq8i/A/0495kGTzMPduvc5UiNU4G8759wk0d5qYxIg1KJfpN67stUhTdjZ/j7ilJi58WTNUUY8o+konouB0Jz4tWHXkmajmN9qrEeH08wWhG3Xak6vsy6Xb19S192ZBsI4j+RG8GF1mHFPK8K3bQnCuWFpbCH0QNQw+IteN9yF33dASu+ILgpV7yGIAwqFjapq5w="
+    - # ^^ SIGNING_KEY_PASS
+install: mvn install
+cache:
+  directories:
+    - ~/.m2/repository
+before_deploy:
+  - openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d
+  - gpg --fast-import signing_key.gpg
+  - mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
+  - export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep -v '\[')
+deploy:
+  - provider: script
+    script: "mvn deploy --settings ci/.maven.xml"
+    skip_cleanup: true
+    on:
+      tags: true
+  - provider: releases
+    name: $project_version
+    secure: fjBjaAy7wOUbfa66Bv+UUfHnjjFl8k/FuGlULenknvUao5RLPMRs8GTlY1nhum7TG3071rCKb/VIS2HhseikGEWubUXr0sWwSSS5v31enViG/RP1T+4cOz3i8Vgb9mswqv2tqselbwIoQW3xpBgPPFuiNgij3WAqRSlKv17Fa/cBdCRsgWXDGvPfPlyCJmXEnMDQK0O5/uxZIWO5IIAxo/PnQlkWcKQaA/kE9wEQsfxbyYtT3sQVP/FSApimBhOC9iTz6/rw6OZM8ehVkYpygrcEyjeRxM2ZibRb6osTrNrOMSH6mDlzWTLYv/cGPo4Ch/riMFqv/lFcCZvH1+leOPdoqkokOHAvgTRuFHs9LCu1hMd4suWrowwKJc4RUkZFrATMfXUyRHd48kRj4whc3YhwaSX07sCEMRN94Ztvc336DsMWMid49yH1/1kapQCFRxfQBimBHKobD9LYrZdBK4ZwQeR/P910En4QOmeaeOiLGxoiqxwHgX7pjhZfiZJovq/vc5+AVByAAFrBc1TfXcZDrDmzWNXje4db6iEwMdGAd2hTMyGt1SIp9g4ui7/QvOiiID9O/Pflr4E+zAKJTtc+LjmwWriYFnaGz6SOaRznLIj0WGXx8ixpjCj02EttOhkwsIK172d1CQ438O5GciIDrHtXurKieRjRoCXkJTw=
+    file:
+      - alexandria-maven-plugin/target/alexandria-maven-plugin-$project_version.jar
+      - alexandria-core/target/alexandria-core-$project_version.jar
+      - alexandria-cli/target/alexandria-cli-$project_version.jar
+    skip_cleanup: true
+    on:
+      tags: true
