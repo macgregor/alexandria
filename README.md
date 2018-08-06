@@ -27,9 +27,25 @@ Alexandria relies on documentMetadata in the markdown files to know where to pub
 
 ```markdown
 <!--- alexandria
-remote: http://jive.corp.com/remote-document-url
+title: My Painstaking Documentation
+remote: http://jive.corp.com/docs/remote-document-url
 tags: tag1, tag2
+createdOn: 2016-03-21T15:07:34.533+0000
+lastUpdated: 2018-06-22T18:42:59.652+0000
 -->
 ```
 
+The plugin will update metadata as it runs, for example adding the remote url when it creates a new document. The
+keys in the example above are standard metadata, but different remote implementations may need extra metadata. For example
+the `JiveRemote` uses `jiveParentUrl` to add documents to a particular group, which is a Jive specific platform detail.
+
+
 ## Remotes
+Remotes are hosting platforms to upload converted files to. This will almost always be a rest interface for interacting 
+with the platform's api.
+
+## CLI
+If you want to manually convert and upload files you can use the `alexandria-cli`. 
+
+## alexandria-maven-plugin
+The alexandria maven plugin can be used to add conversion/publishing to your maven project as part of the project build.
