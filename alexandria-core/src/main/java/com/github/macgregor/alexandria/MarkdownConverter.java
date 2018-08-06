@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,8 +46,8 @@ public class MarkdownConverter {
         this.overwriteFiles = Optional.of(true);
     }
 
-    public List<Metadata> convert() throws IOException {
-        List<Metadata> convertedFiles = new ArrayList<>();
+    public List<DocumentMetadata> convert() throws IOException, URISyntaxException {
+        List<DocumentMetadata> convertedFiles = new ArrayList<>();
 
         MutableDataSet options = new MutableDataSet();
         options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create()));
@@ -60,7 +61,7 @@ public class MarkdownConverter {
                 Files.createDirectories(output);
             }
             for(File in : Resources.files(inputDir, Resources.MATCH_MD_FILES)){
-                Metadata metadata = Metadata.extract(in);
+                DocumentMetadata documentMetadata = DocumentMetadata.extract(in);
 
                 // render html
                 Node document = parser.parseReader(new FileReader(in));
@@ -68,8 +69,8 @@ public class MarkdownConverter {
                 Path outputFile = Paths.get(output.toString(), outFileName);
                 Resources.save(outputFile, renderer.render(document), overwriteFiles.get());
 
-                metadata.setConverted(Optional.of(outputFile));
-                convertedFiles.add(metadata);
+                documentMetadata.setConverted(Optional.of(outputFile));
+                convertedFiles.add(documentMetadata);
             }
         }
 

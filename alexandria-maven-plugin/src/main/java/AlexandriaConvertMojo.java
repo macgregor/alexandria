@@ -1,5 +1,5 @@
+import com.github.macgregor.alexandria.DocumentMetadata;
 import com.github.macgregor.alexandria.MarkdownConverter;
-import com.github.macgregor.alexandria.Metadata;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -38,8 +38,8 @@ public class AlexandriaConvertMojo extends AbstractMojo {
         getLog().info("Alexandria overwrite generated files: " + overwrite);
         try {
             MarkdownConverter converter = new MarkdownConverter(input, Optional.ofNullable(output), Optional.of(overwrite));
-            List<Metadata> converted = converter.convert();
-            for(Metadata m : converted){
+            List<DocumentMetadata> converted = converter.convert();
+            for(DocumentMetadata m : converted){
                 getLog().info(String.format("Created %s", m.getConverted().get().toString()));
             }
         } catch(IOException e){

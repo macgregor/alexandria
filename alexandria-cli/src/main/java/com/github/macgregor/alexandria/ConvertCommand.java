@@ -22,8 +22,8 @@ public class ConvertCommand implements Callable<Void> {
     @Override
     public Void call() throws Exception {
         MarkdownConverter converter = new MarkdownConverter(input, Optional.ofNullable(output), Optional.of(overwrite));
-        List<Metadata> converted = converter.convert();
-        for(Metadata m : converted){
+        List<DocumentMetadata> converted = converter.convert();
+        for(DocumentMetadata m : converted){
             System.out.println(String.format("Created %s", m.getConverted().get().toString()));
         }
         return null;
