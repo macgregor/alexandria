@@ -7,6 +7,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -33,7 +34,7 @@ public class MarkdownConverterTest {
     }
 
     @Test
-    public void testConvertSingleDir() throws IOException {
+    public void testConvertSingleDir() throws IOException, URISyntaxException {
         File subDir = folder.newFolder("foo");
         File f = new File(subDir, "readme.md");
         f.createNewFile();
@@ -43,7 +44,7 @@ public class MarkdownConverterTest {
     }
 
     @Test
-    public void testConvertMultipleDir() throws IOException {
+    public void testConvertMultipleDir() throws IOException, URISyntaxException {
         File subDir1 = folder.newFolder("foo");
         File f1 = new File(subDir1, "readme1.md");
         f1.createNewFile();
@@ -58,7 +59,7 @@ public class MarkdownConverterTest {
     }
 
     @Test
-    public void testConvertOverrideOutputDir() throws IOException {
+    public void testConvertOverrideOutputDir() throws IOException, URISyntaxException {
         File subDir = folder.newFolder("foo");
         File f = new File(subDir, "readme.md");
         f.createNewFile();
@@ -70,7 +71,7 @@ public class MarkdownConverterTest {
     }
 
     @Test
-    public void testConvertCreatesOutputDir() throws IOException {
+    public void testConvertCreatesOutputDir() throws IOException, URISyntaxException {
         File subDir = folder.newFolder("foo");
         File f = new File(subDir, "readme.md");
         f.createNewFile();
@@ -82,7 +83,7 @@ public class MarkdownConverterTest {
     }
 
     @Test
-    public void testConvertHeadersToHtml() throws IOException {
+    public void testConvertHeadersToHtml() throws IOException, URISyntaxException {
         File subDir = folder.newFolder("foo");
         File f = new File(subDir, "readme.md");
         Resources.save(f.getPath(), "# Header");
@@ -95,7 +96,7 @@ public class MarkdownConverterTest {
     }
 
     @Test
-    public void testConvertStrikethroughToHtml() throws IOException {
+    public void testConvertStrikethroughToHtml() throws IOException, URISyntaxException {
         File subDir = folder.newFolder("foo");
         File f = new File(subDir, "readme.md");
         Resources.save(f.getPath(), "~~strikethrough~~");
@@ -108,27 +109,27 @@ public class MarkdownConverterTest {
     }
 
     @Test
-    public void testConvertExtractedMetadataSetsSource() throws IOException {
+    public void testConvertExtractedMetadataSetsSource() throws IOException, URISyntaxException {
         File subDir = folder.newFolder("foo");
         File f = new File(subDir, "readme.md");
         Resources.save(f.getPath(), "~~strikethrough~~");
         File outDir = folder.newFolder("output");
 
         MarkdownConverter converter = new MarkdownConverter(Arrays.asList(subDir.getPath()), outDir.getPath());
-        List<Metadata> metadata = converter.convert();
+        List<DocumentMetadata> metadata = converter.convert();
         assertThat(metadata.size()).isEqualTo(1);
         assertThat(metadata.get(0).getSource()).isEqualTo(f.toPath());
     }
 
     @Test
-    public void testConvertExtractedMetadataSetsConverted() throws IOException {
+    public void testConvertExtractedMetadataSetsConverted() throws IOException, URISyntaxException {
         File subDir = folder.newFolder("foo");
         File f = new File(subDir, "readme.md");
         Resources.save(f.getPath(), "~~strikethrough~~");
         File outDir = folder.newFolder("output");
 
         MarkdownConverter converter = new MarkdownConverter(Arrays.asList(subDir.getPath()), outDir.getPath());
-        List<Metadata> metadata = converter.convert();
+        List<DocumentMetadata> metadata = converter.convert();
         assertThat(metadata.size()).isEqualTo(1);
         assertThat(metadata.get(0).getConverted().get()).isEqualTo(Paths.get(outDir.toString(), "readme.html"));
     }
