@@ -19,6 +19,19 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * maven-project dep uses old maven 2 deps which conflict with maven 3 deps. I tried excluding all transitive dependencies
+ * and it runs now but I am getting weird behavior. Would be related to the maven-project dependency or could be a classloader
+ * issue.
+ *
+ * https://github.com/roboconf/roboconf-maven-plugin
+ * https://maven.apache.org/plugin-testing/maven-plugin-testing-harness/getting-started/index.html
+ * https://stackoverflow.com/questions/15512404/unit-testing-maven-mojo-components-and-parameters-are-null
+ * https://stackoverflow.com/questions/41224885/test-maven-plugin-with-maven-plugin-testing-harness
+ * https://maven.apache.org/guides/mini/guide-maven-classloading.html
+ * https://cwiki.apache.org/confluence/display/MAVEN/Maven+3.x+Class+Loading
+ * http://blog.chalda.cz/2018/02/17/Maven-plugin-and-fight-with-classloading.html
+ */
 public class AlexandriaConvertMojoTest {
 
     @Rule
@@ -38,6 +51,8 @@ public class AlexandriaConvertMojoTest {
         mvnProject.getBuild().setFinalName("test");
         mvnProject.setArtifact( new ProjectArtifact( mvnProject ));
 
+        // something strange is happening, the lookupMojo returns a AlexandriaConvertMojo but I get a class cast exception here
+        // might be something to do with class loader
         AlexandriaConvertMojo mojo = (AlexandriaConvertMojo)this.rule.lookupMojo( "convert", pom );
         this.rule.setVariableValueToObject( mojo, "project", mvnProject );
         assertThat(this.rule.getVariableValueFromObject(mojo, "output")).isEqualTo("/foo");
