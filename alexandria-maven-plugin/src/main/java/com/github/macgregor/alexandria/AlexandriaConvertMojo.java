@@ -1,5 +1,5 @@
-import com.github.macgregor.alexandria.DocumentMetadata;
-import com.github.macgregor.alexandria.MarkdownConverter;
+package com.github.macgregor.alexandria;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -8,6 +8,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +17,7 @@ import java.util.Optional;
 public class AlexandriaConvertMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
-    MavenProject project;
+    private MavenProject project;
 
     @Parameter( property = "alexandria.output", defaultValue = "${project.build.directory}/alexandria" )
     private String output;
@@ -42,8 +43,40 @@ public class AlexandriaConvertMojo extends AbstractMojo {
             for(DocumentMetadata m : converted){
                 getLog().info(String.format("Created %s", m.getConverted().get().toString()));
             }
-        } catch(IOException e){
+        } catch(IOException | URISyntaxException e){
             throw new MojoFailureException("Failed to convert documents.", e);
         }
+    }
+
+    public MavenProject getProject() {
+        return project;
+    }
+
+    public void setProject(MavenProject project) {
+        this.project = project;
+    }
+
+    public String getOutput() {
+        return output;
+    }
+
+    public void setOutput(String output) {
+        this.output = output;
+    }
+
+    public boolean isOverwrite() {
+        return overwrite;
+    }
+
+    public void setOverwrite(boolean overwrite) {
+        this.overwrite = overwrite;
+    }
+
+    public List<String> getInput() {
+        return input;
+    }
+
+    public void setInput(List<String> input) {
+        this.input = input;
     }
 }

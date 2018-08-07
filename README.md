@@ -23,7 +23,7 @@ Alexandria looks for all markdown files in your project and converts them to htm
 It can be configured to look in multiple directories if needed.
 
 ## Metadata
-Alexandria relies on documentMetadata in the markdown files to know where to publish the converted files. 
+Alexandria relies on metadata in the markdown files to know where to publish the converted files. 
 
 ```markdown
 <!--- alexandria
@@ -37,7 +37,9 @@ lastUpdated: 2018-06-22T18:42:59.652+0000
 
 The plugin will update metadata as it runs, for example adding the remote url when it creates a new document. The
 keys in the example above are standard metadata, but different remote implementations may need extra metadata. For example
-the `JiveRemote` uses `jiveParentUrl` to add documents to a particular group, which is a Jive specific platform detail.
+the `JiveRemote` uses `jiveParentUrl` to add documents to a particular group, which is a Jive specific concept.
+
+This means it is important to add a git commit as part of the deploy step to ensure metadata is persisted.
 
 
 ## Remotes
@@ -47,5 +49,5 @@ with the platform's api.
 ## CLI
 If you want to manually convert and upload files you can use the `alexandria-cli`. 
 
-## alexandria-maven-plugin
-The alexandria maven plugin can be used to add conversion/publishing to your maven project as part of the project build.
+## Maven Plugin
+The `alexandria-maven-plugin` can be used to add conversion/publishing to your maven project as part of the project build.
