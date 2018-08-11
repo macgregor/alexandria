@@ -1,239 +1,231 @@
 package com.github.macgregor.alexandria;
 
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 import java.util.*;
 
 public class AlexandriaConfig {
-    public static final DateFormat DEFAULT_DATETIME = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    public static final String ALEXANDRIA_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
+    @JsonProperty
     private Optional<List<RemoteConfig>> remotes = Optional.of(new ArrayList<>());
-    private Optional<DateFormat> datetimeFormat = Optional.of(DEFAULT_DATETIME);
+
+    @JsonProperty
     private Optional<List<String>> defaultTags = Optional.of(new ArrayList<>());
+
+    @JsonProperty
     private Optional<List<DocumentMetadata>> metadata = Optional.of(new ArrayList<>());
 
-    public Optional<DateFormat> getDatetimeFormat() {
-        return datetimeFormat;
-    }
-
-    public void setDatetimeFormat(Optional<DateFormat> datetimeFormat) {
-        this.datetimeFormat = datetimeFormat;
-    }
-
-    public Optional<List<String>> getDefaultTags() {
+    public Optional<List<String>> defaultTags() {
         return defaultTags;
     }
 
-    public void setDefaultTags(Optional<List<String>> defaultTags) {
+    public void defaultTags(Optional<List<String>> defaultTags) {
         this.defaultTags = defaultTags;
     }
 
-    public Optional<List<RemoteConfig>> getRemotes() {
+    public Optional<List<RemoteConfig>> remotes() {
         return remotes;
     }
 
-    public void setRemotes(Optional<List<RemoteConfig>> remotes) {
+    public void remotes(Optional<List<RemoteConfig>> remotes) {
         this.remotes = remotes;
     }
 
-    public Optional<List<DocumentMetadata>> getMetadata() {
+    public Optional<List<DocumentMetadata>> metadata() {
         return metadata;
     }
 
-    public void setMetadata(Optional<List<DocumentMetadata>> metadata) {
+    public void metadata(Optional<List<DocumentMetadata>> metadata) {
         this.metadata = metadata;
     }
 
     public static class RemoteConfig{
+        @JsonProperty
         private String baseUrl;
-        private String username;
-        private String password;
-        private Optional<Boolean> nativeMarkdown = Optional.of(false);
-        private Optional<Boolean> enabled = Optional.of(true);
-        private Optional<DateFormat> datetimeFormat = Optional.of(DEFAULT_DATETIME);
 
-        public String getBaseUrl() {
+        @JsonProperty
+        private String username;
+
+        @JsonProperty
+        private String password;
+
+        @JsonProperty
+        private Optional<Boolean> supportsNativeMarkdown = Optional.of(false);
+
+        @JsonProperty
+        private Optional<Boolean> enabled = Optional.of(true);
+
+        @JsonProperty
+        private Optional<String> datetimeFormat = Optional.of(ALEXANDRIA_DATETIME_PATTERN);
+
+        public String baseUrl() {
             return baseUrl;
         }
 
-        public void setBaseUrl(String baseUrl) {
+        public void baseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
         }
 
-        public Optional<Boolean> getNativeMarkdown() {
-            return nativeMarkdown;
+        public Optional<Boolean> supportsNativeMarkdown() {
+            return supportsNativeMarkdown;
         }
 
-        public void setNativeMarkdown(Optional<Boolean> nativeMarkdown) {
-            this.nativeMarkdown = nativeMarkdown;
+        public void supportsNativeMarkdown(Optional<Boolean> nativeMarkdown) {
+            this.supportsNativeMarkdown = nativeMarkdown;
         }
 
-        public Optional<Boolean> getEnabled() {
+        public Optional<Boolean> enabled() {
             return enabled;
         }
 
-        public void setEnabled(Optional<Boolean> enabled) {
+        public void enabled(Optional<Boolean> enabled) {
             this.enabled = enabled;
         }
 
-        public Optional<DateFormat> getDatetimeFormat() {
+        public Optional<String> datetimeFormat() {
             return datetimeFormat;
         }
 
-        public void setDatetimeFormat(Optional<DateFormat> datetimeFormat) {
+        public void datetimeFormat(Optional<String> datetimeFormat) {
             this.datetimeFormat = datetimeFormat;
         }
 
-        public String getUsername() {
+        public String username() {
             return username;
         }
 
-        public void setUsername(String username) {
+        public void username(String username) {
             this.username = username;
         }
 
-        public String getPassword() {
+        public String password() {
             return password;
         }
 
-        public void setPassword(String password) {
+        public void password(String password) {
             this.password = password;
         }
     }
 
-    public class DocumentMetadata{
-        private Path source;
+    public static class DocumentMetadata{
+        @JsonProperty
+        private Path sourcePath;
+
+        @JsonProperty
         private String title;
-        private Optional<Path> converted = Optional.empty();
-        private Optional<URI> remote = Optional.empty();
+
+        @JsonProperty
+        private Optional<Path> convertedPath = Optional.empty();
+
+        @JsonProperty
+        private Optional<URI> remoteUri = Optional.empty();
+
+        @JsonProperty
         private Optional<List<String>> tags = Optional.of(new ArrayList<>());
+
+        @JsonProperty
         private Optional<ZonedDateTime> createdOn = Optional.empty();
+
+        @JsonProperty
         private Optional<ZonedDateTime> lastUpdated = Optional.empty();
-        private Optional<Map<String, String>> extra = Optional.of(new HashMap<>());
 
-        public Path getSource() {
-            return source;
+        @JsonProperty
+        private Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
+
+        public Path sourcePath() {
+            return sourcePath;
         }
 
-        public void setSource(Path source) {
-            this.source = source;
+        public void sourcePath(Path source) {
+            this.sourcePath = source;
         }
 
-        public String getTitle() {
+        public String title() {
             return title;
         }
 
-        public void setTitle(String title) {
+        public void title(String title) {
             this.title = title;
         }
 
-        public Optional<Path> getConverted() {
-            return converted;
+        public Optional<Path> convertedPath() {
+            return convertedPath;
         }
 
-        public void setConverted(Optional<Path> converted) {
-            this.converted = converted;
+        public void convertedPath(Optional<Path> convertedPath) {
+            this.convertedPath = convertedPath;
         }
 
-        public Optional<URI> getRemote() {
-            return remote;
+        public Optional<URI> remoteURI() {
+            return remoteUri;
         }
 
-        public void setRemote(Optional<URI> remote) {
-            this.remote = remote;
+        public void remoteUri(Optional<URI> remote) {
+            this.remoteUri = remote;
         }
 
-        public Optional<List<String>> getTags() {
+        public Optional<List<String>> tags() {
             return tags;
         }
 
-        public void setTags(Optional<List<String>> tags) {
+        public void tags(Optional<List<String>> tags) {
             this.tags = tags;
         }
 
-        public Optional<ZonedDateTime> getCreatedOn() {
+        public Optional<ZonedDateTime> createdOn() {
             return createdOn;
         }
 
-        public void setCreatedOn(Optional<ZonedDateTime> createdOn) {
+        public void createdOn(Optional<ZonedDateTime> createdOn) {
             this.createdOn = createdOn;
         }
 
-        public Optional<ZonedDateTime> getLastUpdated() {
+        public Optional<ZonedDateTime> lastUpdated() {
             return lastUpdated;
         }
 
-        public void setLastUpdated(Optional<ZonedDateTime> lastUpdated) {
+        public void lastUpdated(Optional<ZonedDateTime> lastUpdated) {
             this.lastUpdated = lastUpdated;
         }
 
-        public Optional<Map<String, String>> getExtra() {
-            return extra;
+        public Optional<Map<String, String>> extraProps() {
+            return extraProps;
         }
 
-        public void setExtra(Optional<Map<String, String>> extra) {
-            this.extra = extra;
+        public void extraProps(Optional<Map<String, String>> extraProps) {
+            this.extraProps = extraProps;
         }
     }
 
     /**
      * Config parsing code
      */
-    protected static JavaPropsMapper propertyMapper;
-    protected static ObjectMapper yamlMapper;
-    static{
-        propertyMapper = new JavaPropsMapper();
-        propertyMapper.setDateFormat(DEFAULT_DATETIME);
-        yamlMapper = new ObjectMapper(new YAMLFactory());
-        yamlMapper.setDateFormat(DEFAULT_DATETIME);
 
-        Module jdk8Module = new Jdk8Module();
-        propertyMapper.registerModule(jdk8Module);
-        yamlMapper.registerModule(jdk8Module);
-    }
-
-    protected enum PropertiesFileType{
-        YAML, PROP;
-    }
-
-    private PropertiesFileType type;
+    @JsonIgnore
     private Path propertiesPath;
 
     public static AlexandriaConfig load(String filePath) throws IOException {
         Path propertiesPath = Resources.path(filePath, true);
-
-        try {
-            AlexandriaConfig config = propertyMapper.readValue(propertiesPath.toFile(), AlexandriaConfig.class);
-            config.type = PropertiesFileType.PROP;
-            config.propertiesPath = propertiesPath;
-            return config;
-        } catch (IOException first) {
-            try {
-                AlexandriaConfig config = yamlMapper.readValue(propertiesPath.toFile(), AlexandriaConfig.class);
-                config.type = PropertiesFileType.YAML;
-                config.propertiesPath = propertiesPath;
-                return config;
-            } catch (IOException second) {
-                throw new IOException("Unable to load %s as either .properties or .yaml file", second);
-            }
-        }
+        AlexandriaConfig config = Jackson.yamlFileMapper().readValue(propertiesPath.toFile(), AlexandriaConfig.class);
+        config.propertiesPath = propertiesPath;
+        return config;
     }
 
     public static void save(AlexandriaConfig config) throws IOException {
-        if(PropertiesFileType.PROP.equals(config.type)) {
-            propertyMapper.writeValue(config.propertiesPath.toFile(), config);
-        } else if(PropertiesFileType.YAML.equals(config.type)) {
-            yamlMapper.writeValue(config.propertiesPath.toFile(), config);
-        }
+        Jackson.yamlFileMapper().writeValue(config.propertiesPath.toFile(), config);
+    }
+
+    public Path propertiesPath() {
+        return propertiesPath;
+    }
+
+    public void propertiesPath(Path propertiesPath) {
+        this.propertiesPath = propertiesPath;
     }
 }

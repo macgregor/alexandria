@@ -23,7 +23,7 @@ Alexandria looks for all markdown files in your project and converts them to htm
 It can be configured to look in multiple directories if needed.
 
 ## Metadata
-Alexandria relies on metadata in the markdown files to know where to publish the converted files. 
+Alexandria relies on metadata in the markdown files to know where to publish the convertedPath files. 
 
 ```markdown
 <!--- alexandria
@@ -43,7 +43,7 @@ This means it is important to add a git commit as part of the deploy step to ens
 
 
 ## Remotes
-Remotes are hosting platforms to upload converted files to. This will almost always be a rest interface for interacting 
+Remotes are hosting platforms to upload convertedPath files to. This will almost always be a rest interface for interacting 
 with the platform's api.
 
 ## CLI
