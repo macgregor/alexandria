@@ -11,4 +11,6 @@ public interface Remote {
     URI create(DocumentMetadata documentMetadata) throws IOException;
     URI update(DocumentMetadata documentMetadata) throws IOException;
     Request.Builder authenticated(Request.Builder builder);
+
+    
 }
