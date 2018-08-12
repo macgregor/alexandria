@@ -254,7 +254,7 @@ public class JiveRemote implements Remote{
             jiveDocument.tags = metadata.tags().get();
         }
 
-        jiveDocument.content.text = Resources.load(metadata.convertedPath().get());
+        jiveDocument.content.text = Resources.load(metadata.convertedPath().get().toString());
 
         //TODO: add parent
 
