@@ -79,8 +79,8 @@ public class AlexandriaConfigTest {
     @Test
     public void testLoadMetadataCreatedDateTimeIsConverter() throws IOException {
         AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/config.yaml");
-        assertThat(config.metadata()).isPresent();
-        AlexandriaConfig.DocumentMetadata metadata = config.metadata().get().get(0);
+        assertThat(config.remotes().get().get(0).metadata()).isPresent();
+        AlexandriaConfig.DocumentMetadata metadata = config.remotes().get().get(0).metadata().get().get(0);
         assertThat(metadata.createdOn()).isPresent();
         ZonedDateTime expected = ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern(AlexandriaConfig.ALEXANDRIA_DATETIME_PATTERN));
         assertThat(metadata.createdOn().get()).isEqualTo(expected);
@@ -89,8 +89,8 @@ public class AlexandriaConfigTest {
     @Test
     public void testLoadMetadataLastUpdatedDateTimeIsConverter() throws IOException {
         AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/config.yaml");
-        assertThat(config.metadata()).isPresent();
-        AlexandriaConfig.DocumentMetadata metadata = config.metadata().get().get(0);
+        assertThat(config.remotes().get().get(0).metadata()).isPresent();
+        AlexandriaConfig.DocumentMetadata metadata = config.remotes().get().get(0).metadata().get().get(0);
         assertThat(metadata.createdOn()).isPresent();
         ZonedDateTime expected = ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern(AlexandriaConfig.ALEXANDRIA_DATETIME_PATTERN));
         assertThat(metadata.lastUpdated().get()).isEqualTo(expected);
@@ -99,48 +99,48 @@ public class AlexandriaConfigTest {
     @Test
     public void testLoadMetadataSource() throws IOException {
         AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/config.yaml");
-        assertThat(config.metadata()).isPresent();
-        AlexandriaConfig.DocumentMetadata metadata = config.metadata().get().get(0);
+        assertThat(config.remotes().get().get(0).metadata()).isPresent();
+        AlexandriaConfig.DocumentMetadata metadata = config.remotes().get().get(0).metadata().get().get(0);
         assertThat(metadata.sourcePath()).isEqualTo(Paths.get("README.md"));
     }
 
     @Test
     public void testLoadMetadataTitle() throws IOException {
         AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/config.yaml");
-        assertThat(config.metadata()).isPresent();
-        AlexandriaConfig.DocumentMetadata metadata = config.metadata().get().get(0);
+        assertThat(config.remotes().get().get(0).metadata()).isPresent();
+        AlexandriaConfig.DocumentMetadata metadata = config.remotes().get().get(0).metadata().get().get(0);
         assertThat(metadata.title()).isEqualTo("Readme");
     }
 
     @Test
     public void testLoadMetadataConverted() throws IOException {
         AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/config.yaml");
-        assertThat(config.metadata()).isPresent();
-        AlexandriaConfig.DocumentMetadata metadata = config.metadata().get().get(0);
+        assertThat(config.remotes().get().get(0).metadata()).isPresent();
+        AlexandriaConfig.DocumentMetadata metadata = config.remotes().get().get(0).metadata().get().get(0);
         assertThat(metadata.convertedPath().get()).isEqualTo(Paths.get("README.html"));
     }
 
     @Test
     public void testLoadMetadataRemote() throws IOException, URISyntaxException {
         AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/config.yaml");
-        assertThat(config.metadata()).isPresent();
-        AlexandriaConfig.DocumentMetadata metadata = config.metadata().get().get(0);
-        assertThat(metadata.remoteURI().get()).isEqualTo(new URI("http://www.google.com/readme.html"));
+        assertThat(config.remotes().get().get(0).metadata()).isPresent();
+        AlexandriaConfig.DocumentMetadata metadata = config.remotes().get().get(0).metadata().get().get(0);
+        assertThat(metadata.remoteUri().get()).isEqualTo(new URI("http://www.google.com/readme.html"));
     }
 
     @Test
     public void testLoadMetadataTags() throws IOException, URISyntaxException {
         AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/config.yaml");
-        assertThat(config.metadata()).isPresent();
-        AlexandriaConfig.DocumentMetadata metadata = config.metadata().get().get(0);
+        assertThat(config.remotes().get().get(0).metadata()).isPresent();
+        AlexandriaConfig.DocumentMetadata metadata = config.remotes().get().get(0).metadata().get().get(0);
         assertThat(metadata.tags().get()).containsExactlyInAnyOrder("baz");
     }
 
     @Test
     public void testLoadMetadataExtraProps() throws IOException, URISyntaxException {
         AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/config.yaml");
-        assertThat(config.metadata()).isPresent();
-        AlexandriaConfig.DocumentMetadata metadata = config.metadata().get().get(0);
+        assertThat(config.remotes().get().get(0).metadata()).isPresent();
+        AlexandriaConfig.DocumentMetadata metadata = config.remotes().get().get(0).metadata().get().get(0);
         assertThat(metadata.extraProps().get()).containsExactly(new Map.Entry<String, String>() {
             @Override
             public String getKey() {
@@ -171,13 +171,6 @@ public class AlexandriaConfigTest {
         AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/empty.yaml");
         assertThat(config.remotes()).isPresent();
         assertThat(config.remotes().get()).isEmpty();
-    }
-
-    @Test
-    public void testConfigDefaultsForMetadata() throws IOException {
-        AlexandriaConfig config = AlexandriaConfig.load("src/test/resources/empty.yaml");
-        assertThat(config.metadata()).isPresent();
-        assertThat(config.metadata().get()).isEmpty();
     }
 
     @Test

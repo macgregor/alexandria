@@ -1,16 +1,15 @@
 package com.github.macgregor.alexandria.remotes;
 
-import com.github.macgregor.alexandria.DocumentMetadata;
-import okhttp3.Request;
+
+import com.github.macgregor.alexandria.AlexandriaConfig;
 
 import java.io.IOException;
-import java.net.URI;
 
 public interface Remote {
-    boolean exists(DocumentMetadata documentMetadata) throws IOException;
-    URI create(DocumentMetadata documentMetadata) throws IOException;
-    URI update(DocumentMetadata documentMetadata) throws IOException;
-    Request.Builder authenticated(Request.Builder builder);
-
-    
+    default void validateRemoteConfig(AlexandriaConfig.RemoteConfig config) throws IllegalStateException{}
+    default void validateDocumentMetadata(AlexandriaConfig.DocumentMetadata metadata) throws IllegalStateException{}
+    void syncMetadata(AlexandriaConfig.DocumentMetadata metadata) throws IOException;
+    void create(AlexandriaConfig.DocumentMetadata metadata) throws IOException;
+    void update(AlexandriaConfig.DocumentMetadata metadata) throws IOException;
+    void delete(AlexandriaConfig.DocumentMetadata metadata) throws IOException;
 }

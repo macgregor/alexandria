@@ -1,138 +1,307 @@
 package com.github.macgregor.alexandria.remotes;
 
-import com.github.macgregor.alexandria.DocumentMetadata;
+import com.github.macgregor.alexandria.AlexandriaConfig;
+import com.github.macgregor.alexandria.AlexandriaConfig.RemoteConfig;
+import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.Resources;
-import com.google.gson.Gson;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 public class JiveRemoteTest {
 
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
     @Test
     public void voidTestJivePagedContentParsing() throws IOException {
-        Gson gson = new Gson();
-        JiveRemote.PagedJiveContent parsed = gson.fromJson(Resources.load("src/test/resources/DOC-1072237.json"), JiveRemote.PagedJiveContent.class);
+        JiveRemote.PagedJiveContent parsed = Jackson.jsonMapper().readValue(Resources.load("src/test/resources/DOC-1072237-Paged.json"), JiveRemote.PagedJiveContent.class);
 
         assertThat(parsed).isEqualToComparingFieldByFieldRecursively(expectedPagedJiveContent());
     }
 
     @Test
-    public void testDocumentExistsCall() throws IOException, URISyntaxException {
-        MockWebServer server = new MockWebServer();
-        server.enqueue(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")));
-        server.start();
+    public void testSyncMetadata400() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
-        HttpUrl baseUrl = server.url("api/core/v3");
-        RestRemoteConfig config = new RestRemoteConfig();
-        config.setBaseUrl(baseUrl.toString());
-        JiveRemote jiveRemote = new JiveRemote(config);
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
-        DocumentMetadata metadata = new DocumentMetadata();
-        metadata.setRemote(Optional.of(new URI("https://mojo.redhat.com/docs/DOC-1072237")));
-        assertThat(jiveRemote.exists(metadata)).isTrue();
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.syncMetadata(metadata))
+                .withMessageContaining("Bad request");
     }
 
     @Test
-    public void testDocumentExistsFalseWhenNoRemoteSet() throws IOException {
-        RestRemoteConfig config = new RestRemoteConfig();
-        JiveRemote jiveRemote = new JiveRemote(config);
-        DocumentMetadata metadata = new DocumentMetadata();
-        assertThat(jiveRemote.exists(metadata)).isFalse();
+    public void testSyncMetadata500() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(500));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.syncMetadata(metadata))
+                .withMessageContaining("Unexpected status code");
     }
 
     @Test
-    public void testDocumentExistsFalseOn404() throws IOException, URISyntaxException {
-        MockWebServer server = new MockWebServer();
-        server.enqueue(new MockResponse().setResponseCode(404));
-        server.start();
+    public void testSyncMetadataUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")));
 
-        HttpUrl baseUrl = server.url("api/core/v3");
-        RestRemoteConfig config = new RestRemoteConfig();
-        config.setBaseUrl(baseUrl.toString());
-        JiveRemote jiveRemote = new JiveRemote(config);
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        jiveRemote.syncMetadata(metadata);
 
-        DocumentMetadata metadata = new DocumentMetadata();
-        metadata.setRemote(Optional.of(new URI("https://mojo.redhat.com/docs/DOC-1072237")));
-        assertThat(jiveRemote.exists(metadata)).isFalse();
-    }
-
-    @Test
-    public void testDocumentExistsUpdatesMetadata() throws IOException, URISyntaxException {
-        MockWebServer server = new MockWebServer();
-        server.enqueue(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")));
-        server.start();
-
-        HttpUrl baseUrl = server.url("api/core/v3");
-        RestRemoteConfig config = new RestRemoteConfig();
-        config.setBaseUrl(baseUrl.toString());
-        JiveRemote jiveRemote = new JiveRemote(config);
-
-        DocumentMetadata metadata = new DocumentMetadata();
-        metadata.setRemote(Optional.of(new URI("https://mojo.redhat.com/docs/DOC-1072237")));
-        assertThat(jiveRemote.exists(metadata)).isTrue();
-        assertThat(metadata.getLastUpdated().get())
+        assertThat(metadata.lastUpdated().get())
                 .isEqualTo(ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
-        assertThat(metadata.getCreatedOn().get())
+        assertThat(metadata.createdOn().get())
                 .isEqualTo(ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
-        assertThat(metadata.getExtra().get("jiveParentUrl")).isEqualTo("https://mojo.redhat.com/groups/soa-services-esb");
-        assertThat(metadata.getExtra().get("jiveParentPlaceId")).isEqualTo("61562");
-        assertThat(metadata.getExtra().get("jiveContentId")).isEqualTo("1278973");
+        assertThat(metadata.extraProps().get().get("jiveParentUrl")).isEqualTo("https://jive.com/groups/parent_group");
+        assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
+        assertThat(metadata.extraProps().get().get("jiveContentId")).isEqualTo("1278973");
+    }
+
+    @Test
+    public void testCreateUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+        jiveRemote.create(metadata);
+
+        assertThat(metadata.lastUpdated().get())
+                .isEqualTo(ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
+        assertThat(metadata.createdOn().get())
+                .isEqualTo(ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
+        assertThat(metadata.extraProps().get().get("jiveParentUrl")).isEqualTo("https://jive.com/groups/parent_group");
+        assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
+        assertThat(metadata.extraProps().get().get("jiveContentId")).isEqualTo("1278973");
+    }
+
+    @Test
+    public void testCreate400() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.create(metadata))
+                .withMessageContaining("Bad request");
+    }
+
+    @Test
+    public void testCreate409() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.create(metadata))
+                .withMessageContaining("Document conflicts with existing document");
+    }
+
+    @Test
+    public void testCreate403() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.create(metadata))
+                .withMessageContaining("Unauthorized to access document");
+    }
+
+    @Test
+    public void testUpdateUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+        jiveRemote.update(metadata);
+
+        assertThat(metadata.lastUpdated().get())
+                .isEqualTo(ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
+        assertThat(metadata.createdOn().get())
+                .isEqualTo(ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
+        assertThat(metadata.extraProps().get().get("jiveParentUrl")).isEqualTo("https://jive.com/groups/parent_group");
+        assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
+        assertThat(metadata.extraProps().get().get("jiveContentId")).isEqualTo("1278973");
+    }
+
+    @Test
+    public void testUpdate400() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.update(metadata))
+                .withMessageContaining("Bad request");
+    }
+
+    @Test
+    public void testUpdate409() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.update(metadata))
+                .withMessageContaining("Document conflicts with existing document");
+    }
+
+    @Test
+    public void testUpdate403() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.update(metadata))
+                .withMessageContaining("Unauthorized to access document");
+    }
+
+    @Test
+    public void testUpdate404() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.update(metadata))
+                .withMessageContaining("Document doesnt exist");
+    }
+
+    @Test
+    public void testDeleteSetsDeletedDateTime() throws URISyntaxException, IOException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(204));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        jiveRemote.delete(metadata);
+        assertThat(metadata.deletedOn()).isPresent();
+    }
+
+    @Test
+    public void testDelete400() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.delete(metadata))
+                .withMessageContaining("Bad request");
+    }
+
+    @Test
+    public void testDelete403() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.delete(metadata))
+                .withMessageContaining("Unauthorized to access document");
+    }
+
+    @Test
+    public void testDelete404() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
+
+        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+
+        assertThatExceptionOfType(HttpException.class)
+                .isThrownBy(() -> jiveRemote.delete(metadata))
+                .withMessageContaining("Document doesnt exist");
+    }
+
+
+    protected JiveRemote setup(MockResponse mockResponse) throws IOException, URISyntaxException {
+        MockWebServer server = new MockWebServer();
+        server.enqueue(mockResponse);
+        server.start();
+
+        HttpUrl baseUrl = server.url("api/core/v3");
+        RemoteConfig config = new RemoteConfig();
+        config.baseUrl(baseUrl.toString());
+        JiveRemote jiveRemote = new JiveRemote(config);
+
+        return jiveRemote;
     }
 
     private JiveRemote.PagedJiveContent expectedPagedJiveContent(){
         JiveRemote.JiveContent jiveContent = new JiveRemote.JiveContent();
         jiveContent.id = 1072237;
-        jiveContent.published = "2016-03-21T15:07:34.533+0000";
-        jiveContent.updated = "2018-06-22T18:42:59.652+0000";
-        jiveContent.tags = new String[]{"esb", "unified-messagebus", "umb"};
+        jiveContent.published = ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern(AlexandriaConfig.ALEXANDRIA_DATETIME_PATTERN));
+        jiveContent.updated = ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern(AlexandriaConfig.ALEXANDRIA_DATETIME_PATTERN));
+        jiveContent.tags = Arrays.asList("foo", "bar", "baz");
         jiveContent.contentID = "1278973";
-        jiveContent.parent = "https://mojo.redhat.com/api/core/v3/places/61562";
-        jiveContent.subject = "Unified Message Bus (UMB) Documentation Index";
+        jiveContent.parent = "https://jive.com/api/core/v3/places/61562";
+        jiveContent.subject = "Document Title";
         jiveContent.type = "document";
         jiveContent.typeCode = 102;
 
         JiveRemote.JiveContent.Content content = new JiveRemote.JiveContent.Content();
-        content.editable = false;
+        content.editable = true;
         content.type = "text/html";
         content.text = "<body></body>";
         jiveContent.content = content;
 
         JiveRemote.JiveContent.ParentPlace parentPlace = new JiveRemote.JiveContent.ParentPlace();
         parentPlace.id = 2276;
-        parentPlace.html = "https://mojo.redhat.com/groups/soa-services-esb";
+        parentPlace.html = "https://jive.com/groups/parent_group";
         parentPlace.placeID = "61562";
-        parentPlace.name = "SOA Services and ESB";
+        parentPlace.name = "Some Parent Group";
         parentPlace.type = "group";
-        parentPlace.uri = "https://mojo.redhat.com/api/core/v3/places/61562";
+        parentPlace.uri = "https://jive.com/api/core/v3/places/61562";
         jiveContent.parentPlace = parentPlace;
 
         Map<String, JiveRemote.JiveContent.Link> resources = new HashMap<>();
-        resources.put("html", link("https://mojo.redhat.com/docs/DOC-1072237", "GET"));
-        resources.put("extprops", link("https://mojo.redhat.com/api/core/v3/contents/1278973/extprops", "POST", "DELETE", "GET"));
+        resources.put("html", link("https://jive.com/docs/DOC-1072237", Arrays.asList("GET")));
+        resources.put("extprops", link("https://jive.com/api/core/v3/contents/1278973/extprops", Arrays.asList("POST", "DELETE", "GET")));
         jiveContent.resources = resources;
 
         JiveRemote.PagedJiveContent pagedContent = new JiveRemote.PagedJiveContent();
         pagedContent.itemsPerPage = 1;
-        pagedContent.links.put("next", "https://mojo.redhat.com/api/core/v3/contents?sort=dateCreatedDesc&fields=id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent&filter=entityDescriptor%28102,1072237%29&abridged=false&includeBlogs=false&count=1&startIndex=1");
+        pagedContent.links.put("next", "https://jive.com/api/core/v3/contents?sort=dateCreatedDesc&fields=id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent&filter=entityDescriptor%28102,1072237%29&abridged=false&includeBlogs=false&count=1&startIndex=1");
         pagedContent.startIndex = 0;
-        pagedContent.list = new JiveRemote.JiveContent[]{jiveContent};
+        pagedContent.list = Arrays.asList(jiveContent);
         return pagedContent;
     }
 
-    private JiveRemote.JiveContent.Link link(String ref, String... allowed){
+    private JiveRemote.JiveContent.Link link(String ref, List<String> allowed){
         JiveRemote.JiveContent.Link link = new JiveRemote.JiveContent.Link();
         link.ref = ref;
         link.allowed = allowed;
