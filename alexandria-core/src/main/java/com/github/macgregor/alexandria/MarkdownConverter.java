@@ -46,8 +46,8 @@ public class MarkdownConverter {
         this.overwriteFiles = Optional.of(true);
     }
 
-    public List<DocumentMetadata> convert() throws IOException, URISyntaxException {
-        List<DocumentMetadata> convertedFiles = new ArrayList<>();
+    public List<AlexandriaConfig.DocumentMetadata> convert() throws IOException, URISyntaxException {
+        List<AlexandriaConfig.DocumentMetadata> convertedFiles = new ArrayList<>();
 
         MutableDataSet options = new MutableDataSet();
         options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create()));
@@ -61,7 +61,7 @@ public class MarkdownConverter {
                 Files.createDirectories(output);
             }
             for(File in : Resources.files(inputDir, Resources.MATCH_MD_FILES)){
-                DocumentMetadata documentMetadata = DocumentMetadata.extract(in);
+                //AlexandriaConfig.DocumentMetadata documentMetadata = AlexandriaConfig.DocumentMetadata.extract(in);
 
                 // render html
                 Node document = parser.parseReader(new FileReader(in));
@@ -69,8 +69,8 @@ public class MarkdownConverter {
                 Path outputFile = Paths.get(output.toString(), outFileName);
                 Resources.save(outputFile, renderer.render(document), overwriteFiles.get());
 
-                documentMetadata.setConverted(Optional.of(outputFile));
-                convertedFiles.add(documentMetadata);
+                //documentMetadata.convertedPath(Optional.of(outputFile));
+                //convertedFiles.add(documentMetadata);
             }
         }
 

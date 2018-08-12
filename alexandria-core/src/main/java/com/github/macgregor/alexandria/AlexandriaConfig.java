@@ -18,9 +18,6 @@ public class AlexandriaConfig {
     @JsonProperty
     private Optional<List<String>> defaultTags = Optional.of(new ArrayList<>());
 
-    @JsonProperty
-    private Optional<List<DocumentMetadata>> metadata = Optional.of(new ArrayList<>());
-
     public Optional<List<String>> defaultTags() {
         return defaultTags;
     }
@@ -35,14 +32,6 @@ public class AlexandriaConfig {
 
     public void remotes(Optional<List<RemoteConfig>> remotes) {
         this.remotes = remotes;
-    }
-
-    public Optional<List<DocumentMetadata>> metadata() {
-        return metadata;
-    }
-
-    public void metadata(Optional<List<DocumentMetadata>> metadata) {
-        this.metadata = metadata;
     }
 
     public static class RemoteConfig{
@@ -63,6 +52,9 @@ public class AlexandriaConfig {
 
         @JsonProperty
         private Optional<String> datetimeFormat = Optional.of(ALEXANDRIA_DATETIME_PATTERN);
+
+        @JsonProperty
+        private Optional<List<DocumentMetadata>> metadata = Optional.of(new ArrayList<>());
 
         public String baseUrl() {
             return baseUrl;
@@ -111,6 +103,15 @@ public class AlexandriaConfig {
         public void password(String password) {
             this.password = password;
         }
+
+        public Optional<List<DocumentMetadata>> metadata() {
+            return metadata;
+        }
+
+        public void metadata(Optional<List<DocumentMetadata>> metadata) {
+            this.metadata = metadata;
+        }
+
     }
 
     public static class DocumentMetadata{
@@ -134,6 +135,9 @@ public class AlexandriaConfig {
 
         @JsonProperty
         private Optional<ZonedDateTime> lastUpdated = Optional.empty();
+
+        @JsonProperty
+        private Optional<ZonedDateTime> deletedOn = Optional.empty();
 
         @JsonProperty
         private Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
@@ -162,7 +166,7 @@ public class AlexandriaConfig {
             this.convertedPath = convertedPath;
         }
 
-        public Optional<URI> remoteURI() {
+        public Optional<URI> remoteUri() {
             return remoteUri;
         }
 
@@ -194,6 +198,14 @@ public class AlexandriaConfig {
             this.lastUpdated = lastUpdated;
         }
 
+        public Optional<ZonedDateTime> deletedOn() {
+            return deletedOn;
+        }
+
+        public void deletedOn(Optional<ZonedDateTime> deletedOn) {
+            this.deletedOn = deletedOn;
+        }
+
         public Optional<Map<String, String>> extraProps() {
             return extraProps;
         }
@@ -212,13 +224,13 @@ public class AlexandriaConfig {
 
     public static AlexandriaConfig load(String filePath) throws IOException {
         Path propertiesPath = Resources.path(filePath, true);
-        AlexandriaConfig config = Jackson.yamlFileMapper().readValue(propertiesPath.toFile(), AlexandriaConfig.class);
+        AlexandriaConfig config = Jackson.yamlMapper().readValue(propertiesPath.toFile(), AlexandriaConfig.class);
         config.propertiesPath = propertiesPath;
         return config;
     }
 
     public static void save(AlexandriaConfig config) throws IOException {
-        Jackson.yamlFileMapper().writeValue(config.propertiesPath.toFile(), config);
+        Jackson.yamlMapper().writeValue(config.propertiesPath.toFile(), config);
     }
 
     public Path propertiesPath() {

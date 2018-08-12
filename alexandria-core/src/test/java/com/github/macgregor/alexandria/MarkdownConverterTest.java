@@ -116,9 +116,9 @@ public class MarkdownConverterTest {
         File outDir = folder.newFolder("output");
 
         MarkdownConverter converter = new MarkdownConverter(Arrays.asList(subDir.getPath()), outDir.getPath());
-        List<DocumentMetadata> metadata = converter.convert();
+        List<AlexandriaConfig.DocumentMetadata> metadata = converter.convert();
         assertThat(metadata.size()).isEqualTo(1);
-        assertThat(metadata.get(0).getSource()).isEqualTo(f.toPath());
+        assertThat(metadata.get(0).sourcePath()).isEqualTo(f.toPath());
     }
 
     @Test
@@ -129,8 +129,8 @@ public class MarkdownConverterTest {
         File outDir = folder.newFolder("output");
 
         MarkdownConverter converter = new MarkdownConverter(Arrays.asList(subDir.getPath()), outDir.getPath());
-        List<DocumentMetadata> metadata = converter.convert();
+        List<AlexandriaConfig.DocumentMetadata> metadata = converter.convert();
         assertThat(metadata.size()).isEqualTo(1);
-        assertThat(metadata.get(0).getConverted().get()).isEqualTo(Paths.get(outDir.toString(), "readme.html"));
+        assertThat(metadata.get(0).convertedPath().get()).isEqualTo(Paths.get(outDir.toString(), "readme.html"));
     }
 }

@@ -1,0 +1,42 @@
+{
+  "itemsPerPage" : 1,
+  "links" : {
+    "next" : "https://jive.com/api/core/v3/contents?sort=dateCreatedDesc&fields=id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent&filter=entityDescriptor%28102,1072237%29&abridged=false&includeBlogs=false&count=1&startIndex=1"
+  },
+  "list" : [ {
+    "id" : "1072237",
+    "resources" : {
+      "html" : {
+        "allowed" : [ "GET" ],
+        "ref" : "https://jive.com/docs/DOC-1072237"
+      },
+      "extprops" : {
+        "allowed" : [ "POST", "DELETE", "GET" ],
+        "ref" : "https://jive.com/api/core/v3/contents/1278973/extprops"
+      }
+    },
+    "published" : "2016-03-21T15:07:34.533+0000",
+    "tags" : [ "foo", "bar", "baz" ],
+    "updated" : "2018-06-22T18:42:59.652+0000",
+    "parentPlace" : {
+      "id" : "2276",
+      "html" : "https://jive.com/groups/parent_group",
+      "placeID" : "61562",
+      "name" : "Some Parent Group",
+      "type" : "group",
+      "uri" : "https://jive.com/api/core/v3/places/61562",
+      "iconCss" : "jive-icon-group"
+    },
+    "contentID" : "1278973",
+    "content" : {
+      "text" : "<body></body>",
+      "editable" : true,
+      "type" : "text/html"
+    },
+    "parent" : "https://jive.com/api/core/v3/places/61562",
+    "subject" : "Document Title",
+    "type" : "document",
+    "typeCode" : 102
+  } ],
+  "startIndex" : 0
+}

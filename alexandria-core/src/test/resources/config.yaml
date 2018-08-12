@@ -8,14 +8,14 @@ remotes:
     supportsNativeMarkdown: true
     enabled: false
     datetimeFormat: yyyy-MM-dd'override'HH:mm:ss.SSSZ
-metadata:
-  - sourcePath: README.md
-    title: Readme
-    convertedPath: README.html
-    remoteUri: http://www.google.com/readme.html
-    createdOn: 2018-06-22T18:42:59.652+0000
-    lastUpdated: 2018-06-22T18:42:59.652+0000
-    tags:
-      - baz
-    extraProps:
-      foo: bar
+    metadata:
+      - sourcePath: README.md
+        title: Readme
+        convertedPath: README.html
+        remoteUri: http://www.google.com/readme.html
+        createdOn: 2018-06-22T18:42:59.652+0000
+        lastUpdated: 2018-06-22T18:42:59.652+0000
+        tags:
+          - baz
+        extraProps:
+          foo: bar

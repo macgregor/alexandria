@@ -15,20 +15,36 @@ import java.time.format.DateTimeFormatter;
 
 public class Jackson {
     private static ObjectMapper yamlMapper;
+    private static ObjectMapper jsonMapper;
 
-    public static ObjectMapper yamlFileMapper(){
+    public static ObjectMapper yamlMapper(){
         if(yamlMapper == null){
             yamlMapper = configureMapper(new ObjectMapper(new YAMLFactory()));
         }
         return yamlMapper;
     }
 
-    public static ObjectReader yamlFileReader(){
-        return yamlFileMapper().reader();
+    public static ObjectReader yamlReader(){
+        return yamlMapper().reader();
     }
 
-    public static ObjectWriter yamlFileWriter(){
-        return yamlFileMapper().writer();
+    public static ObjectWriter yamlWriter(){
+        return yamlMapper().writer();
+    }
+
+    public static ObjectMapper jsonMapper(){
+        if(jsonMapper == null){
+            jsonMapper = configureMapper(new ObjectMapper());
+        }
+        return jsonMapper;
+    }
+
+    public static ObjectReader jsonReader(){
+        return jsonMapper().reader();
+    }
+
+    public static ObjectWriter jsonWriter(){
+        return jsonMapper().writer();
     }
 
     public static class ZonedDateTimeDeserializer extends JsonDeserializer<ZonedDateTime> {
