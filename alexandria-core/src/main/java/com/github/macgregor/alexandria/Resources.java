@@ -1,99 +1,83 @@
 package com.github.macgregor.alexandria;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.file.*;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.*;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * Utility class for working with file system resources.
  */
 public class Resources {
 
-    public static final String DEFAULT_MATCH_PATTERN = "glob:**";
-    public static final String MATCH_MD_FILES = "glob:**.md";
+    public static class PathFinder{
 
-    public static List<File> files(String filePath) throws IOException {
-        return Resources.files(filePath, DEFAULT_MATCH_PATTERN);
-    }
+        private Path startingDir;
+        private List<String> include;
+        private List<String> exclude;
+        private boolean recursive;
 
-    public static List<File> files(Path filePath) throws IOException {
-        return Resources.files(filePath, DEFAULT_MATCH_PATTERN);
-    }
-
-    public static List<File> files(String filePath, String matchPattern) throws IOException {
-        return Resources.files(filePath, matchPattern, Integer.MAX_VALUE);
-    }
-
-    public static List<File> files(Path filePath, String matchPattern) throws IOException {
-        return Resources.files(filePath, matchPattern, Integer.MAX_VALUE);
-    }
-
-    public static List<File> files(String filePath, int maxDepth) throws IOException {
-        return Resources.files(filePath, DEFAULT_MATCH_PATTERN, maxDepth);
-    }
-
-    public static List<File> files(Path filePath, int maxDepth) throws IOException {
-        return Resources.files(filePath, DEFAULT_MATCH_PATTERN, maxDepth);
-    }
-
-    public static List<File> files(String filePath, String matchPattern, int maxDepth) throws IOException {
-        Path start = Paths.get(filePath);
-        return files(start, matchPattern, maxDepth);
-    }
-
-    /**
-     * Retrieve all files on the file path that match pattern with limited recursion depth. The path will be searched
-     * recursively, but only files will be returned, even if the directory name matches the match pattern. Symbolic and
-     * hard links will be followed, the pattern matcher applies to the name of the link, not the resolved name
-     * of the link.
-     *
-     * Pattern matching is done using {@link java.nio.file.FileSystem#getPathMatcher(String)} and can use "glob"
-     * and "regex" pattern matchers (possibly more depending on the file system). For example the default pattern
-     * to match all files would be "glob:**" or "regex:.*". To match all markdown files you would use "glob:**.md"
-     * or "regex:.*\.md". See {@link java.nio.file.FileSystem#getPathMatcher(String)} for more details and examples.
-     *
-     * If the file path doesnt exist, is an invalid path, or the match pattern is invalid, an exception is thrown.
-     *
-     * @param filePath Path to file or directory to search. If a path to a file is provided, that file will be returned
-     *                 provided it matches the matchPattern. If it is a directory, it will be walked to find all files that
-     *                 match the pattern.
-     * @param matchPattern File name pattern to match. See {@link java.nio.file.FileSystem#getPathMatcher(String)}.
-     * @param maxDepth Maximum recursion depth for the file walker. See {@link Files#walk(Path, int, FileVisitOption...)}.
-     * @return
-     * @throws IOException If the file path doesnt exist, is an invalid path, or the match pattern is invalid, an exception is thrown.
-     */
-    public static List<File> files(Path filePath, String matchPattern, int maxDepth) throws IOException {
-        PathMatcher matcher = FileSystems.getDefault().getPathMatcher(matchPattern);
-
-        if(!Files.exists(filePath)){
-            throw new FileNotFoundException(String.format("%s doesnt exist.", filePath));
+        public PathFinder(){
+            include = Collections.singletonList("*");
+            exclude = Collections.emptyList();
+            recursive = true;
         }
 
-        try (Stream<Path> paths = Files.walk(filePath, maxDepth, FileVisitOption.FOLLOW_LINKS)) {
-            return paths.filter(Files::isRegularFile)
-                    .filter(matcher::matches)
-                    .map(Path::toFile)
-                    .collect(Collectors.toList());
+        public PathFinder startingIn(String dir) throws IOException {
+            this.startingDir = Paths.get(dir);
+            if(!Files.exists(startingDir)){
+                throw new IOException(String.format("Directory %s doesnt exist.", dir));
+            }
+            if(!Files.isDirectory(startingDir)){
+                throw new IOException(String.format("%s is not a directory.", dir));
+            }
+            return this;
+        }
+
+        public PathFinder including(List<String> include){
+            this.include = include;
+            return this;
+        }
+
+        public PathFinder including(String include){
+            this.include = Collections.singletonList(include);
+            return this;
+        }
+
+        public PathFinder excluding(List<String> exclude){
+            this.exclude = exclude;
+            return this;
+        }
+
+        public PathFinder excluding(String exclude){
+            this.exclude = Collections.singletonList(exclude);
+            return this;
+        }
+
+        public PathFinder recursive(boolean isRecursive){
+            this.recursive = isRecursive;
+            return this;
+        }
+
+        public Collection<File> find(){
+            IOFileFilter dirFilter = recursive ? TrueFileFilter.INSTANCE : null;
+            IOFileFilter fileFilter = new AndFileFilter(
+                    new WildcardFileFilter(include),
+                    new NotFileFilter(new WildcardFileFilter(exclude)));
+
+            return FileUtils.listFiles(startingDir.toFile(), fileFilter, dirFilter);
         }
     }
 
     public static void save(String filePath, String content) throws IOException {
         Resources.save(filePath, content, true);
-    }
-
-    public static void save(Path filePath, String content) throws IOException {
-        Resources.save(filePath, content, true);
-    }
-
-    public static void save(String filePath, String content, boolean overwrite) throws IOException {
-        Path path = Paths.get(filePath);
-        save(path, content, overwrite);
     }
 
     /**
@@ -106,29 +90,20 @@ public class Resources {
      * @param overwrite Whether or not to overwrite the file if it already exists.
      * @throws IOException If the file path cant be overwritten, the file path is invalid or an general IO error occurred.
      */
-    public static void save(Path filePath, String content, boolean overwrite) throws IOException {
-        if(Files.exists(filePath)){
-            if(Files.isDirectory(filePath)){
+    public static void save(String filePath, String content, boolean overwrite) throws IOException {
+        Path path = Paths.get(filePath);
+        if(Files.exists(path)){
+            if(Files.isDirectory(path)){
                 throw new FileAlreadyExistsException("File is a directory. Refusing to destroy.");
             } else if(!overwrite) {
                 throw new FileAlreadyExistsException("Refusing to overwrite existing file.");
-            } else{
-                Files.delete(filePath);
             }
         }
-
-        BufferedWriter writer = new BufferedWriter(new FileWriter(filePath.toString()));
-        writer.write(content);
-        writer.close();
+        FileUtils.writeStringToFile(path.toFile(), content, (String) null);
     }
 
     public static String load(String filePath) throws IOException {
-        return load(Paths.get(filePath));
-    }
-
-    public static String load(Path filePath) throws IOException {
-        byte[] encoded = Files.readAllBytes(filePath);
-        return new String(encoded, Charset.defaultCharset());
+        return FileUtils.readFileToString(Paths.get(filePath).toFile(), (String) null);
     }
 
     public static Set<Path> paths(Collection<String>rawPaths) {

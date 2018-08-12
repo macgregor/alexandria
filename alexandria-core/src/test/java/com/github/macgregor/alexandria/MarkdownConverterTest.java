@@ -92,7 +92,7 @@ public class MarkdownConverterTest {
         MarkdownConverter converter = new MarkdownConverter(Arrays.asList(subDir.getPath()), outDir.getPath());
         assertThat(converter.convert().size()).isEqualTo(1);
         assertThat(Paths.get(outDir.toString(), "readme.html")).exists();
-        assertThat(Resources.load(Paths.get(outDir.toString(), "readme.html"))).isEqualTo("<h1>Header</h1>\n");
+        assertThat(Resources.load(Paths.get(outDir.toString(), "readme.html").toString())).isEqualTo("<h1>Header</h1>\n");
     }
 
     @Test
@@ -105,7 +105,7 @@ public class MarkdownConverterTest {
         MarkdownConverter converter = new MarkdownConverter(Arrays.asList(subDir.getPath()), outDir.getPath());
         assertThat(converter.convert().size()).isEqualTo(1);
         assertThat(Paths.get(outDir.toString(), "readme.html")).exists();
-        assertThat(Resources.load(Paths.get(outDir.toString(), "readme.html"))).isEqualTo("<p><del>strikethrough</del></p>\n");
+        assertThat(Resources.load(Paths.get(outDir.toString(), "readme.html").toString())).isEqualTo("<p><del>strikethrough</del></p>\n");
     }
 
     @Test

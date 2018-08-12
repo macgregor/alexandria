@@ -60,14 +60,18 @@ public class MarkdownConverter {
             if(!Files.exists(output)){
                 Files.createDirectories(output);
             }
-            for(File in : Resources.files(inputDir, Resources.MATCH_MD_FILES)){
+            Collection<File> markdownFiles = new Resources.PathFinder()
+                    .startingIn(inputDir.toString())
+                    .including("*.md")
+                    .find();
+            for(File in : markdownFiles){
                 //AlexandriaConfig.DocumentMetadata documentMetadata = AlexandriaConfig.DocumentMetadata.extract(in);
 
                 // render html
                 Node document = parser.parseReader(new FileReader(in));
                 String outFileName = in.getName().substring(0, in.getName().lastIndexOf('.')) + ".html";
                 Path outputFile = Paths.get(output.toString(), outFileName);
-                Resources.save(outputFile, renderer.render(document), overwriteFiles.get());
+                Resources.save(outputFile.toString(), renderer.render(document), overwriteFiles.get());
 
                 //documentMetadata.convertedPath(Optional.of(outputFile));
                 //convertedFiles.add(documentMetadata);

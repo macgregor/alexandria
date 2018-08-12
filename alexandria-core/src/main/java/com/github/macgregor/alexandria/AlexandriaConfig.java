@@ -13,6 +13,15 @@ public class AlexandriaConfig {
     public static final String ALEXANDRIA_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
     @JsonProperty
+    private Path searchPath;
+
+    @JsonProperty
+    private List<String> include = new ArrayList<>(Arrays.asList("**.md"));
+
+    @JsonProperty
+    private Optional<List<String>> exclude = Optional.of(new ArrayList<>());
+
+    @JsonProperty
     private Optional<List<RemoteConfig>> remotes = Optional.of(new ArrayList<>());
 
     @JsonProperty
@@ -32,6 +41,30 @@ public class AlexandriaConfig {
 
     public void remotes(Optional<List<RemoteConfig>> remotes) {
         this.remotes = remotes;
+    }
+
+    public List<String> include() {
+        return include;
+    }
+
+    public void include(List<String> include) {
+        this.include = include;
+    }
+
+    public Optional<List<String>> exclude() {
+        return exclude;
+    }
+
+    public void exclude(Optional<List<String>> exclude) {
+        this.exclude = exclude;
+    }
+
+    public Path searchPath() {
+        return searchPath;
+    }
+
+    public void searchPath(Path searchPath) {
+        this.searchPath = searchPath;
     }
 
     public static class RemoteConfig{
@@ -122,9 +155,6 @@ public class AlexandriaConfig {
         private String title;
 
         @JsonProperty
-        private Optional<Path> convertedPath = Optional.empty();
-
-        @JsonProperty
         private Optional<URI> remoteUri = Optional.empty();
 
         @JsonProperty
@@ -141,6 +171,8 @@ public class AlexandriaConfig {
 
         @JsonProperty
         private Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
+
+        private Optional<Path> convertedPath = Optional.empty();
 
         public Path sourcePath() {
             return sourcePath;

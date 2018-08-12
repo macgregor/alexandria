@@ -8,15 +8,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 public class ResourcesTest {
 
@@ -24,160 +24,143 @@ public class ResourcesTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testFilesFindsAllFilesByDefault() throws IOException {
+    public void testPathFinderFindsAllFilesByDefault() throws IOException {
         folder.newFile("readme.md");
         folder.newFile("readme2.md");
         folder.newFile("foo.txt");
-        List<File> found = Resources.files(folder.getRoot().getPath());
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(folder.getRoot().toString())
+                .find();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                .containsExactlyInAnyOrder("readme.md", "readme2.md", "foo.txt");
     }
 
     @Test
-    public void testFilesFindsAllFilesByRegex() throws IOException {
+    public void testPathFinderFindsFilesMatchingIncludePattern() throws IOException {
         folder.newFile("readme.md");
         folder.newFile("readme2.md");
         folder.newFile("foo.txt");
-        List<File> found = Resources.files(folder.getRoot().getPath(), "regex:.*");
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(folder.getRoot().toString())
+                .including("*.md")
+                .find();
+        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
+                .containsExactlyInAnyOrder("readme.md", "readme2.md");
+    }
+
+    @Test
+    public void testPathFinderFindsFilesMatchingAllIncludePatterns() throws IOException {
+        folder.newFile("readme.md");
+        folder.newFile("readme2.md");
+        folder.newFile("foo.txt");
+        folder.newFile("MyClass.java");
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(folder.getRoot().toString())
+                .including(Arrays.asList("*.md", "*.txt"))
+                .find();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md", "foo.txt");
     }
 
     @Test
-    public void testFilesOnlyMatchesFiles() throws IOException {
+    public void testPathFinderFindsFilesNotMatchingExcludePattern() throws IOException {
+        folder.newFile("readme.md");
+        folder.newFile("readme2.md");
+        folder.newFile("foo.txt");
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(folder.getRoot().toString())
+                .excluding("*.txt")
+                .find();
+        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
+                .containsExactlyInAnyOrder("readme.md", "readme2.md");
+    }
+
+    @Test
+    public void testPathFinderFindsFilesNotMatchingAnyExcludePatterns() throws IOException {
+        folder.newFile("readme.md");
+        folder.newFile("readme2.md");
+        folder.newFile("foo.txt");
+        folder.newFile("MyClass.java");
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(folder.getRoot().toString())
+                .excluding(Arrays.asList("*.txt", "*.java"))
+                .find();
+        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
+                .containsExactlyInAnyOrder("readme.md", "readme2.md");
+    }
+
+    @Test
+    public void testPathFinderOnlyMatchesFiles() throws IOException {
         folder.newFile("readme.md");
         folder.newFile("readme2.md");
         folder.newFolder("foo");
-
-        List<File> found = Resources.files(folder.getRoot().getPath());
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(folder.getRoot().toString())
+                .find();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md");
     }
 
     @Test
-    public void testFilesFindsAllFilesRecursivelyByDefault() throws IOException {
+    public void testPathFinderFindsAllFilesRecursivelyByDefault() throws IOException {
         folder.newFile("readme.md");
         folder.newFile("readme2.md");
         File subDir = folder.newFolder("foo");
         File f3 = new File(subDir, "readme3.md");
         f3.createNewFile();
 
-        List<File> found = Resources.files(folder.getRoot().getPath(), "regex:.*");
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(folder.getRoot().toString())
+                .find();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md", "readme3.md");
     }
 
     @Test
-    public void testFilesFindsAllFilesRecursivelyByRegex() throws IOException {
+    public void testPathFinderFindsAllFilesObeysRecursionFlag() throws IOException {
         folder.newFile("readme.md");
         folder.newFile("readme2.md");
         File subDir = folder.newFolder("foo");
         File f3 = new File(subDir, "readme3.md");
         f3.createNewFile();
 
-        List<File> found = Resources.files(folder.getRoot().getPath());
-        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
-                .containsExactlyInAnyOrder("readme.md", "readme2.md", "readme3.md");
-    }
-
-    @Test
-    public void testFilesOnlyMatchesFilesByPattern() throws IOException {
-        folder.newFile("readme.md");
-        folder.newFile("readme2.md");
-        folder.newFile("ignore");
-        List<File> found = Resources.files(folder.getRoot().getPath(), "glob:**.md");
-        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
-                .containsExactlyInAnyOrder("readme.md", "readme2.md");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void testFilesThrowsFileNotFound() throws IOException {
-        Resources.files("nope");
-    }
-
-    @Test
-    public void testFilesObeysMaxDepth() throws IOException {
-        folder.newFile("readme.md");
-        folder.newFile("readme2.md");
-        File subDir = folder.newFolder("foo");
-        File f3 = new File(subDir, "readme3.md");
-        f3.createNewFile();
-
-        List<File> found = Resources.files(folder.getRoot().getPath(), 1);
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(folder.getRoot().toString())
+                .recursive(false)
+                .find();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md");
     }
 
     @Test
-    public void testFilesWithDirectoryAsFilePath() throws IOException {
+    public void testPathFinderMatchesOnIncludeAndExcludePatterns() throws IOException {
         folder.newFile("readme.md");
-        List<File> found = Resources.files(folder.getRoot().getPath());
-        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
-                .containsExactly("readme.md");
-    }
+        folder.newFile("readme.txt");
 
-    @Test
-    public void testFilesWithFileAsFilePath() throws IOException {
-        File f = folder.newFile("readme.md");
-        List<File> found = Resources.files(f.getPath());
-        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
-                .containsExactly("readme.md");
-    }
-
-    @Test
-    public void testFilesWithFileAsFilePathMatchesPattern() throws IOException {
-        File f = folder.newFile("readme.md");
-        List<File> found = Resources.files(f.getPath(), "glob:**.md");
-        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
-                .containsExactly("readme.md");
-    }
-
-    @Test
-    public void testFilesWithFileAsFilePathDoesntMatchesPattern() throws IOException {
-        File f = folder.newFile("readme.txt");
-        List<File> found = Resources.files(f.getPath(), "glob:**.md");
-        assertThat(found).isEmpty();
-    }
-
-    @Test
-    public void testFilesWithSymbolicLinkToFile() throws IOException {
-        File subDir = folder.newFolder("foo");
-        File f3 = new File(subDir, "readme3.md");
-        f3.createNewFile();
-        Path link = Paths.get(folder.getRoot().getPath(), "link");
-        Files.createSymbolicLink(link, Paths.get(f3.toURI()));
-
-        List<File> found = Resources.files(folder.getRoot().getPath(), 1);
-        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
-                .containsExactlyInAnyOrder("link");
-    }
-
-    @Test
-    public void testFilesWithSymbolicLinkToFileMatchesPattern() throws IOException {
-        File subDir = folder.newFolder("foo");
-        File f3 = new File(subDir, "link");
-        f3.createNewFile();
-        Path link = Paths.get(folder.getRoot().getPath(), "readme.md");
-        Files.createSymbolicLink(link, Paths.get(f3.toURI()));
-
-        List<File> found = Resources.files(folder.getRoot().getPath(), "glob:**.md", 1);
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(folder.getRoot().toString())
+                .including("*")
+                .excluding("*.txt")
+                .find();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md");
     }
 
     @Test
-    public void testFilesWithSymbolicLinkToDir() throws IOException {
-        File subDirL1 = folder.newFolder("level1");
-        File subDirL2 = new File(subDirL1, "level2");
-        subDirL2.mkdir();
-        File file = new File(subDirL2, "readme.md");
-        file.createNewFile();
-        Path link = Paths.get(folder.getRoot().getPath(), "link");
-        Files.createSymbolicLink(link, Paths.get(subDirL2.toURI()));
+    public void testPathFinderChecksStartingDirExists() throws IOException {
+        Resources.PathFinder pathFinder = new Resources.PathFinder();
+        assertThatExceptionOfType(IOException.class)
+                .isThrownBy(() -> pathFinder.startingIn("nope"))
+                .withMessageContaining("Directory nope doesnt exist.");
+    }
 
-        List<File> found = Resources.files(link.toString(), 1);
-        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
-                .containsExactlyInAnyOrder("readme.md");
+    @Test
+    public void testPathFinderChecksStartingDirIsDirectory() throws IOException {
+        File file = folder.newFile();
+        Resources.PathFinder pathFinder = new Resources.PathFinder();
+        assertThatExceptionOfType(IOException.class)
+                .isThrownBy(() -> pathFinder.startingIn(file.toString()))
+                .withMessageContaining("is not a directory.");
     }
 
     @Test
@@ -195,11 +178,22 @@ public class ResourcesTest {
         assertThat(f).hasContent("world");
     }
 
-    @Test(expected = FileAlreadyExistsException.class)
+    @Test
     public void testSaveRefusesToOverwriteFile() throws IOException {
         File f = new File(folder.getRoot(), "out");
         Resources.save(f.getPath(), "hello");
-        Resources.save(f.getPath(), "world", false);
+        ;
+        assertThatExceptionOfType(FileAlreadyExistsException.class)
+                .isThrownBy(() -> Resources.save(f.getPath(), "world", false))
+                .withMessageContaining("Refusing to overwrite existing file.");
+    }
+
+    @Test
+    public void testSaveRefusesToOverwriteDirectory() throws IOException {
+        File f = folder.newFolder("subdir");
+        assertThatExceptionOfType(FileAlreadyExistsException.class)
+                .isThrownBy(() -> Resources.save(f.getPath(), "world"))
+                .withMessageContaining("File is a directory. Refusing to destroy.");
     }
 
     @Test
