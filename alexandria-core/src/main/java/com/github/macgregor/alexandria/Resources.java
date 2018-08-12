@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for working with file system resources.
@@ -19,25 +20,35 @@ public class Resources {
 
     public static class PathFinder{
 
-        private Path startingDir;
+        private List<Path> startingDirs;
         private List<String> include;
         private List<String> exclude;
         private boolean recursive;
 
         public PathFinder(){
+            startingDirs = Collections.emptyList();
             include = Collections.singletonList("*");
             exclude = Collections.emptyList();
             recursive = true;
         }
 
         public PathFinder startingIn(String dir) throws IOException {
-            this.startingDir = Paths.get(dir);
-            if(!Files.exists(startingDir)){
-                throw new IOException(String.format("Directory %s doesnt exist.", dir));
+            return startingIn(Collections.singletonList(dir));
+        }
+
+        public PathFinder startingIn(List<String> dirs) throws IOException {
+            List<Path> paths = new ArrayList<>();
+            for(String dir : dirs){
+                Path dirPath = Paths.get(dir);
+                if(!Files.exists(dirPath)){
+                    throw new IOException(String.format("Directory %s doesnt exist.", dir));
+                }
+                if(!Files.isDirectory(dirPath)){
+                    throw new IOException(String.format("%s is not a directory.", dir));
+                }
+                paths.add(dirPath);
             }
-            if(!Files.isDirectory(startingDir)){
-                throw new IOException(String.format("%s is not a directory.", dir));
-            }
+            this.startingDirs = paths;
             return this;
         }
 
@@ -72,7 +83,10 @@ public class Resources {
                     new WildcardFileFilter(include),
                     new NotFileFilter(new WildcardFileFilter(exclude)));
 
-            return FileUtils.listFiles(startingDir.toFile(), fileFilter, dirFilter);
+            return startingDirs.stream()
+                    .map(d -> FileUtils.listFiles(d.toFile(), fileFilter, dirFilter))
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
         }
     }
 

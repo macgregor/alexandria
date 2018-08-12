@@ -164,6 +164,22 @@ public class ResourcesTest {
     }
 
     @Test
+    public void testPathFinderWithMultipleInputSources() throws IOException {
+        File subDir1 = folder.newFolder("foo");
+        File f1 = new File(subDir1, "readme.md");
+        f1.createNewFile();
+        File subDir2 = folder.newFolder("bar");
+        File f2 = new File(subDir2, "readme2.md");
+        f2.createNewFile();
+
+        Collection<File> found = new Resources.PathFinder()
+                .startingIn(Arrays.asList(subDir1.getPath(), subDir2.getPath()))
+                .find();
+        assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
+                .containsExactlyInAnyOrder("readme.md", "readme2.md");
+    }
+
+    @Test
     public void testSaveNewFile() throws IOException {
         File f = new File(folder.getRoot(), "out");
         Resources.save(f.getPath(), "hello");
