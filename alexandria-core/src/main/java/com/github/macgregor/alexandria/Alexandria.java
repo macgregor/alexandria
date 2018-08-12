@@ -1,8 +1,13 @@
 package com.github.macgregor.alexandria;
 
+import org.apache.commons.io.FilenameUtils;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Alexandria {
@@ -29,11 +34,17 @@ public class Alexandria {
             metadata.title(f.getName());
             config.metadata().get().add(metadata);
         }
-
-        AlexandriaConfig.save(config);
     }
 
-    public static void sync(AlexandriaConfig config){
-
+    public static void generate(AlexandriaConfig config) throws IOException {
+        if(config.remote().isPresent() && config.remote().get().supportsNativeMarkdown().get()){
+            return;
+        }
+        for(AlexandriaConfig.DocumentMetadata metadata : config.metadata().get()){
+            String convertedDir = config.output().orElse(metadata.sourcePath().getParent().toString());
+            String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
+            metadata.convertedPath(Optional.of(Paths.get(convertedDir, convertedFileName)));
+            Markdown.toHtml(metadata);
+        }
     }
 }
