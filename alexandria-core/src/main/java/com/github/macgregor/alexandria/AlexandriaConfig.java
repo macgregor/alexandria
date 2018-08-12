@@ -13,16 +13,22 @@ public class AlexandriaConfig {
     public static final String ALEXANDRIA_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
     @JsonProperty
-    private Path searchPath;
+    private List<String> searchPath;
 
     @JsonProperty
-    private List<String> include = new ArrayList<>(Arrays.asList("**.md"));
+    private Optional<String> outputPath = Optional.empty();
+
+    @JsonProperty
+    private List<String> include = new ArrayList<>(Arrays.asList("*.md"));
 
     @JsonProperty
     private Optional<List<String>> exclude = Optional.of(new ArrayList<>());
 
     @JsonProperty
-    private Optional<List<RemoteConfig>> remotes = Optional.of(new ArrayList<>());
+    private Optional<RemoteConfig> remote = Optional.empty();
+
+    @JsonProperty
+    private Optional<List<DocumentMetadata>> metadata = Optional.of(new ArrayList<>());
 
     @JsonProperty
     private Optional<List<String>> defaultTags = Optional.of(new ArrayList<>());
@@ -35,12 +41,12 @@ public class AlexandriaConfig {
         this.defaultTags = defaultTags;
     }
 
-    public Optional<List<RemoteConfig>> remotes() {
-        return remotes;
+    public Optional<RemoteConfig> remote() {
+        return remote;
     }
 
-    public void remotes(Optional<List<RemoteConfig>> remotes) {
-        this.remotes = remotes;
+    public void remotes(Optional<RemoteConfig> remote) {
+        this.remote = remote;
     }
 
     public List<String> include() {
@@ -59,12 +65,28 @@ public class AlexandriaConfig {
         this.exclude = exclude;
     }
 
-    public Path searchPath() {
+    public List<String> searchPath() {
         return searchPath;
     }
 
-    public void searchPath(Path searchPath) {
+    public void searchPath(List<String> searchPath) {
         this.searchPath = searchPath;
+    }
+
+    public Optional<String> output() {
+        return outputPath;
+    }
+
+    public void output(Optional<String> outputPath) {
+        this.outputPath = outputPath;
+    }
+
+    public Optional<List<DocumentMetadata>> metadata() {
+        return metadata;
+    }
+
+    public void metadata(Optional<List<DocumentMetadata>> metadata) {
+        this.metadata = metadata;
     }
 
     public static class RemoteConfig{
@@ -85,9 +107,6 @@ public class AlexandriaConfig {
 
         @JsonProperty
         private Optional<String> datetimeFormat = Optional.of(ALEXANDRIA_DATETIME_PATTERN);
-
-        @JsonProperty
-        private Optional<List<DocumentMetadata>> metadata = Optional.of(new ArrayList<>());
 
         public String baseUrl() {
             return baseUrl;
@@ -137,14 +156,6 @@ public class AlexandriaConfig {
             this.password = password;
         }
 
-        public Optional<List<DocumentMetadata>> metadata() {
-            return metadata;
-        }
-
-        public void metadata(Optional<List<DocumentMetadata>> metadata) {
-            this.metadata = metadata;
-        }
-
     }
 
     public static class DocumentMetadata{
@@ -172,6 +183,7 @@ public class AlexandriaConfig {
         @JsonProperty
         private Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
 
+        @JsonIgnore
         private Optional<Path> convertedPath = Optional.empty();
 
         public Path sourcePath() {
@@ -252,24 +264,24 @@ public class AlexandriaConfig {
      */
 
     @JsonIgnore
-    private Path propertiesPath;
+    private Path configPath;
 
     public static AlexandriaConfig load(String filePath) throws IOException {
-        Path propertiesPath = Resources.path(filePath, true);
-        AlexandriaConfig config = Jackson.yamlMapper().readValue(propertiesPath.toFile(), AlexandriaConfig.class);
-        config.propertiesPath = propertiesPath;
+        Path path = Resources.path(filePath, true);
+        AlexandriaConfig config = Jackson.yamlMapper().readValue(path.toFile(), AlexandriaConfig.class);
+        config.configPath = path;
         return config;
     }
 
     public static void save(AlexandriaConfig config) throws IOException {
-        Jackson.yamlMapper().writeValue(config.propertiesPath.toFile(), config);
+        Jackson.yamlMapper().writeValue(config.configPath.toFile(), config);
     }
 
-    public Path propertiesPath() {
-        return propertiesPath;
+    public Path configPath() {
+        return configPath;
     }
 
-    public void propertiesPath(Path propertiesPath) {
-        this.propertiesPath = propertiesPath;
+    public void configPath(Path propertiesPath) {
+        this.configPath = propertiesPath;
     }
 }
