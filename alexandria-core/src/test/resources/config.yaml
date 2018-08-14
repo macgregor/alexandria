@@ -6,7 +6,6 @@ remote:
   username: matt
   password: password
   supportsNativeMarkdown: true
-  enabled: false
   datetimeFormat: yyyy-MM-dd'override'HH:mm:ss.SSSZ
 metadata:
   - sourcePath: README.md

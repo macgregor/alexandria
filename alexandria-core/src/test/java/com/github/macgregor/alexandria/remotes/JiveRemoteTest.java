@@ -1,9 +1,10 @@
 package com.github.macgregor.alexandria.remotes;
 
-import com.github.macgregor.alexandria.AlexandriaConfig;
-import com.github.macgregor.alexandria.AlexandriaConfig.RemoteConfig;
+import com.github.macgregor.alexandria.Config;
+import com.github.macgregor.alexandria.Config.RemoteConfig;
 import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.Resources;
+import com.github.macgregor.alexandria.exceptions.HttpException;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -37,7 +38,7 @@ public class JiveRemoteTest {
     public void testSyncMetadata400() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
@@ -49,7 +50,7 @@ public class JiveRemoteTest {
     public void testSyncMetadata500() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(500));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
@@ -61,7 +62,7 @@ public class JiveRemoteTest {
     public void testSyncMetadataUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         jiveRemote.syncMetadata(metadata);
 
@@ -78,7 +79,7 @@ public class JiveRemoteTest {
     public void testCreateUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
         jiveRemote.create(metadata);
@@ -96,7 +97,7 @@ public class JiveRemoteTest {
     public void testCreate400() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -109,7 +110,7 @@ public class JiveRemoteTest {
     public void testCreate409() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -122,7 +123,7 @@ public class JiveRemoteTest {
     public void testCreate403() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -133,9 +134,11 @@ public class JiveRemoteTest {
 
     @Test
     public void testUpdateUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")));
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
         jiveRemote.update(metadata);
@@ -153,7 +156,7 @@ public class JiveRemoteTest {
     public void testUpdate400() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -166,7 +169,7 @@ public class JiveRemoteTest {
     public void testUpdate409() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -179,7 +182,7 @@ public class JiveRemoteTest {
     public void testUpdate403() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -192,7 +195,7 @@ public class JiveRemoteTest {
     public void testUpdate404() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -203,9 +206,11 @@ public class JiveRemoteTest {
 
     @Test
     public void testDeleteSetsDeletedDateTime() throws URISyntaxException, IOException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(204));
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
+                new MockResponse().setResponseCode(204)));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         jiveRemote.delete(metadata);
         assertThat(metadata.deletedOn()).isPresent();
@@ -215,7 +220,7 @@ public class JiveRemoteTest {
     public void testDelete400() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
@@ -227,7 +232,7 @@ public class JiveRemoteTest {
     public void testDelete403() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
@@ -239,7 +244,7 @@ public class JiveRemoteTest {
     public void testDelete404() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
@@ -248,9 +253,15 @@ public class JiveRemoteTest {
     }
 
 
-    protected JiveRemote setup(MockResponse mockResponse) throws IOException, URISyntaxException {
+    protected JiveRemote setup(MockResponse mockResponses) throws IOException {
+        return setup(Collections.singletonList(mockResponses));
+    }
+
+    protected JiveRemote setup(List<MockResponse> mockResponses) throws IOException {
         MockWebServer server = new MockWebServer();
-        server.enqueue(mockResponse);
+        for(MockResponse mockResponse : mockResponses) {
+            server.enqueue(mockResponse);
+        }
         server.start();
 
         HttpUrl baseUrl = server.url("api/core/v3");
@@ -264,8 +275,8 @@ public class JiveRemoteTest {
     private JiveRemote.PagedJiveContent expectedPagedJiveContent(){
         JiveRemote.JiveContent jiveContent = new JiveRemote.JiveContent();
         jiveContent.id = 1072237;
-        jiveContent.published = ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern(AlexandriaConfig.ALEXANDRIA_DATETIME_PATTERN));
-        jiveContent.updated = ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern(AlexandriaConfig.ALEXANDRIA_DATETIME_PATTERN));
+        jiveContent.published = ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
+        jiveContent.updated = ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
         jiveContent.tags = Arrays.asList("foo", "bar", "baz");
         jiveContent.contentID = "1278973";
         jiveContent.parent = "https://jive.com/api/core/v3/places/61562";

@@ -39,7 +39,7 @@ public class Markdown {
         return renderer;
     }
 
-    public static void toHtml(AlexandriaConfig.DocumentMetadata metadata) throws IOException {
+    public static void toHtml(Config.DocumentMetadata metadata) throws IOException {
         Node document = parser().parseReader(new FileReader(metadata.sourcePath().toFile()));
         Resources.save(metadata.convertedPath().get().toString(), renderer().render(document));
     }

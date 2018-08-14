@@ -24,7 +24,7 @@ public class MarkdownTest {
         Resources.save(f.getPath(), "# Header");
         File outDir = folder.newFolder("output");
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(f.toPath());
         metadata.convertedPath(Optional.of(Paths.get(outDir.toString(), "readme.html")));
         Markdown.toHtml(metadata);
@@ -38,7 +38,7 @@ public class MarkdownTest {
         Resources.save(f.getPath(), "~~strikethrough~~");
         File outDir = folder.newFolder("output");
 
-        AlexandriaConfig.DocumentMetadata metadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(f.toPath());
         metadata.convertedPath(Optional.of(Paths.get(outDir.toString(), "readme.html")));
         Markdown.toHtml(metadata);

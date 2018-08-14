@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.util.*;
 
-public class AlexandriaConfig {
+public class Config {
     public static final String ALEXANDRIA_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
     @JsonProperty
@@ -103,9 +103,6 @@ public class AlexandriaConfig {
         private Optional<Boolean> supportsNativeMarkdown = Optional.of(false);
 
         @JsonProperty
-        private Optional<Boolean> enabled = Optional.of(true);
-
-        @JsonProperty
         private Optional<String> datetimeFormat = Optional.of(ALEXANDRIA_DATETIME_PATTERN);
 
         public String baseUrl() {
@@ -122,14 +119,6 @@ public class AlexandriaConfig {
 
         public void supportsNativeMarkdown(Optional<Boolean> nativeMarkdown) {
             this.supportsNativeMarkdown = nativeMarkdown;
-        }
-
-        public Optional<Boolean> enabled() {
-            return enabled;
-        }
-
-        public void enabled(Optional<Boolean> enabled) {
-            this.enabled = enabled;
         }
 
         public Optional<String> datetimeFormat() {
@@ -170,6 +159,9 @@ public class AlexandriaConfig {
 
         @JsonProperty
         private Optional<List<String>> tags = Optional.of(new ArrayList<>());
+
+        @JsonProperty
+        private Optional<Long> sourceChecksum = Optional.empty();
 
         @JsonProperty
         private Optional<ZonedDateTime> createdOn = Optional.empty();
@@ -257,6 +249,14 @@ public class AlexandriaConfig {
         public void extraProps(Optional<Map<String, String>> extraProps) {
             this.extraProps = extraProps;
         }
+
+        public Optional<Long> sourceChecksum() {
+            return sourceChecksum;
+        }
+
+        public void sourceChecksum(Optional<Long> sourceChecksum) {
+            this.sourceChecksum = sourceChecksum;
+        }
     }
 
     /**
@@ -266,14 +266,14 @@ public class AlexandriaConfig {
     @JsonIgnore
     private Path configPath;
 
-    public static AlexandriaConfig load(String filePath) throws IOException {
+    public static Config load(String filePath) throws IOException {
         Path path = Resources.path(filePath, true);
-        AlexandriaConfig config = Jackson.yamlMapper().readValue(path.toFile(), AlexandriaConfig.class);
+        Config config = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
         config.configPath = path;
         return config;
     }
 
-    public static void save(AlexandriaConfig config) throws IOException {
+    public static void save(Config config) throws IOException {
         Jackson.yamlMapper().writeValue(config.configPath.toFile(), config);
     }
 
