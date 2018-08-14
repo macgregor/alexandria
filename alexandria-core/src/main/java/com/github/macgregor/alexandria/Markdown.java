@@ -11,6 +11,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 
+/**
+ * Configure Flexmark markdown library
+ */
 public class Markdown {
 
     private static Parser parser;
@@ -39,6 +42,12 @@ public class Markdown {
         return renderer;
     }
 
+    /**
+     * Convert a source file into html
+     *
+     * @param metadata {@link com.github.macgregor.alexandria.Config.DocumentMetadata} containing markdown source file to convert.
+     * @throws IOException
+     */
     public static void toHtml(Config.DocumentMetadata metadata) throws IOException {
         Node document = parser().parseReader(new FileReader(metadata.sourcePath().toFile()));
         Resources.save(metadata.convertedPath().get().toString(), renderer().render(document));
