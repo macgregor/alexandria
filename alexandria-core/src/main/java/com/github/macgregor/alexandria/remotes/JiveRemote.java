@@ -1,8 +1,9 @@
 package com.github.macgregor.alexandria.remotes;
 
-import com.github.macgregor.alexandria.AlexandriaConfig;
+import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.Resources;
+import com.github.macgregor.alexandria.exceptions.HttpException;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 
@@ -19,15 +20,159 @@ public class JiveRemote implements Remote{
     public static final String STANDARD_FIELD_PROJECTION = "id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent";
 
     protected OkHttpClient client;
-    protected AlexandriaConfig.RemoteConfig config;
+    protected Config.RemoteConfig config;
 
-    public JiveRemote(OkHttpClient client, AlexandriaConfig.RemoteConfig config){
+    public JiveRemote(OkHttpClient client, Config.RemoteConfig config){
         this.client = client;
         this.config = config;
     }
 
-    public JiveRemote(AlexandriaConfig.RemoteConfig config){
+    public JiveRemote(Config.RemoteConfig config){
         this(new OkHttpClient(), config);
+    }
+
+    /**
+     * https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#createContent(String,%20String,%20String,%20String)
+     *
+     * @param metadata
+     * @throws IOException
+     */
+    @Override
+    public void create(Config.DocumentMetadata metadata) throws IOException {
+        HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
+                .addPathSegment("contents")
+                .addQueryParameter("fields", STANDARD_FIELD_PROJECTION)
+                .build();
+
+        Request request = authenticated(new Request.Builder())
+                .url(route)
+                .post(RequestBody.create(JSON, documentPostBody(metadata)))
+                .build();
+
+        Response response = doRequest(request);
+        try {
+            JiveContent jiveContent =  Jackson.jsonMapper().readValue(response.body().charStream(), JiveContent.class);
+            updateMetadata(metadata, jiveContent);
+        } catch (IOException e) {
+            HttpException exception = new HttpException("Cannot parse response content", e);
+            exception.setRequest(Optional.of(request));
+            exception.setResponse(Optional.ofNullable(response));
+            throw exception;
+        }
+    }
+
+    /**
+     * https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#updateContent(String,%20String,%20String,%20boolean,%20String,%20boolean)
+     *
+     * @param metadata
+     * @throws IOException
+     */
+    @Override
+    public void update(Config.DocumentMetadata metadata) throws IOException {
+        if(!metadata.extraProps().isPresent() || !metadata.extraProps().get().containsKey("jiveContentId")){
+            syncMetadata(metadata);
+        }
+        String contentId = metadata.extraProps().get().get("jiveContentId");
+
+        HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
+                .addPathSegment("contents")
+                .addPathSegment(contentId)
+                .build();
+
+        Request request = authenticated(new Request.Builder())
+                .url(route)
+                .put(RequestBody.create(JSON, documentPostBody(metadata)))
+                .build();
+
+        Response response = doRequest(request);
+        try {
+            JiveContent jiveContent =  Jackson.jsonMapper().readValue(response.body().charStream(), JiveContent.class);
+            updateMetadata(metadata, jiveContent);
+        } catch (IOException e) {
+            throw new HttpException.Builder()
+                    .withMessage("Cannot parse response content")
+                    .causedBy(e)
+                    .requestContext(request)
+                    .responseContext(response)
+                    .build();
+        }
+    }
+
+    /**
+     * https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#deleteContent(String,%20Boolean)
+     *
+     * @param metadata
+     * @throws IOException
+     */
+    @Override
+    public void delete(Config.DocumentMetadata metadata) throws IOException {
+        if(!metadata.extraProps().isPresent() || !metadata.extraProps().get().containsKey("jiveContentId")){
+            syncMetadata(metadata);
+        }
+        String contentId = metadata.extraProps().get().get("jiveContentId");
+
+        HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
+                .addPathSegment("contents")
+                .addPathSegment(contentId)
+                .build();
+
+        Request request = authenticated(new Request.Builder())
+                .url(route)
+                .delete()
+                .build();
+
+        Response response = doRequest(request);
+        metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
+    }
+
+    protected Response doRequest(Request request) throws HttpException {
+        Call call = client.newCall(request);
+
+        Response response = null;
+        try {
+            response = call.execute();
+        } catch(IOException e){
+            throw new HttpException.Builder()
+                    .withMessage(String.format("Unable to make request %s", request.url().toString()))
+                    .causedBy(e)
+                    .requestContext(request)
+                    .responseContext(response)
+                    .build();
+        }
+
+        if(response.isSuccessful()){
+            return response;
+        } else if(response.code() == 400){
+            throw new HttpException.Builder()
+                    .withMessage("Bad request.")
+                    .requestContext(request)
+                    .responseContext(response)
+                    .build();
+        } else if(response.code() == 403){
+            throw new HttpException.Builder()
+                    .withMessage("Unauthorized to access document.")
+                    .requestContext(request)
+                    .responseContext(response)
+                    .build();
+        } else if(response.code() == 404){
+            throw new HttpException.Builder()
+                    .withMessage("Document doesnt exist.")
+                    .requestContext(request)
+                    .responseContext(response)
+                    .build();
+        } else if(response.code() == 409){
+            throw new HttpException.Builder()
+                    .withMessage("Document conflicts with existing document.")
+                    .requestContext(request)
+                    .responseContext(response)
+                    .build();
+        } else {
+            throw new HttpException.Builder()
+                    .withMessage(String.format("Unexpected status code %d.", response.code()))
+                    .requestContext(request)
+                    .responseContext(response)
+                    .build();
+        }
     }
 
     /**
@@ -36,8 +181,7 @@ public class JiveRemote implements Remote{
      * @param metadata
      * @throws IOException
      */
-    @Override
-    public void syncMetadata(AlexandriaConfig.DocumentMetadata metadata) throws IOException {
+    public void syncMetadata(Config.DocumentMetadata metadata) throws IOException {
         if(metadata.remoteUri().isPresent()) {
             // https://community.jivesoftware.com/docs/DOC-153931
             String filter = String.format("entityDescriptor(102,%s)", jiveObjectId(metadata.remoteUri().get()));
@@ -68,138 +212,12 @@ public class JiveRemote implements Remote{
         }
     }
 
-    /**
-     * https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#createContent(String,%20String,%20String,%20String)
-     *
-     * @param metadata
-     * @throws IOException
-     */
-    @Override
-    public void create(AlexandriaConfig.DocumentMetadata metadata) throws IOException {
-
-        HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
-                .addPathSegment("contents")
-                .addQueryParameter("fields", STANDARD_FIELD_PROJECTION)
-                .build();
-
-        Request request = authenticated(new Request.Builder())
-                .url(route)
-                .post(RequestBody.create(JSON, documentPostBody(metadata)))
-                .build();
-
-        Response response = doRequest(request);
-        try {
-            JiveContent jiveContent =  Jackson.jsonMapper().readValue(response.body().charStream(), JiveContent.class);
-            updateMetadata(metadata, jiveContent);
-        } catch (IOException e) {
-            HttpException exception = new HttpException("Cannot parse response content", e);
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
-            throw exception;
-        }
-    }
-
-    /**
-     * https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#updateContent(String,%20String,%20String,%20boolean,%20String,%20boolean)
-     *
-     * @param metadata
-     * @throws IOException
-     */
-    @Override
-    public void update(AlexandriaConfig.DocumentMetadata metadata) throws IOException {
-        HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
-                .addPathSegment("contents")
-                .addPathSegment(jiveObjectId(metadata.remoteUri().get()))
-                .build();
-
-        Request request = authenticated(new Request.Builder())
-                .url(route)
-                .put(RequestBody.create(JSON, documentPostBody(metadata)))
-                .build();
-
-        Response response = doRequest(request);
-        try {
-            JiveContent jiveContent =  Jackson.jsonMapper().readValue(response.body().charStream(), JiveContent.class);
-            updateMetadata(metadata, jiveContent);
-        } catch (IOException e) {
-            HttpException exception = new HttpException("Cannot parse response content", e);
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
-            throw exception;
-        }
-    }
-
-    /**
-     * https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#deleteContent(String,%20Boolean)
-     *
-     * @param metadata
-     * @throws IOException
-     */
-    @Override
-    public void delete(AlexandriaConfig.DocumentMetadata metadata) throws IOException {
-        HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
-                .addPathSegment("contents")
-                .addPathSegment(jiveObjectId(metadata.remoteUri().get()))
-                .build();
-
-        Request request = authenticated(new Request.Builder())
-                .url(route)
-                .delete()
-                .build();
-
-        Response response = doRequest(request);
-        metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
-    }
-
-    protected Response doRequest(Request request) throws HttpException {
-        Call call = client.newCall(request);
-
-        Response response = null;
-        try {
-            response = call.execute();
-        } catch(IOException e){
-            HttpException exception = new HttpException(String.format("Unable to make request %s", request.url().toString()), e);
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
-            throw exception;
-        }
-
-        if(response.isSuccessful()){
-            return response;
-        } else if(response.code() == 400){
-            HttpException exception = new HttpException("Bad request.");
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
-            throw exception;
-        } else if(response.code() == 403){
-            HttpException exception = new HttpException("Unauthorized to access document.");
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
-            throw exception;
-        } else if(response.code() == 404){
-            HttpException exception = new HttpException("Document doesnt exist.");
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
-            throw exception;
-        } else if(response.code() == 409){
-            HttpException exception = new HttpException("Document conflicts with existing document.");
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
-            throw exception;
-        } else {
-            HttpException exception = new HttpException(String.format("Unexpected status code %d.", response.code()));
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
-            throw exception;
-        }
-    }
-
     public Request.Builder authenticated(Request.Builder builder) {
         builder.addHeader("Authorization", Credentials.basic(config.username(), config.password()));
         return builder;
     }
 
-    protected AlexandriaConfig.DocumentMetadata updateMetadata(AlexandriaConfig.DocumentMetadata metadata, PagedJiveContent content) {
+    protected Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJiveContent content) {
         if(content != null && content.list != null && content.list.size() > 0){
             return updateMetadata(metadata, content.list.get(0));
         }
@@ -207,7 +225,7 @@ public class JiveRemote implements Remote{
         return metadata;
     }
 
-    protected AlexandriaConfig.DocumentMetadata updateMetadata(AlexandriaConfig.DocumentMetadata metadata, JiveContent content) {
+    protected Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JiveContent content) {
         metadata.createdOn(Optional.ofNullable(content.published));
         metadata.lastUpdated(Optional.ofNullable(content.updated));
 
@@ -242,7 +260,7 @@ public class JiveRemote implements Remote{
      * @param metadata
      * @return
      */
-    protected String documentPostBody(AlexandriaConfig.DocumentMetadata metadata) throws IOException {
+    protected String documentPostBody(Config.DocumentMetadata metadata) throws IOException {
         JiveContent jiveDocument = new JiveContent();
 
         if(metadata.extraProps().get().containsKey("jiveContentId")){

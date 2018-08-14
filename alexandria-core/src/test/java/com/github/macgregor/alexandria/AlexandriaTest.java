@@ -1,5 +1,6 @@
 package com.github.macgregor.alexandria;
 
+import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -22,7 +23,7 @@ public class AlexandriaTest {
     public void testIndexFresh() throws IOException {
         File f1 = folder.newFile("readme.md");
         File f2 = folder.newFile("doc.md");
-        AlexandriaConfig config = new AlexandriaConfig();
+        Config config = new Config();
         config.searchPath(Arrays.asList(folder.getRoot().toString()));
         config.configPath(folder.newFile().toPath());
         Alexandria.index(config);
@@ -39,11 +40,11 @@ public class AlexandriaTest {
         File f1 = folder.newFile("readme.md");
         File f2 = folder.newFile("doc.md");
 
-        AlexandriaConfig config = new AlexandriaConfig();
+        Config config = new Config();
         config.searchPath(Arrays.asList(folder.getRoot().toString()));
         config.configPath(folder.newFile().toPath());
 
-        AlexandriaConfig.DocumentMetadata readmeMetadata = new AlexandriaConfig.DocumentMetadata();
+        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
         readmeMetadata.sourcePath(f1.toPath());
         readmeMetadata.title("Custom Title");
         config.metadata().get().add(readmeMetadata);
@@ -63,7 +64,7 @@ public class AlexandriaTest {
         File f1 = folder.newFile("readme.md");
         File f2 = folder.newFile("doc.md");
 
-        AlexandriaConfig config = new AlexandriaConfig();
+        Config config = new Config();
         config.searchPath(Arrays.asList(folder.getRoot().toString()));
         config.configPath(folder.newFile().toPath());
 
@@ -77,11 +78,11 @@ public class AlexandriaTest {
     }
 
     @Test
-    public void testGenerateDoesntConvertWhenRemoteSupportsMarkdown() throws IOException {
+    public void testGenerateDoesntConvertWhenRemoteSupportsMarkdown() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
 
-        AlexandriaConfig config = new AlexandriaConfig();
-        AlexandriaConfig.RemoteConfig remoteConfig = new AlexandriaConfig.RemoteConfig();
+        Config config = new Config();
+        Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.supportsNativeMarkdown(Optional.of(true));
         config.remotes(Optional.of(remoteConfig));
 
@@ -90,12 +91,12 @@ public class AlexandriaTest {
     }
 
     @Test
-    public void testGenerateSetsConvertedPathPreferringConfigOverride() throws IOException {
+    public void testGenerateSetsConvertedPathPreferringConfigOverride() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
         File subdir = folder.newFolder("out");
 
-        AlexandriaConfig config = new AlexandriaConfig();
-        AlexandriaConfig.DocumentMetadata readmeMetadata = new AlexandriaConfig.DocumentMetadata();
+        Config config = new Config();
+        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
         readmeMetadata.sourcePath(f1.toPath());
         config.metadata().get().add(readmeMetadata);
         config.output(Optional.of(subdir.getPath()));
@@ -106,11 +107,11 @@ public class AlexandriaTest {
     }
 
     @Test
-    public void testGenerateSetsConvertedPathUsesSourceDirAsOutput() throws IOException {
+    public void testGenerateSetsConvertedPathUsesSourceDirAsOutput() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
 
-        AlexandriaConfig config = new AlexandriaConfig();
-        AlexandriaConfig.DocumentMetadata readmeMetadata = new AlexandriaConfig.DocumentMetadata();
+        Config config = new Config();
+        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
         readmeMetadata.sourcePath(f1.toPath());
         config.metadata().get().add(readmeMetadata);
 

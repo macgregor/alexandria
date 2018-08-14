@@ -89,8 +89,8 @@ public class Jackson {
     }
 
     protected static JavaTimeModule java8TimeModule(){
-        ZonedDateTimeDeserializer dateTimeDeserializer = new ZonedDateTimeDeserializer(DateTimeFormatter.ofPattern(AlexandriaConfig.ALEXANDRIA_DATETIME_PATTERN));
-        ZonedDateTimeSerializer dateTimeSerializer = new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern(AlexandriaConfig.ALEXANDRIA_DATETIME_PATTERN));
+        ZonedDateTimeDeserializer dateTimeDeserializer = new ZonedDateTimeDeserializer(DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
+        ZonedDateTimeSerializer dateTimeSerializer = new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
 
         JavaTimeModule javaTimeModule = new JavaTimeModule();
         javaTimeModule.addDeserializer(ZonedDateTime.class, dateTimeDeserializer);
