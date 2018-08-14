@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Jackson parser configuration
+ */
 public class Jackson {
     private static ObjectMapper yamlMapper;
     private static ObjectMapper jsonMapper;
@@ -47,6 +50,9 @@ public class Jackson {
         return jsonMapper().writer();
     }
 
+    /**
+     * Converts a string to a {@link ZonedDateTime} instance using a provided {@link DateTimeFormatter}
+     */
     public static class ZonedDateTimeDeserializer extends JsonDeserializer<ZonedDateTime> {
 
         private DateTimeFormatter dateTimeFormatter;
@@ -62,6 +68,9 @@ public class Jackson {
         }
     }
 
+    /**
+     * Converts a {@link ZonedDateTime} instance to a string using the provided {@link DateTimeFormatter}
+     */
     public static class ZonedDateTimeSerializer extends JsonSerializer<ZonedDateTime> {
 
         private DateTimeFormatter dateTimeFormatter;
@@ -77,6 +86,12 @@ public class Jackson {
         }
     }
 
+    /**
+     * Configure Jakson mapper with commong configurations; ignoring unknown properties, enable jdk8 feature, etc.
+     *
+     * @param mapper
+     * @return
+     */
     protected static ObjectMapper configureMapper(ObjectMapper mapper){
         Module jdk8Module = new Jdk8Module();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -88,6 +103,11 @@ public class Jackson {
         return mapper;
     }
 
+    /**
+     * Configure Java 8 time module to allow use of newer, better date time features. Also add the {@link ZonedDateTime}
+     * (de)serializers to the module.
+     * @return
+     */
     protected static JavaTimeModule java8TimeModule(){
         ZonedDateTimeDeserializer dateTimeDeserializer = new ZonedDateTimeDeserializer(DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
         ZonedDateTimeSerializer dateTimeSerializer = new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));

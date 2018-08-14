@@ -18,6 +18,10 @@ import java.util.stream.Collectors;
  */
 public class Resources {
 
+    /**
+     * Builder to find files among directories matching based on include/exclude patterns. Makes use of
+     * {@link FileUtils#listFiles(File, IOFileFilter, IOFileFilter)} to do the heavy lifting.
+     */
     public static class PathFinder{
 
         private List<Path> startingDirs;
@@ -36,6 +40,12 @@ public class Resources {
             return startingIn(Collections.singletonList(dir));
         }
 
+        /**
+         * Converts the provided strings into {@link Path} objects and validates they are directories that exist.
+         * @param dirs
+         * @return
+         * @throws IOException Any path doesnt exist or is not a directory.
+         */
         public PathFinder startingIn(List<String> dirs) throws IOException {
             List<Path> paths = new ArrayList<>();
             for(String dir : dirs){
@@ -52,31 +62,62 @@ public class Resources {
             return this;
         }
 
+        /**
+         * Wild card include pattern, see {@link WildcardFileFilter}.
+         * @param include Wildcard filename patterns, e.g. *.md
+         * @return
+         */
         public PathFinder including(List<String> include){
             this.include = include;
             return this;
         }
 
+        /**
+         * Wild card include pattern, see {@link WildcardFileFilter}.
+         * @param include Wildcard filename pattern, e.g. *.md
+         * @return
+         */
         public PathFinder including(String include){
             this.include = Collections.singletonList(include);
             return this;
         }
 
+        /**
+         * Wild card include pattern, see {@link WildcardFileFilter}.
+         * @param exclude Wildcard filename patterns, e.g. *.md
+         * @return
+         */
         public PathFinder excluding(List<String> exclude){
             this.exclude = exclude;
             return this;
         }
 
+        /**
+         * Wild card include pattern, see {@link WildcardFileFilter}.
+         * @param exclude Wildcard filename pattern, e.g. *.md
+         * @return
+         */
         public PathFinder excluding(String exclude){
             this.exclude = Collections.singletonList(exclude);
             return this;
         }
 
+        /**
+         * When set, recursively walk directories when finding files. Defaults to true.
+         *
+         * @param isRecursive
+         * @return
+         */
         public PathFinder recursive(boolean isRecursive){
             this.recursive = isRecursive;
             return this;
         }
 
+        /**
+         * Find all files using the builder properties. Files will only be included if they match any
+         * of the include patterns and non of the exclude filters.
+         * @return
+         */
         public Collection<File> find(){
             IOFileFilter dirFilter = recursive ? TrueFileFilter.INSTANCE : null;
             IOFileFilter fileFilter = new AndFileFilter(
