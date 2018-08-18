@@ -9,6 +9,7 @@ defaultTags:
   - foo
   - bar
 remote:
+  class: com.foo.bar.SomeRemoteClass
   baseUrl: http://www.google.com
   username: matt
   password: password

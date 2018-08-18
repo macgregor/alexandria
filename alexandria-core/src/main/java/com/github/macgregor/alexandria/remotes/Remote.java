@@ -10,6 +10,8 @@ import java.io.IOException;
  */
 public interface Remote {
 
+    void configure(Config.RemoteConfig config);
+
     /**
      * Called after instantiating the Remote to validate the configuration has all information required to use the remote.
      * @throws IllegalStateException The remote configuration is invalid.

@@ -53,33 +53,39 @@ public class ConfigLoadTest {
     }
 
     @Test
+    public void testLoadRemoteClass() throws IOException, URISyntaxException {
+        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote();
+        assertThat(loaded.clazz()).isEqualTo(expected().remote().clazz());
+    }
+
+    @Test
     public void testLoadRemoteBaseUrl() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote().get();
-        assertThat(loaded.baseUrl()).isEqualTo(expected().remote().get().baseUrl());
+        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote();
+        assertThat(loaded.baseUrl()).isEqualTo(expected().remote().baseUrl());
     }
 
     @Test
     public void testLoadRemoteUsername() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote().get();
-        assertThat(loaded.username()).isEqualTo(expected().remote().get().username());
+        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote();
+        assertThat(loaded.username()).isEqualTo(expected().remote().username());
     }
 
     @Test
     public void testLoadRemotePassword() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote().get();
-        assertThat(loaded.password()).isEqualTo(expected().remote().get().password());
+        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote();
+        assertThat(loaded.password()).isEqualTo(expected().remote().password());
     }
 
     @Test
     public void testLoadRemoteSupportNativeMarkdown() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote().get();
-        assertThat(loaded.supportsNativeMarkdown()).isEqualTo(expected().remote().get().supportsNativeMarkdown());
+        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote();
+        assertThat(loaded.supportsNativeMarkdown()).isEqualTo(expected().remote().supportsNativeMarkdown());
     }
 
     @Test
     public void testLoadRemoteDateTimeFormat() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote().get();
-        assertThat(loaded.datetimeFormat()).isEqualTo(expected().remote().get().datetimeFormat());
+        Config.RemoteConfig loaded = Config.load("src/test/resources/config.yaml").remote();
+        assertThat(loaded.datetimeFormat()).isEqualTo(expected().remote().datetimeFormat());
     }
 
     @Test
@@ -159,12 +165,13 @@ public class ConfigLoadTest {
         config.defaultTags(Optional.of(Arrays.asList("foo", "bar")));
 
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.baseUrl("http://www.google.com");
-        remoteConfig.username("matt");
-        remoteConfig.password("password");
+        remoteConfig.clazz("com.foo.bar.SomeRemoteClass");
+        remoteConfig.baseUrl(Optional.of("http://www.google.com"));
+        remoteConfig.username(Optional.of("matt"));
+        remoteConfig.password(Optional.of("password"));
         remoteConfig.supportsNativeMarkdown(Optional.of(true));
         remoteConfig.datetimeFormat(Optional.of("yyyy-MM-dd'override'HH:mm:ss.SSSZ"));
-        config.remotes(Optional.of(remoteConfig));
+        config.remote(remoteConfig);
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("README.md"));

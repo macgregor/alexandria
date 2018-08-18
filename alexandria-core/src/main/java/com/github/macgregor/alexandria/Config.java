@@ -13,7 +13,6 @@ import java.util.*;
 
 public class Config {
     public static final String ALEXANDRIA_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-    public static final String DEFAULT_CONFIG_FILE = ".alexandria";
 
     @JsonProperty
     private List<String> searchPath;
@@ -28,7 +27,7 @@ public class Config {
     private Optional<List<String>> exclude = Optional.of(new ArrayList<>());
 
     @JsonProperty
-    private Optional<RemoteConfig> remote = Optional.empty();
+    private RemoteConfig remote = new RemoteConfig();
 
     @JsonProperty
     private Optional<List<DocumentMetadata>> metadata = Optional.of(new ArrayList<>());
@@ -44,11 +43,11 @@ public class Config {
         this.defaultTags = defaultTags;
     }
 
-    public Optional<RemoteConfig> remote() {
+    public RemoteConfig remote() {
         return remote;
     }
 
-    public void remotes(Optional<RemoteConfig> remote) {
+    public void remote(RemoteConfig remote) {
         this.remote = remote;
     }
 
@@ -93,14 +92,17 @@ public class Config {
     }
 
     public static class RemoteConfig{
-        @JsonProperty
-        private String baseUrl;
+        @JsonProperty("class")
+        private String clazz = "com.github.macgregor.alexandria.remotes.NoopRemote";
 
         @JsonProperty
-        private String username;
+        private Optional<String> baseUrl = Optional.empty();
 
         @JsonProperty
-        private String password;
+        private Optional<String> username = Optional.empty();
+
+        @JsonProperty
+        private Optional<String> password = Optional.empty();
 
         @JsonProperty
         private Optional<Boolean> supportsNativeMarkdown = Optional.of(false);
@@ -108,11 +110,19 @@ public class Config {
         @JsonProperty
         private Optional<String> datetimeFormat = Optional.of(ALEXANDRIA_DATETIME_PATTERN);
 
-        public String baseUrl() {
+        public String clazz() {
+            return clazz;
+        }
+
+        public void clazz(String clazz) {
+            this.clazz = clazz;
+        }
+
+        public Optional<String> baseUrl() {
             return baseUrl;
         }
 
-        public void baseUrl(String baseUrl) {
+        public void baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
         }
 
@@ -132,19 +142,19 @@ public class Config {
             this.datetimeFormat = datetimeFormat;
         }
 
-        public String username() {
+        public Optional<String> username() {
             return username;
         }
 
-        public void username(String username) {
+        public void username(Optional<String> username) {
             this.username = username;
         }
 
-        public String password() {
+        public Optional<String> password() {
             return password;
         }
 
-        public void password(String password) {
+        public void password(Optional<String> password) {
             this.password = password;
         }
 
@@ -294,10 +304,10 @@ public class Config {
         Path path = Resources.path(filePath, false);
         if(path.toFile().exists()) {
             config = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
-            log.debug(String.format("Loaded configuration from %s.", path.toAbsolutePath().toString()));
+            log.debug(String.format("Loaded configuration from %s", path.toAbsolutePath().toString()));
         } else{
             config = new Config();
-            log.debug(String.format("Created default configuration for new file %s.", path.toAbsolutePath().toString()));
+            log.debug(String.format("Created default configuration for new file %s", path.toAbsolutePath().toString()));
         }
         config.configPath = path;
         return config;
@@ -305,7 +315,7 @@ public class Config {
 
     public static void save(Config config) throws IOException {
         Jackson.yamlMapper().writeValue(config.configPath.toFile(), config);
-        log.debug(String.format("Saved configuration to %s.", config.configPath.toAbsolutePath().toString()));
+        log.debug(String.format("Saved configuration to %s", config.configPath.toAbsolutePath().toString()));
     }
 
     public Path configPath() {

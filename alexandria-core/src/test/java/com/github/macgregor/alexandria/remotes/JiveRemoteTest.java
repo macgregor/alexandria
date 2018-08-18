@@ -22,6 +22,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class JiveRemoteTest {
 
@@ -269,6 +270,39 @@ public class JiveRemoteTest {
                 .withMessageContaining("Document doesnt exist");
     }
 
+    @Test
+    public void testJiveRemoteValidateConfigRequiresBaseUrl(){
+        RemoteConfig config = new RemoteConfig();
+        config.username(Optional.of("user"));
+        config.password(Optional.of("password"));
+        JiveRemote remote = new JiveRemote(config);
+        assertThatThrownBy(() -> remote.validateRemoteConfig())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("remote.baseUrl");
+    }
+
+    @Test
+    public void testJiveRemoteValidateConfigRequiresUsername(){
+        RemoteConfig config = new RemoteConfig();
+        config.baseUrl(Optional.of("http://www.google.com"));
+        config.password(Optional.of("password"));
+        JiveRemote remote = new JiveRemote(config);
+        assertThatThrownBy(() -> remote.validateRemoteConfig())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("remote.username");
+    }
+
+    @Test
+    public void testJiveRemoteValidateConfigRequiresPassword(){
+        RemoteConfig config = new RemoteConfig();
+        config.baseUrl(Optional.of("http://www.google.com"));
+        config.username(Optional.of("user"));
+        JiveRemote remote = new JiveRemote(config);
+        assertThatThrownBy(() -> remote.validateRemoteConfig())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("remote.password");
+    }
+
 
     protected JiveRemote setup(MockResponse mockResponses) throws IOException {
         return setup(Collections.singletonList(mockResponses));
@@ -283,7 +317,9 @@ public class JiveRemoteTest {
 
         HttpUrl baseUrl = server.url("api/core/v3");
         RemoteConfig config = new RemoteConfig();
-        config.baseUrl(baseUrl.toString());
+        config.baseUrl(Optional.of(baseUrl.toString()));
+        config.username(Optional.of("user"));
+        config.password(Optional.of("password"));
         JiveRemote jiveRemote = new JiveRemote(config);
 
         return jiveRemote;

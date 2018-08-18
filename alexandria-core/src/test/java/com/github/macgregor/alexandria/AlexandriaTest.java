@@ -85,7 +85,7 @@ public class AlexandriaTest {
         config.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.supportsNativeMarkdown(Optional.of(true));
-        config.remotes(Optional.of(remoteConfig));
+        config.remote(remoteConfig);
 
         Alexandria.convert(config);
         assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).doesNotExist();
