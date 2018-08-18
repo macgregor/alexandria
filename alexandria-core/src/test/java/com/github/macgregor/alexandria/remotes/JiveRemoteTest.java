@@ -15,6 +15,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -39,6 +40,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
@@ -51,6 +53,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(500));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
@@ -63,6 +66,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         jiveRemote.syncMetadata(metadata);
 
@@ -80,6 +84,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
         jiveRemote.create(metadata);
@@ -98,6 +103,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -111,6 +117,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -124,6 +131,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -139,6 +147,7 @@ public class JiveRemoteTest {
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
         jiveRemote.update(metadata);
@@ -157,6 +166,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -170,6 +180,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -183,6 +194,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -196,6 +208,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         metadata.convertedPath(Optional.of(folder.newFile().toPath()));
 
@@ -211,6 +224,7 @@ public class JiveRemoteTest {
                 new MockResponse().setResponseCode(204)));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         jiveRemote.delete(metadata);
         assertThat(metadata.deletedOn()).isPresent();
@@ -221,6 +235,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
@@ -233,6 +248,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
@@ -245,6 +261,7 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)

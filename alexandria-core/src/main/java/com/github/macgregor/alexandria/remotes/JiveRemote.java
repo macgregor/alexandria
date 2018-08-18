@@ -6,6 +6,8 @@ import com.github.macgregor.alexandria.Resources;
 import com.github.macgregor.alexandria.exceptions.HttpException;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -15,6 +17,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 public class JiveRemote implements Remote{
+    private static Logger log = LoggerFactory.getLogger(JiveRemote.class);
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     public static final String STANDARD_FIELD_PROJECTION = "id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent";
@@ -54,6 +57,7 @@ public class JiveRemote implements Remote{
             JiveContent jiveContent =  Jackson.jsonMapper().readValue(response.body().charStream(), JiveContent.class);
             updateMetadata(metadata, jiveContent);
         } catch (IOException e) {
+            log.warn("Cannot parse response content", e);
             HttpException exception = new HttpException("Cannot parse response content", e);
             exception.setRequest(Optional.of(request));
             exception.setResponse(Optional.ofNullable(response));
@@ -70,6 +74,7 @@ public class JiveRemote implements Remote{
     @Override
     public void update(Config.DocumentMetadata metadata) throws IOException {
         if(!metadata.extraProps().isPresent() || !metadata.extraProps().get().containsKey("jiveContentId")){
+            log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.remoteUri().get().toString()));
             syncMetadata(metadata);
         }
         String contentId = metadata.extraProps().get().get("jiveContentId");
@@ -89,6 +94,7 @@ public class JiveRemote implements Remote{
             JiveContent jiveContent =  Jackson.jsonMapper().readValue(response.body().charStream(), JiveContent.class);
             updateMetadata(metadata, jiveContent);
         } catch (IOException e) {
+            log.warn("Cannot parse response content", e);
             throw new HttpException.Builder()
                     .withMessage("Cannot parse response content")
                     .causedBy(e)
@@ -107,6 +113,7 @@ public class JiveRemote implements Remote{
     @Override
     public void delete(Config.DocumentMetadata metadata) throws IOException {
         if(!metadata.extraProps().isPresent() || !metadata.extraProps().get().containsKey("jiveContentId")){
+            log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.remoteUri().get().toString()));
             syncMetadata(metadata);
         }
         String contentId = metadata.extraProps().get().get("jiveContentId");
@@ -126,11 +133,13 @@ public class JiveRemote implements Remote{
     }
 
     protected Response doRequest(Request request) throws HttpException {
+        log.trace(request.toString());
         Call call = client.newCall(request);
 
         Response response = null;
         try {
             response = call.execute();
+            log.trace(response.toString());
         } catch(IOException e){
             throw new HttpException.Builder()
                     .withMessage(String.format("Unable to make request %s", request.url().toString()))
@@ -204,6 +213,7 @@ public class JiveRemote implements Remote{
                 PagedJiveContent pagedJiveContent = Jackson.jsonMapper().readValue(response.body().charStream(), PagedJiveContent.class);
                 updateMetadata(metadata, pagedJiveContent);
             } catch (IOException e) {
+                log.warn("Cannot parse response content", e);
                 HttpException exception = new HttpException("Cannot parse response content", e);
                 exception.setRequest(Optional.of(request));
                 exception.setResponse(Optional.ofNullable(response));
@@ -246,6 +256,7 @@ public class JiveRemote implements Remote{
             metadata.extraProps().get().put("jiveContentId", content.contentID);
         }
 
+        log.debug(String.format("Updated %s metadata from response content.", metadata.sourcePath().toAbsolutePath().toString()));
         return metadata;
     }
 

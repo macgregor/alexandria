@@ -1,12 +1,14 @@
 package com.github.macgregor.alexandria;
 
-import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
+import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import com.github.macgregor.alexandria.exceptions.HttpException;
 import com.github.macgregor.alexandria.remotes.JiveRemote;
 import com.github.macgregor.alexandria.remotes.Remote;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
  * lifeycle: index -> convert -> syncWithRemote.
  */
 public class Alexandria {
+    private static Logger log = LoggerFactory.getLogger(Alexandria.class);
 
     /**
      * Update the metadata index based on matched files found on the search path. Any files found that
@@ -36,6 +39,7 @@ public class Alexandria {
      * @throws AlexandriaException Any exception is thrown, most likely an IOException due to a missing file or invalid path.
      */
     public static void index(Config config) throws AlexandriaException {
+        log.debug("Updating metadata index.");
         try {
             Collection<File> matchedDocuments = new Resources.PathFinder()
                     .startingIn(config.searchPath())
@@ -52,7 +56,9 @@ public class Alexandria {
                     .filter(f -> !alreadyIndexed.contains(f))
                     .collect(Collectors.toList());
 
+            log.debug(String.format("Found %d unindexed files.", unindexed.size()));
             for (File f : unindexed) {
+                log.debug("Creating metadata for unindexed file " + f.getName());
                 Config.DocumentMetadata metadata = new Config.DocumentMetadata();
                 metadata.sourcePath(f.toPath());
                 metadata.title(f.getName());
@@ -60,6 +66,7 @@ public class Alexandria {
             }
             Config.save(config);
         } catch(Exception e){
+            log.warn("Unexpeccted exception generating local metadata index", e);
             throw new AlexandriaException.Builder()
                     .withMessage("Unexpeccted exception generating local metadata index")
                     .causedBy(e)
@@ -76,21 +83,25 @@ public class Alexandria {
      * @throws BatchProcessException Exception wrapping all exceptions thrown during document processing.
      */
     public static void convert(Config config) throws BatchProcessException {
+        log.debug("Converting files to html.");
         if(config.remote().isPresent() &&
                 config.remote().get().supportsNativeMarkdown().isPresent() &&
                 config.remote().get().supportsNativeMarkdown().get()){
+            log.debug("Remote supports native markdown, no need to convert anything.");
             return;
         }
 
         List<AlexandriaException> exceptions = new ArrayList<>();
 
         for(Config.DocumentMetadata metadata : config.metadata().get()){
+            log.debug(String.format("Converting %s.", metadata.sourcePath().toFile().getName()));
             try {
                 String convertedDir = config.output().orElse(metadata.sourcePath().getParent().toString());
                 String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
                 metadata.convertedPath(Optional.of(Paths.get(convertedDir, convertedFileName)));
                 Markdown.toHtml(metadata);
             } catch(Exception e){
+                log.warn(String.format("Unexcepted error converting %s to html", metadata.sourcePath()), e);
                 exceptions.add(new AlexandriaException.Builder()
                         .withMessage(String.format("Unexcepted error converting %s to html", metadata.sourcePath()))
                         .causedBy(e)
@@ -98,10 +109,12 @@ public class Alexandria {
                         .build());
             }
         }
+        log.debug(String.format("%d out of %d files converted successfully.", config.metadata().get().size()-exceptions.size(), config.metadata().get().size()));
 
         try {
             Config.save(config);
         } catch (IOException e) {
+            log.warn(String.format("Unable to save configuration to %s", config.configPath()));
             exceptions.add(new AlexandriaException.Builder()
                     .withMessage(String.format("Unable to save configuration to %s", config.configPath()))
                     .causedBy(e)
@@ -135,7 +148,9 @@ public class Alexandria {
      * @throws IllegalStateException No remote is configured, the remote configuration is invalid.
      */
     public static void syncWithRemote(Config config) throws BatchProcessException {
+        log.debug("Syncing files to html.");
         if(!config.remote().isPresent()){
+            log.warn("No configured remote.");
             throw new IllegalStateException("No configured remote.");
         }
         Remote remote = new JiveRemote(config.remote().get());
@@ -144,20 +159,26 @@ public class Alexandria {
         List<AlexandriaException> exceptions = new ArrayList<>();
 
         for(Config.DocumentMetadata metadata : config.metadata().get()){
+            log.debug(String.format("Syncing %s with remote.", metadata.sourcePath().toFile().getName()));
             try {
                 remote.validateDocumentMetadata(metadata);
                 long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
+                log.debug(String.format("Old checksum: %d; New checksum: %d.", metadata.sourceChecksum().orElse(null), currentChecksum));
                 if (!metadata.remoteUri().isPresent()) {
                     remote.create(metadata);
+                    log.debug(String.format("Created new document at %s.", metadata.remoteUri().get().toString()));
                 } else {
                     if (!metadata.sourceChecksum().isPresent() || !metadata.sourceChecksum().get().equals(currentChecksum)) {
                         remote.update(metadata);
+                        log.debug(String.format("Update document at %s.", metadata.remoteUri().get().toString()));
                     }
                 }
                 metadata.sourceChecksum(Optional.of(currentChecksum));
             } catch(HttpException e){
+                log.warn(e.getMessage(), e);
                 exceptions.add(e);
             } catch(Exception e){
+                log.warn(String.format("Unexcepted error syncing %s to remote", metadata.sourcePath()), e);
                 exceptions.add(new AlexandriaException.Builder()
                         .withMessage(String.format("Unexcepted error syncing %s to remote", metadata.sourcePath()))
                         .causedBy(e)
