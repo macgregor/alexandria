@@ -11,6 +11,7 @@ import java.util.*;
 
 public class Config {
     public static final String ALEXANDRIA_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    public static final String DEFAULT_CONFIG_FILE = ".alexandria";
 
     @JsonProperty
     private List<String> searchPath;
@@ -257,6 +258,22 @@ public class Config {
         public void sourceChecksum(Optional<Long> sourceChecksum) {
             this.sourceChecksum = sourceChecksum;
         }
+
+        @Override
+        public String toString() {
+            return "DocumentMetadata{" +
+                    "sourcePath=" + sourcePath +
+                    ", title='" + title + '\'' +
+                    ", remoteUri=" + remoteUri +
+                    ", tags=" + tags +
+                    ", sourceChecksum=" + sourceChecksum +
+                    ", createdOn=" + createdOn +
+                    ", lastUpdated=" + lastUpdated +
+                    ", deletedOn=" + deletedOn +
+                    ", extraProps=" + extraProps +
+                    ", convertedPath=" + convertedPath +
+                    '}';
+        }
     }
 
     /**
@@ -267,8 +284,13 @@ public class Config {
     private Path configPath;
 
     public static Config load(String filePath) throws IOException {
-        Path path = Resources.path(filePath, true);
-        Config config = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
+        Config config;
+        Path path = Resources.path(filePath, false);
+        if(path.toFile().exists()) {
+            config = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
+        } else{
+            config = new Config();
+        }
         config.configPath = path;
         return config;
     }

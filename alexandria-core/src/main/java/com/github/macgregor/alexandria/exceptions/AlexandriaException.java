@@ -65,5 +65,10 @@ public class AlexandriaException extends IOException {
         }
     }
 
-
+    @Override
+    public String toString() {
+        return "AlexandriaException{" +
+                "metadata=" + metadata +
+                '}';
+    }
 }

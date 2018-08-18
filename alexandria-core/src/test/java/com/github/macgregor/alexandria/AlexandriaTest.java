@@ -78,44 +78,47 @@ public class AlexandriaTest {
     }
 
     @Test
-    public void testGenerateDoesntConvertWhenRemoteSupportsMarkdown() throws IOException, BatchProcessException {
+    public void testConvertDoesntConvertWhenRemoteSupportsMarkdown() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
 
         Config config = new Config();
+        config.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.supportsNativeMarkdown(Optional.of(true));
         config.remotes(Optional.of(remoteConfig));
 
-        Alexandria.generate(config);
+        Alexandria.convert(config);
         assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).doesNotExist();
     }
 
     @Test
-    public void testGenerateSetsConvertedPathPreferringConfigOverride() throws IOException, BatchProcessException {
+    public void testConvertSetsConvertedPathPreferringConfigOverride() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
         File subdir = folder.newFolder("out");
 
         Config config = new Config();
+        config.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
         readmeMetadata.sourcePath(f1.toPath());
         config.metadata().get().add(readmeMetadata);
         config.output(Optional.of(subdir.getPath()));
 
-        Alexandria.generate(config);
+        Alexandria.convert(config);
         assertThat(readmeMetadata.convertedPath().get()).isEqualTo(Paths.get(subdir.getPath(), "readme.html"));
         assertThat(Paths.get(subdir.getPath(), "readme.html")).exists();
     }
 
     @Test
-    public void testGenerateSetsConvertedPathUsesSourceDirAsOutput() throws IOException, BatchProcessException {
+    public void testConvertSetsConvertedPathUsesSourceDirAsOutput() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
 
         Config config = new Config();
+        config.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
         readmeMetadata.sourcePath(f1.toPath());
         config.metadata().get().add(readmeMetadata);
 
-        Alexandria.generate(config);
+        Alexandria.convert(config);
         assertThat(readmeMetadata.convertedPath().get()).isEqualTo(Paths.get(folder.getRoot().toString(), "readme.html"));
         assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).exists();
     }

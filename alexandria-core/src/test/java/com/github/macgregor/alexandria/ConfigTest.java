@@ -157,13 +157,12 @@ public class ConfigTest {
     }
 
     @Test
-    public void testConfigSave() throws IOException {
-        Config config = Config.load("src/test/resources/empty.yaml");
-        config.defaultTags(Optional.of(Arrays.asList("updated")));
+    public void testConfigSaveDefaultTags() throws IOException {
+        Config config = new Config();
+        config.defaultTags(Optional.of(Arrays.asList("tag")));
         config.configPath(folder.newFile().toPath());
         Config.save(config);
         Config reloaded = Config.load(config.configPath().toString());
-        assertThat(reloaded.defaultTags().get()).containsExactlyInAnyOrder("updated");
-
+        assertThat(reloaded.defaultTags().get()).containsExactlyInAnyOrder("tag");
     }
 }

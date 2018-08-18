@@ -5,7 +5,6 @@ import picocli.CommandLine;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.concurrent.Callable;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -15,9 +14,9 @@ import java.util.jar.Manifest;
         mixinStandardHelpOptions = true,
         versionProvider = Application.ManifestVersionProvider.class,
         subcommands = {
-            ConvertCommand.class
+            ConvertCommand.class, IndexCommand.class, SyncCommand.class
         })
-public class Application implements Callable<Void> {
+public class Application extends AlexandriaCommand {
 
     public static void main(String[] args) {
         CommandLine cmd = new CommandLine(new Application());
@@ -26,6 +25,12 @@ public class Application implements Callable<Void> {
 
     @Override
     public Void call() throws Exception {
+        configureLogging();
+        Config config = alexandriaConfig();
+        logConfig(config);
+        Alexandria.index(config);
+        Alexandria.convert(config);
+        Alexandria.syncWithRemote(config);
         return null;
     }
 
