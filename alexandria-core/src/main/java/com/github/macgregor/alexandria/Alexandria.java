@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * Core class containing the high level commands to indexing metadata, converting html and
  * syncing documents with the remote. Each of these can be executed independently but form a
- * lifeycle: index -> generate -> syncWithRemote.
+ * lifeycle: index -> convert -> syncWithRemote.
  */
 public class Alexandria {
 
@@ -68,14 +68,14 @@ public class Alexandria {
     }
 
     /**
-     * Generate HTML files from the metadata index. Generated files will be saved to the configured {@link Config#outputPath}, if set.
-     * Otherwise the files will be generated in place in the same directory as the markdown file being converted. Any exceptions
-     * thrown will be collected and thrown after processing all documents
+     * Convert HTML files from the files in the metadata index. Converted files will be saved to the configured {@link Config#outputPath}, if set.
+     * Otherwise the files will be converted in place in the same directory as the markdown file being converted. Any exceptions
+     * thrown will be collected and thrown after processing all documents.
      *
      * @param config
      * @throws BatchProcessException Exception wrapping all exceptions thrown during document processing.
      */
-    public static void generate(Config config) throws BatchProcessException {
+    public static void convert(Config config) throws BatchProcessException {
         if(config.remote().isPresent() &&
                 config.remote().get().supportsNativeMarkdown().isPresent() &&
                 config.remote().get().supportsNativeMarkdown().get()){

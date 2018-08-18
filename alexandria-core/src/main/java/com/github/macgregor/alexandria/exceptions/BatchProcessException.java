@@ -17,6 +17,13 @@ public class BatchProcessException extends Exception {
         return exceptions;
     }
 
+    @Override
+    public String toString() {
+        return "BatchProcessException{" +
+                "exceptions=" + exceptions +
+                '}';
+    }
+
     public void setExceptions(List<AlexandriaException> exceptions) {
         this.exceptions = exceptions;
     }
