@@ -68,58 +68,69 @@ public class ConfigSaveTest {
     }
 
     @Test
+    public void testSaveRemoteClass() throws IOException, URISyntaxException {
+        Config config = new Config();
+        Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
+        remoteConfig.clazz(expected().remote().clazz());
+        config.remote(remoteConfig);
+
+        Config reloaded = saveAndReload(config);
+        assertThat(reloaded.remote().clazz()).isEqualTo(expected().remote().clazz());
+    }
+
+    @Test
     public void testSaveRemoteBaseUrl() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.baseUrl(expected().remote().get().baseUrl());
-        config.remotes(Optional.of(remoteConfig));
+        remoteConfig.baseUrl(expected().remote().baseUrl());
+        config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().get().baseUrl()).isEqualTo(expected().remote().get().baseUrl());
+        assertThat(reloaded.remote().baseUrl()).isEqualTo(expected().remote().baseUrl());
     }
 
     @Test
     public void testSaveRemoteUsername() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.username(expected().remote().get().username());
-        config.remotes(Optional.of(remoteConfig));
+        remoteConfig.username(expected().remote().username());
+        config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().get().username()).isEqualTo(expected().remote().get().username());
+        assertThat(reloaded.remote().username()).isEqualTo(expected().remote().username());
     }
 
     @Test
     public void testSaveRemotePassword() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.password(expected().remote().get().password());
-        config.remotes(Optional.of(remoteConfig));
+        remoteConfig.password(expected().remote().password());
+        config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().get().password()).isEqualTo(expected().remote().get().password());
+        assertThat(reloaded.remote().password()).isEqualTo(expected().remote().password());
     }
 
     @Test
     public void testSaveRemoteSupportNativeMarkdown() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.supportsNativeMarkdown(expected().remote().get().supportsNativeMarkdown());
-        config.remotes(Optional.of(remoteConfig));
+        remoteConfig.supportsNativeMarkdown(expected().remote().supportsNativeMarkdown());
+        config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().get().supportsNativeMarkdown()).isEqualTo(expected().remote().get().supportsNativeMarkdown());
+        assertThat(reloaded.remote().supportsNativeMarkdown()).isEqualTo(expected().remote().supportsNativeMarkdown());
     }
 
     @Test
     public void testSaveRemoteDateTimeFormat() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.datetimeFormat(expected().remote().get().datetimeFormat());
-        config.remotes(Optional.of(remoteConfig));
+        remoteConfig.datetimeFormat(expected().remote().datetimeFormat());
+        config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().get().datetimeFormat()).isEqualTo(expected().remote().get().datetimeFormat());
+        assertThat(reloaded.remote().datetimeFormat()).isEqualTo(expected().remote().datetimeFormat());
     }
 
     @Test
@@ -230,6 +241,19 @@ public class ConfigSaveTest {
         assertThat(actual.extraProps()).isEqualTo(expected.extraProps());
     }
 
+    @Test
+    public void testSaveMetadataMultiDocument() throws IOException {
+        Config config = new Config();
+        Path path = folder.newFile().toPath();
+        config.configPath(path);
+        Config.DocumentMetadata metadata1 = new Config.DocumentMetadata();
+        metadata1.sourcePath(Paths.get(folder.getRoot().toString(),"README.md"));
+        Config.DocumentMetadata metadata2 = new Config.DocumentMetadata();
+        metadata1.sourcePath(Paths.get(folder.getRoot().toString(),"README2.md"));
+        config.metadata(Optional.of(Arrays.asList(metadata1, metadata2)));
+        Config.save(config);
+    }
+
     private Config saveAndReload(Config config) throws IOException {
         Path path = folder.newFile().toPath();
         config.configPath(path);
@@ -249,12 +273,13 @@ public class ConfigSaveTest {
         config.defaultTags(Optional.of(Arrays.asList("foo", "bar")));
 
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.baseUrl("http://www.google.com");
-        remoteConfig.username("matt");
-        remoteConfig.password("password");
+        remoteConfig.clazz("com.foo.bar.SomeRemoteClass");
+        remoteConfig.baseUrl(Optional.of("http://www.google.com"));
+        remoteConfig.username(Optional.of("matt"));
+        remoteConfig.password(Optional.of("password"));
         remoteConfig.supportsNativeMarkdown(Optional.of(true));
         remoteConfig.datetimeFormat(Optional.of("yyyy-MM-dd'override'HH:mm:ss.SSSZ"));
-        config.remotes(Optional.of(remoteConfig));
+        config.remote(remoteConfig);
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("README.md"));

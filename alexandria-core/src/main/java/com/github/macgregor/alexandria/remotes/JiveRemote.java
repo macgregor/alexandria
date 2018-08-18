@@ -25,6 +25,8 @@ public class JiveRemote implements Remote{
     protected OkHttpClient client;
     protected Config.RemoteConfig config;
 
+    public JiveRemote(){}
+
     public JiveRemote(OkHttpClient client, Config.RemoteConfig config){
         this.client = client;
         this.config = config;
@@ -32,6 +34,30 @@ public class JiveRemote implements Remote{
 
     public JiveRemote(Config.RemoteConfig config){
         this(new OkHttpClient(), config);
+    }
+
+    @Override
+    public void configure(Config.RemoteConfig config){
+        this.client = new OkHttpClient();
+        this.config = config;
+    }
+
+    @Override
+    public void validateRemoteConfig() throws IllegalStateException {
+        List<String> missingProperties = new ArrayList<>();
+        if(!config.baseUrl().isPresent()){
+            missingProperties.add("remote.baseUrl");
+        }
+        if(!config.username().isPresent()){
+            missingProperties.add("remote.username");
+        }
+        if(!config.password().isPresent()){
+            missingProperties.add("remote.password");
+        }
+        if(!missingProperties.isEmpty()){
+            log.warn(String.format("Jive remote configuration missing required properties: %s", missingProperties));
+            throw new IllegalStateException(String.format("Jive remote configuration missing required properties: %s", missingProperties));
+        }
     }
 
     /**
@@ -42,7 +68,7 @@ public class JiveRemote implements Remote{
      */
     @Override
     public void create(Config.DocumentMetadata metadata) throws IOException {
-        HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
+        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
                 .addPathSegment("contents")
                 .addQueryParameter("fields", STANDARD_FIELD_PROJECTION)
                 .build();
@@ -79,7 +105,7 @@ public class JiveRemote implements Remote{
         }
         String contentId = metadata.extraProps().get().get("jiveContentId");
 
-        HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
+        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
                 .addPathSegment("contents")
                 .addPathSegment(contentId)
                 .build();
@@ -118,7 +144,7 @@ public class JiveRemote implements Remote{
         }
         String contentId = metadata.extraProps().get().get("jiveContentId");
 
-        HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
+        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
                 .addPathSegment("contents")
                 .addPathSegment(contentId)
                 .build();
@@ -195,7 +221,7 @@ public class JiveRemote implements Remote{
             // https://community.jivesoftware.com/docs/DOC-153931
             String filter = String.format("entityDescriptor(102,%s)", jiveObjectId(metadata.remoteUri().get()));
 
-            HttpUrl route = HttpUrl.parse(config.baseUrl()).newBuilder()
+            HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
                     .addPathSegment("contents")
                     .addQueryParameter("filter", filter)
                     .addQueryParameter("startIndex", "0")
@@ -223,7 +249,7 @@ public class JiveRemote implements Remote{
     }
 
     public Request.Builder authenticated(Request.Builder builder) {
-        builder.addHeader("Authorization", Credentials.basic(config.username(), config.password()));
+        builder.addHeader("Authorization", Credentials.basic(config.username().get(), config.password().get()));
         return builder;
     }
 

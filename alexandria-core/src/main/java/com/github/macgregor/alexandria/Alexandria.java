@@ -3,7 +3,6 @@ package com.github.macgregor.alexandria;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import com.github.macgregor.alexandria.exceptions.HttpException;
-import com.github.macgregor.alexandria.remotes.JiveRemote;
 import com.github.macgregor.alexandria.remotes.Remote;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -58,7 +57,7 @@ public class Alexandria {
 
             log.debug(String.format("Found %d unindexed files.", unindexed.size()));
             for (File f : unindexed) {
-                log.debug("Creating metadata for unindexed file " + f.getName());
+                log.debug("Creating metadata for unindexed file " + f.getAbsolutePath());
                 Config.DocumentMetadata metadata = new Config.DocumentMetadata();
                 metadata.sourcePath(f.toPath());
                 metadata.title(f.getName());
@@ -84,9 +83,7 @@ public class Alexandria {
      */
     public static void convert(Config config) throws BatchProcessException {
         log.debug("Converting files to html.");
-        if(config.remote().isPresent() &&
-                config.remote().get().supportsNativeMarkdown().isPresent() &&
-                config.remote().get().supportsNativeMarkdown().get()){
+        if(config.remote().supportsNativeMarkdown().isPresent() && config.remote().supportsNativeMarkdown().get()){
             log.debug("Remote supports native markdown, no need to convert anything.");
             return;
         }
@@ -149,11 +146,15 @@ public class Alexandria {
      */
     public static void syncWithRemote(Config config) throws BatchProcessException {
         log.debug("Syncing files to html.");
-        if(!config.remote().isPresent()){
-            log.warn("No configured remote.");
-            throw new IllegalStateException("No configured remote.");
+        Remote remote;
+        try {
+            Class remoteClass = Class.forName(config.remote().clazz());
+            remote = (Remote)remoteClass.newInstance();
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            log.warn(String.format("Unable to instantiate remote of type %s", config.remote().clazz()), e);
+            throw new IllegalStateException(String.format("Unable to instantiate remote of type %s", config.remote().clazz()), e);
         }
-        Remote remote = new JiveRemote(config.remote().get());
+        remote.configure(config.remote());
         remote.validateRemoteConfig();
 
         List<AlexandriaException> exceptions = new ArrayList<>();
@@ -166,11 +167,11 @@ public class Alexandria {
                 log.debug(String.format("Old checksum: %d; New checksum: %d.", metadata.sourceChecksum().orElse(null), currentChecksum));
                 if (!metadata.remoteUri().isPresent()) {
                     remote.create(metadata);
-                    log.debug(String.format("Created new document at %s.", metadata.remoteUri().get().toString()));
+                    log.debug(String.format("Created new document at %s.", metadata.remoteUri().orElse(null)));
                 } else {
                     if (!metadata.sourceChecksum().isPresent() || !metadata.sourceChecksum().get().equals(currentChecksum)) {
                         remote.update(metadata);
-                        log.debug(String.format("Update document at %s.", metadata.remoteUri().get().toString()));
+                        log.debug(String.format("Update document at %s.", metadata.remoteUri().orElse(null)));
                     }
                 }
                 metadata.sourceChecksum(Optional.of(currentChecksum));

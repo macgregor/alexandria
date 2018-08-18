@@ -99,11 +99,6 @@
                 <version>3.11.0</version>
             </dependency>
             <dependency>
-                <groupId>org.cfg4j</groupId>
-                <artifactId>cfg4j-core</artifactId>
-                <version>4.4.1</version>
-            </dependency>
-            <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-yaml</artifactId>
                 <version>${jackson.version}</version>
@@ -223,6 +218,20 @@
                             </goals>
                             <configuration>
                                 <minimizeJar>true</minimizeJar>
+                                <filters>
+                                    <filter>
+                                        <artifact>com.fasterxml.jackson.core:jackson-databind</artifact>
+                                        <includes>
+                                            <include>**</include>
+                                        </includes>
+                                    </filter>
+                                    <filter>
+                                        <artifact>com.github.macgregor:alexandria-core</artifact>
+                                        <includes>
+                                            <include>**</include>
+                                        </includes>
+                                    </filter>
+                                </filters>
                                 <dependencyReducedPomLocation>
                                     ${project.build.directory}/dependency-reduced-pom.xml
                                 </dependencyReducedPomLocation>

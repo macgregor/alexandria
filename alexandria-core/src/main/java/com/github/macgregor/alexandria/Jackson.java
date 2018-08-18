@@ -5,11 +5,14 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -86,6 +89,22 @@ public class Jackson {
         }
     }
 
+    public static class PathDeserializer extends JsonDeserializer<Path> {
+
+        @Override
+        public Path deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+            return Paths.get(p.getText());
+        }
+    }
+
+    public static class PathSerializer extends JsonSerializer<Path> {
+
+        @Override
+        public void serialize(Path value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeString(value.toAbsolutePath().toString());
+        }
+    }
+
     /**
      * Configure Jakson mapper with commong configurations; ignoring unknown properties, enable jdk8 feature, etc.
      *
@@ -97,9 +116,10 @@ public class Jackson {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        mapper.registerModule(java8TimeModule());
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         mapper.registerModule(jdk8Module);
+        mapper.registerModule(java8TimeModule());
+        mapper.registerModule(pathModule());
         return mapper;
     }
 
@@ -116,5 +136,12 @@ public class Jackson {
         javaTimeModule.addDeserializer(ZonedDateTime.class, dateTimeDeserializer);
         javaTimeModule.addSerializer(ZonedDateTime.class, dateTimeSerializer);
         return javaTimeModule;
+    }
+
+    protected static SimpleModule pathModule(){
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Path.class, new PathDeserializer());
+        module.addSerializer(Path.class, new PathSerializer());
+        return module;
     }
 }
