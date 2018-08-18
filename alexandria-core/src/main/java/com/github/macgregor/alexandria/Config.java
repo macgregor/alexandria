@@ -2,6 +2,8 @@ package com.github.macgregor.alexandria;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -283,13 +285,19 @@ public class Config {
     @JsonIgnore
     private Path configPath;
 
+    @JsonIgnore
+    private static Logger log = LoggerFactory.getLogger(Config.class);
+
+
     public static Config load(String filePath) throws IOException {
         Config config;
         Path path = Resources.path(filePath, false);
         if(path.toFile().exists()) {
             config = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
+            log.debug(String.format("Loaded configuration from %s.", path.toAbsolutePath().toString()));
         } else{
             config = new Config();
+            log.debug(String.format("Created default configuration for new file %s.", path.toAbsolutePath().toString()));
         }
         config.configPath = path;
         return config;
@@ -297,6 +305,7 @@ public class Config {
 
     public static void save(Config config) throws IOException {
         Jackson.yamlMapper().writeValue(config.configPath.toFile(), config);
+        log.debug(String.format("Saved configuration to %s.", config.configPath.toAbsolutePath().toString()));
     }
 
     public Path configPath() {
