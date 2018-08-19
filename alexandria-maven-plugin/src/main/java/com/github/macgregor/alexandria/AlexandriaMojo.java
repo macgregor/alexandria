@@ -29,28 +29,29 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     @Parameter( property = "alexandria.input.exclude")
     private List<String> exclude = new ArrayList<>();
 
-    public Config alexandriaConfig() throws IOException {
+    public Context alexandriaContext() throws IOException {
         if(input == null || input.size() < 1){
             input.add(project.getBasedir().toString());
         }
-        Config config = Config.load(configPath);
-        config.searchPath(input);
-        config.output(Optional.of(output));
+        Context context = Alexandria.load(configPath);
+        context.config().searchPath(input);
+        context.config().output(Optional.of(output));
         if(include.size() > 0) {
-            config.include(include);
+            context.config().include(include);
         }
         if(exclude.size() > 0) {
-            config.exclude(Optional.of(exclude));
+            context.config().exclude(Optional.of(exclude));
         }
-        return config;
+        return context;
     }
 
-    public void logConfig(Config config){
-        getLog().info("Alexandria - config file: " + config.configPath());
-        getLog().info("Alexandria - input directories: " + config.searchPath());
-        getLog().info("Alexandria - output directory: " + config.output());
-        getLog().info("Alexandria - include files: " + config.include());
-        getLog().info("Alexandria - exclude files: " + config.exclude());
+    public void logConfig(Context context){
+        getLog().info("Alexandria - config file: " + context.configPath());
+        getLog().info("Alexandria - project base dir: " + context.projectBase());
+        getLog().info("Alexandria - input directories: " + context.config().searchPath());
+        getLog().info("Alexandria - output directory: " + context.config().output());
+        getLog().info("Alexandria - include files: " + context.config().include());
+        getLog().info("Alexandria - exclude files: " + context.config().exclude());
     }
 
     public MavenProject getProject() {

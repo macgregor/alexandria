@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +27,31 @@ import java.util.stream.Collectors;
 public class Alexandria {
     private static Logger log = LoggerFactory.getLogger(Alexandria.class);
 
+
+    public static Context load(String filePath) throws IOException {
+        Context context = new Context();
+        Path path = Resources.path(filePath, false).toAbsolutePath();
+        context.configPath(path);
+        context.projectBase(path.getParent().toAbsolutePath());
+
+        Config config;
+        if(path.toFile().exists()) {
+            config = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
+            log.debug(String.format("Loaded configuration from %s", path.toString()));
+        } else{
+            config = new Config();
+            log.debug(String.format("Created default configuration for new file %s", path.toString()));
+        }
+        context.config(config);
+
+        return context;
+    }
+
+    public static void save(Context context) throws IOException {
+        Jackson.yamlMapper().writeValue(context.configPath().toFile(), context.config());
+        log.debug(String.format("Saved configuration to %s", context.configPath().toString()));
+    }
+
     /**
      * Update the metadata index based on matched files found on the search path. Any files found that
      * are not in the list of metadata will be created and added to the list to be later converted and published.
@@ -34,36 +60,39 @@ public class Alexandria {
      *   - files found in the index but not on the file system should be marked for deletion in the remote.
      *   - pull title from header in the source document
      *
-     * @param config
+     * @param context
      * @throws AlexandriaException Any exception is thrown, most likely an IOException due to a missing file or invalid path.
      */
-    public static void index(Config config) throws AlexandriaException {
+    public static void index(Context context) throws AlexandriaException {
         log.debug("Updating metadata index.");
         try {
             Collection<File> matchedDocuments = new Resources.PathFinder()
-                    .startingIn(config.searchPath())
-                    .including(config.include())
-                    .excluding(config.exclude().get())
+                    .startingIn(context.config().searchPath())
+                    .including(context.config().include())
+                    .excluding(context.config().exclude().get())
                     .find();
 
-            List<File> alreadyIndexed = config.metadata().get().stream()
-                    .map(m -> m.sourcePath())
-                    .map(p -> p.toFile())
-                    .collect(Collectors.toList());
+            Collection<Path> relativeMatchedDocuments = Resources.relativeTo(context.projectBase(),
+                    matchedDocuments.stream().map(File::toPath).collect(Collectors.toList()));
 
-            List<File> unindexed = matchedDocuments.stream()
-                    .filter(f -> !alreadyIndexed.contains(f))
+            Collection<Path> alreadyIndexed = context.config().metadata().get().stream()
+                    .map(Config.DocumentMetadata::sourcePath)
+                    .collect(Collectors.toList());
+            Collection<Path> relativeAlreadyIndexed = Resources.relativeTo(context.projectBase(), alreadyIndexed);
+
+            Collection<Path> unindexed = relativeMatchedDocuments.stream()
+                    .filter(p -> !relativeAlreadyIndexed.contains(p))
                     .collect(Collectors.toList());
 
             log.debug(String.format("Found %d unindexed files.", unindexed.size()));
-            for (File f : unindexed) {
-                log.debug("Creating metadata for unindexed file " + f.getAbsolutePath());
+            for (Path p : unindexed) {
+                log.debug("Creating metadata for unindexed file " + p.toAbsolutePath().toString());
                 Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-                metadata.sourcePath(f.toPath());
-                metadata.title(f.getName());
-                config.metadata().get().add(metadata);
+                metadata.sourcePath(p);
+                metadata.title(p.toFile().getName());
+                context.config().metadata().get().add(metadata);
             }
-            Config.save(config);
+            Alexandria.save(context);
         } catch(Exception e){
             log.warn("Unexpeccted exception generating local metadata index", e);
             throw new AlexandriaException.Builder()
@@ -78,25 +107,25 @@ public class Alexandria {
      * Otherwise the files will be converted in place in the same directory as the markdown file being converted. Any exceptions
      * thrown will be collected and thrown after processing all documents.
      *
-     * @param config
+     * @param context
      * @throws BatchProcessException Exception wrapping all exceptions thrown during document processing.
      */
-    public static void convert(Config config) throws BatchProcessException {
+    public static void convert(Context context) throws BatchProcessException {
         log.debug("Converting files to html.");
-        if(config.remote().supportsNativeMarkdown().isPresent() && config.remote().supportsNativeMarkdown().get()){
+        if(context.config().remote().supportsNativeMarkdown().isPresent() && context.config().remote().supportsNativeMarkdown().get()){
             log.debug("Remote supports native markdown, no need to convert anything.");
             return;
         }
 
         List<AlexandriaException> exceptions = new ArrayList<>();
 
-        for(Config.DocumentMetadata metadata : config.metadata().get()){
+        for(Config.DocumentMetadata metadata : context.config().metadata().get()){
             log.debug(String.format("Converting %s.", metadata.sourcePath().toFile().getName()));
             try {
-                String convertedDir = config.output().orElse(metadata.sourcePath().getParent().toString());
+                String convertedDir = context.config().output().orElse(metadata.sourcePath().getParent().toString());
                 String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
-                metadata.convertedPath(Optional.of(Paths.get(convertedDir, convertedFileName)));
-                Markdown.toHtml(metadata);
+                context.convertedPath(metadata, Paths.get(convertedDir, convertedFileName));
+                Markdown.toHtml(metadata.sourcePath(), context.convertedPath(metadata).get());
             } catch(Exception e){
                 log.warn(String.format("Unexcepted error converting %s to html", metadata.sourcePath()), e);
                 exceptions.add(new AlexandriaException.Builder()
@@ -106,21 +135,21 @@ public class Alexandria {
                         .build());
             }
         }
-        log.debug(String.format("%d out of %d files converted successfully.", config.metadata().get().size()-exceptions.size(), config.metadata().get().size()));
+        log.debug(String.format("%d out of %d files converted successfully.", context.config().metadata().get().size()-exceptions.size(), context.config().metadata().get().size()));
 
         try {
-            Config.save(config);
+            Alexandria.save(context);
         } catch (IOException e) {
-            log.warn(String.format("Unable to save configuration to %s", config.configPath()));
+            log.warn(String.format("Unable to save configuration to %s", context.configPath()));
             exceptions.add(new AlexandriaException.Builder()
-                    .withMessage(String.format("Unable to save configuration to %s", config.configPath()))
+                    .withMessage(String.format("Unable to save configuration to %s", context.configPath()))
                     .causedBy(e)
                     .build());
         }
 
         if(exceptions.size() > 0){
             throw new BatchProcessException.Builder()
-                    .withMessage(String.format("Failed to convert %d out of %d documents to html", exceptions.size(), config.metadata().get().size()))
+                    .withMessage(String.format("Failed to convert %d out of %d documents to html", exceptions.size(), context.config().metadata().get().size()))
                     .causedBy(exceptions)
                     .build();
         }
@@ -140,37 +169,37 @@ public class Alexandria {
      *
      * Delete - not implemented yet.
      *
-     * @param config
+     * @param context
      * @throws BatchProcessException Any errors are thrown for any {@link com.github.macgregor.alexandria.Config.DocumentMetadata}
      * @throws IllegalStateException No remote is configured, the remote configuration is invalid.
      */
-    public static void syncWithRemote(Config config) throws BatchProcessException {
+    public static void syncWithRemote(Context context) throws BatchProcessException {
         log.debug("Syncing files to html.");
         Remote remote;
         try {
-            Class remoteClass = Class.forName(config.remote().clazz());
+            Class remoteClass = Class.forName(context.config().remote().clazz());
             remote = (Remote)remoteClass.newInstance();
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            log.warn(String.format("Unable to instantiate remote of type %s", config.remote().clazz()), e);
-            throw new IllegalStateException(String.format("Unable to instantiate remote of type %s", config.remote().clazz()), e);
+            log.warn(String.format("Unable to instantiate remote of type %s", context.config().remote().clazz()), e);
+            throw new IllegalStateException(String.format("Unable to instantiate remote of type %s", context.config().remote().clazz()), e);
         }
-        remote.configure(config.remote());
+        remote.configure(context.config().remote());
         remote.validateRemoteConfig();
 
         List<AlexandriaException> exceptions = new ArrayList<>();
 
-        for(Config.DocumentMetadata metadata : config.metadata().get()){
+        for(Config.DocumentMetadata metadata : context.config().metadata().get()){
             log.debug(String.format("Syncing %s with remote.", metadata.sourcePath().toFile().getName()));
             try {
                 remote.validateDocumentMetadata(metadata);
                 long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
                 log.debug(String.format("Old checksum: %d; New checksum: %d.", metadata.sourceChecksum().orElse(null), currentChecksum));
                 if (!metadata.remoteUri().isPresent()) {
-                    remote.create(metadata);
+                    remote.create(context, metadata);
                     log.debug(String.format("Created new document at %s.", metadata.remoteUri().orElse(null)));
                 } else {
                     if (!metadata.sourceChecksum().isPresent() || !metadata.sourceChecksum().get().equals(currentChecksum)) {
-                        remote.update(metadata);
+                        remote.update(context, metadata);
                         log.debug(String.format("Update document at %s.", metadata.remoteUri().orElse(null)));
                     }
                 }
@@ -190,7 +219,7 @@ public class Alexandria {
 
         if(exceptions.size() > 0){
             throw new BatchProcessException.Builder()
-                    .withMessage(String.format("Failed to sync %d out of %d documents to remote", exceptions.size(), config.metadata().get().size()))
+                    .withMessage(String.format("Failed to sync %d out of %d documents to remote", exceptions.size(), context.config().metadata().get().size()))
                     .causedBy(exceptions)
                     .build();
         }

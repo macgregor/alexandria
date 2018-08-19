@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 /**
@@ -47,15 +48,15 @@ public class Markdown {
 
     /**
      * Convert a source file into html
-     *
-     * @param metadata {@link com.github.macgregor.alexandria.Config.DocumentMetadata} containing markdown source file to convert.
+     * @param source
+     * @param converted
      * @throws IOException
      */
-    public static void toHtml(Config.DocumentMetadata metadata) throws IOException {
-        Node document = parser().parseReader(new FileReader(metadata.sourcePath().toFile()));
-        Resources.save(metadata.convertedPath().get().toString(), renderer().render(document));
+    public static void toHtml(Path source, Path converted) throws IOException {
+        Node document = parser().parseReader(new FileReader(source.toFile()));
+        Resources.save(converted.toString(), renderer().render(document));
         log.debug(String.format("Converted %s to %s.",
-                metadata.sourcePath().toAbsolutePath().toString(),
-                metadata.convertedPath().get().toAbsolutePath().toString()));
+                source.toAbsolutePath().toString(),
+                converted.toAbsolutePath().toString()));
     }
 }

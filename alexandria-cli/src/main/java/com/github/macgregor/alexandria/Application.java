@@ -26,11 +26,11 @@ public class Application extends AlexandriaCommand {
     @Override
     public Void call() throws Exception {
         configureLogging();
-        Config config = alexandriaConfig();
-        logConfig(config);
-        Alexandria.index(config);
-        Alexandria.convert(config);
-        Alexandria.syncWithRemote(config);
+        Context context = alexandriaContext();
+        logContext(context);
+        Alexandria.index(context);
+        Alexandria.convert(context);
+        Alexandria.syncWithRemote(context);
         return null;
     }
 

@@ -101,7 +101,7 @@ public class Jackson {
 
         @Override
         public void serialize(Path value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-            gen.writeString(value.toAbsolutePath().toString());
+            gen.writeString(value.toString());
         }
     }
 

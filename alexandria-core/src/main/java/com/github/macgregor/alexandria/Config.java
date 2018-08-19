@@ -1,11 +1,7 @@
 package com.github.macgregor.alexandria;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
@@ -188,9 +184,6 @@ public class Config {
         @JsonProperty
         private Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
 
-        @JsonIgnore
-        private Optional<Path> convertedPath = Optional.empty();
-
         public Path sourcePath() {
             return sourcePath;
         }
@@ -205,14 +198,6 @@ public class Config {
 
         public void title(String title) {
             this.title = title;
-        }
-
-        public Optional<Path> convertedPath() {
-            return convertedPath;
-        }
-
-        public void convertedPath(Optional<Path> convertedPath) {
-            this.convertedPath = convertedPath;
         }
 
         public Optional<URI> remoteUri() {
@@ -272,6 +257,21 @@ public class Config {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DocumentMetadata metadata = (DocumentMetadata) o;
+            return Objects.equals(sourcePath, metadata.sourcePath) &&
+                    Objects.equals(title, metadata.title);
+        }
+
+        @Override
+        public int hashCode() {
+
+            return Objects.hash(sourcePath, title);
+        }
+
+        @Override
         public String toString() {
             return "DocumentMetadata{" +
                     "sourcePath=" + sourcePath +
@@ -283,46 +283,7 @@ public class Config {
                     ", lastUpdated=" + lastUpdated +
                     ", deletedOn=" + deletedOn +
                     ", extraProps=" + extraProps +
-                    ", convertedPath=" + convertedPath +
                     '}';
         }
-    }
-
-    /**
-     * Config parsing code
-     */
-
-    @JsonIgnore
-    private Path configPath;
-
-    @JsonIgnore
-    private static Logger log = LoggerFactory.getLogger(Config.class);
-
-
-    public static Config load(String filePath) throws IOException {
-        Config config;
-        Path path = Resources.path(filePath, false);
-        if(path.toFile().exists()) {
-            config = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
-            log.debug(String.format("Loaded configuration from %s", path.toAbsolutePath().toString()));
-        } else{
-            config = new Config();
-            log.debug(String.format("Created default configuration for new file %s", path.toAbsolutePath().toString()));
-        }
-        config.configPath = path;
-        return config;
-    }
-
-    public static void save(Config config) throws IOException {
-        Jackson.yamlMapper().writeValue(config.configPath.toFile(), config);
-        log.debug(String.format("Saved configuration to %s", config.configPath.toAbsolutePath().toString()));
-    }
-
-    public Path configPath() {
-        return configPath;
-    }
-
-    public void configPath(Path propertiesPath) {
-        this.configPath = propertiesPath;
     }
 }

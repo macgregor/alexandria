@@ -227,4 +227,10 @@ public class Resources {
         }
         return p;
     }
+
+    public static Collection<Path> relativeTo(Path base, Collection<Path> paths){
+        return paths.stream()
+                .map(p -> base.relativize(p))
+                .collect(Collectors.toList());
+    }
 }
