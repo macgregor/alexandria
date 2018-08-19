@@ -1,30 +1,42 @@
 #!/usr/bin/env bash
 
 help(){
-    echo -e "Prepare repository for release by removing SNAPSHOT, tagging branch, pushing the tag. The actual build and \n"
-    echo -e "deploy is handled by travis which is triggered by the tag.\n"
-    echo -e "Usage:"
-    echo -e "./prepare-release [--major] [--minor] [--patch] [--dry-run]"
-    echo -e "--major\t\tIncrement major version."
-    echo -e "--minor\t\tIncrement minor version."
-    echo -e "--patch\t\tIncrement patch version. If no arguments are provided, the patch version will be incremented."
-    echo -e "--dry-run\tRun without making modifications to repository."
-}
+    readarray message <<"    EOF"
+    Prepare repository for release by removing SNAPSHOT, tagging branch, and pushing the tag. The actual build and deploy
+    is handled by travis which is triggered by the tag. If no arguments are provided it will simply remove the snapshot
+    (if present) and tag/commit/push.
 
-while [[ $# > 0 ]]
-do
-key="$1"
+    Usage:
+        ./prepare-release [-h] [--help] [--major] [--minor] [--patch] [--dry-run]
+
+        -h,--help   Show this message and exit
+        --major     Increment major version.
+        --minor     Increment minor version.
+        --patch     Increment patch version.
+        --dry-run   Run without committing or pushing changes. Intermediate steps are rolled back.
+
+    Example:
+        ./prepare-release
+        ./prepare-release --minor --dry-run
+
+    EOF
+    printf '%s' "${message[@]#    }"
+}
 
 MAJOR=0
 MINOR=0
 PATCH=0
 DRY_RUN=0
 
+while [[ $# > 0 ]]
+do
+key="$1"
+
 case $key in
-		-h|--help)
-		help
-		exit 0
-		;;
+    -h|--help)
+    help
+    exit 0
+    ;;
     --major)
     MAJOR=1
     shift
@@ -70,19 +82,24 @@ then
     NEW_PATCH_VERSION="${parsedVersion.nextIncrementalVersion}"
 fi
 
-echo -e "release version: $NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION"
 mvn build-helper:parse-version versions:set -DnewVersion=$NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION &> /dev/null
+RELEASE=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
 
 if [[ $DRY_RUN -eq 0 ]]
 then
-    git commit -am "preparing release"
+    git commit -am "preparing release $RELEASE"
     mvn scm:tag &> /dev/null
     mvn versions:commit &> /dev/null
     git push -u origin HEAD:master --tags
 else
-    echo -e "mvn scm:tag &> /dev/null"
-    echo -e "git commit -am 'preparing release'"
-    echo -e "mvn versions:commit &> /dev/null"
-    echo -e "git push -u origin HEAD:master --tags"
+    readarray message <<"    EOF"
+        git commit -am "preparing release $RELEASE"
+        mvn scm:tag &> /dev/null
+        mvn versions:commit &> /dev/null
+        git push -u origin HEAD:master --tags
+    EOF
+    printf '%s' "${message[@]#        }"
     mvn versions:revert &> /dev/null
 fi
+
+echo -e "Cut release $RELEASE"

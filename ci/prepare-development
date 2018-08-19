@@ -1,22 +1,38 @@
 #!/usr/bin/env bash
 
 help(){
-    echo -e "Prepare next development cycle by incrementing the patch version and adding snapshot to the project version.\n"
-    echo -e "Usage:"
-    echo -e "./prepare-development [--dry-run]"
-    echo -e "--dry-run\tRun without making modifications to repository."
+    readarray message <<"    EOF"
+    Prepare next development cycle by incrementing the patch version and adding snapshot to the project version. For example
+    if version 1.0.0 was just released, this script would prepare 1.0.1-SNAPSHOT.
+
+    Usage:
+        ./prepare-release [--dry-run]
+
+        -h,--help   Show this message and exit
+        --major     Increment major version.
+        --minor     Increment minor version.
+        --patch     Increment patch version.
+        --dry-run   Run without committing or pushing changes. Intermediate steps are rolled back.
+
+    Example:
+        ./prepare-release
+        ./prepare-release --dry-run
+
+    EOF
+    printf '%s' "${message[@]#    }"
 }
+
+DRY_RUN=0
 
 while [[ $# > 0 ]]
 do
 key="$1"
-DRY_RUN=0
 
 case $key in
-		-h|--help)
-		help
-		exit 0
-		;;
+    -h|--help)
+    help
+    exit 0
+    ;;
     --dry-run)
     DRY_RUN=1
     shift
@@ -29,16 +45,21 @@ shift
 done
 
 mvn build-helper:parse-version versions:set -DnewVersion='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}-SNAPSHOT' &> /dev/null
-echo -e "Setting version for development."
+RELEASE=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
 
 if [[ $DRY_RUN -eq 0 ]]
 then
-    git commit -am "Setting version $project_version for development."
+    git commit -am "Setting version $RELEASE for development."
     mvn versions:commit &> /dev/null
     git push -u origin HEAD:master
 else
-    echo -e "git commit -am 'Setting version for development.'"
-    echo -e "mvn versions:commit &> /dev/null"
-    echo -e "git push -u origin HEAD:master"
+    readarray message <<"    EOF"
+        git commit -am "Setting version $RELEASE for development."
+        mvn versions:commit &> /dev/null
+        git push -u origin HEAD:master
+    EOF
+    printf '%s' "${message[@]#        }"
     mvn versions:revert &> /dev/null
 fi
+
+echo -e "Prepared development for $RELEASE"
