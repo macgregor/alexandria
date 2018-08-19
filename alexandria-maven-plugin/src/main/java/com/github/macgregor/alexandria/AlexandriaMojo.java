@@ -1,10 +1,12 @@
 package com.github.macgregor.alexandria;
 
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +16,10 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     private MavenProject project;
 
-    @Parameter( property = "alexandria.config", defaultValue = "${project.basedir}/.alexandria")
+    @Parameter(defaultValue = "${session}", required = true, readonly = true)
+    private MavenSession mavenSession;
+
+    @Parameter( property = "alexandria.config")
     private String configPath;
 
     @Parameter( property = "alexandria.output.directory", defaultValue = "${project.build.directory}/alexandria" )
@@ -31,16 +36,19 @@ public abstract class AlexandriaMojo extends AbstractMojo {
 
     public Context alexandriaContext() throws IOException {
         if(input == null || input.size() < 1){
-            input.add(project.getBasedir().toString());
+            input.add(rootDir());
+        }
+        if(configPath == null){
+            configPath = Paths.get(rootDir(), ".alexandria").toString();
         }
         Context context = Alexandria.load(configPath);
-        context.config().searchPath(input);
-        context.config().output(Optional.of(output));
+        context.searchPath(input);
+        context.output(Optional.of(output));
         if(include.size() > 0) {
-            context.config().include(include);
+            context.include(include);
         }
         if(exclude.size() > 0) {
-            context.config().exclude(Optional.of(exclude));
+            context.exclude(exclude);
         }
         return context;
     }
@@ -48,10 +56,22 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     public void logConfig(Context context){
         getLog().info("Alexandria - config file: " + context.configPath());
         getLog().info("Alexandria - project base dir: " + context.projectBase());
-        getLog().info("Alexandria - input directories: " + context.config().searchPath());
-        getLog().info("Alexandria - output directory: " + context.config().output());
-        getLog().info("Alexandria - include files: " + context.config().include());
-        getLog().info("Alexandria - exclude files: " + context.config().exclude());
+        getLog().info("Alexandria - input directories: " + context.searchPath());
+        getLog().info("Alexandria - output directory: " + context.output());
+        getLog().info("Alexandria - include files: " + context.include());
+        getLog().info("Alexandria - exclude files: " + context.exclude());
+    }
+
+    protected boolean isExecutionRoot() {
+        return mavenSession.getExecutionRootDirectory().equalsIgnoreCase(project.getBasedir().toString());
+    }
+
+    protected String rootDir(){
+        MavenProject parent = project;
+        while(parent.getParent() != null){
+            parent = parent.getParent();
+        }
+        return parent.getBasedir().toString();
     }
 
     public MavenProject getProject() {

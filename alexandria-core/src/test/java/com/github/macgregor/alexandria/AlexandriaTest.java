@@ -25,9 +25,9 @@ public class AlexandriaTest {
         File f1 = folder.newFile("readme.md");
         File f2 = folder.newFile("doc.md");
         Config config = new Config();
-        config.searchPath(Arrays.asList(folder.getRoot().toString()));
 
         Context context = new Context();
+        context.searchPath(Arrays.asList(folder.getRoot().toString()));
         context.configPath(folder.newFile().toPath());
         context.projectBase(folder.getRoot().toPath());
         context.config(config);
@@ -47,7 +47,6 @@ public class AlexandriaTest {
         File f2 = folder.newFile("doc.md");
 
         Config config = new Config();
-        config.searchPath(Arrays.asList(folder.getRoot().toString()));
 
         Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
         readmeMetadata.sourcePath(f1.toPath());
@@ -55,6 +54,7 @@ public class AlexandriaTest {
         config.metadata().get().add(readmeMetadata);
 
         Context context = new Context();
+        context.searchPath(Arrays.asList(folder.getRoot().toString()));
         context.configPath(folder.newFile().toPath());
         context.projectBase(folder.getRoot().toPath());
         context.config(config);
@@ -75,9 +75,9 @@ public class AlexandriaTest {
         File f2 = folder.newFile("doc.md");
 
         Config config = new Config();
-        config.searchPath(Arrays.asList(folder.getRoot().toString()));
 
         Context context = new Context();
+        context.searchPath(Arrays.asList(folder.getRoot().toString()));
         context.configPath(folder.newFile().toPath());
         context.projectBase(folder.getRoot().toPath());
         context.config(config);
@@ -103,8 +103,8 @@ public class AlexandriaTest {
         l3Readme.createNewFile();
 
         Config config = new Config();
-        config.searchPath(Arrays.asList(folder.getRoot().toString()));
         Context context = new Context();
+        context.searchPath(Arrays.asList(folder.getRoot().toString()));
         context.configPath(folder.newFile().toPath());
         context.projectBase(Paths.get(folder.getRoot().toString()));
         context.config(config);
@@ -135,8 +135,8 @@ public class AlexandriaTest {
         l3Readme.createNewFile();
 
         Config config = new Config();
-        config.searchPath(Arrays.asList(folder.getRoot().toString()));
         Context context = new Context();
+        context.searchPath(Arrays.asList(folder.getRoot().toString()));
         context.configPath(folder.newFile().toPath());
         context.projectBase(Paths.get(folder.getRoot().toString()));
         context.config(config);
@@ -144,6 +144,7 @@ public class AlexandriaTest {
 
         Alexandria.index(context);
         Context reloaded = Alexandria.load(context.configPath().toString());
+        reloaded.searchPath(Arrays.asList(folder.getRoot().toString()));
         Alexandria.index(reloaded);
         assertThat(reloaded.config().metadata()).isPresent();
         assertThat(reloaded.config().metadata().get()).hasSize(3);
@@ -184,9 +185,9 @@ public class AlexandriaTest {
         Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
         readmeMetadata.sourcePath(f1.toPath());
         config.metadata().get().add(readmeMetadata);
-        config.output(Optional.of(subdir.getPath()));
 
         Context context = new Context();
+        context.output(Optional.of(subdir.getPath()));
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
 

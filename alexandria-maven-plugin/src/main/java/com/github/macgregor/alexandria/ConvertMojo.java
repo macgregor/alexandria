@@ -13,12 +13,14 @@ public class ConvertMojo extends AlexandriaMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        try{
-            Context context = alexandriaContext();
-            logConfig(context);
-            Alexandria.convert(context);
-        } catch (IOException | BatchProcessException e){
-            throw new MojoFailureException("Failed to convert documents.", e);
+        if(isExecutionRoot()) {
+            try {
+                Context context = alexandriaContext();
+                logConfig(context);
+                Alexandria.convert(context);
+            } catch (IOException | BatchProcessException e) {
+                throw new MojoFailureException("Failed to convert documents.", e);
+            }
         }
     }
 }

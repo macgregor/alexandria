@@ -11,18 +11,6 @@ public class Config {
     public static final String ALEXANDRIA_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
     @JsonProperty
-    private List<String> searchPath;
-
-    @JsonProperty
-    private Optional<String> outputPath = Optional.empty();
-
-    @JsonProperty
-    private List<String> include = new ArrayList<>(Arrays.asList("*.md"));
-
-    @JsonProperty
-    private Optional<List<String>> exclude = Optional.of(new ArrayList<>());
-
-    @JsonProperty
     private RemoteConfig remote = new RemoteConfig();
 
     @JsonProperty
@@ -45,38 +33,6 @@ public class Config {
 
     public void remote(RemoteConfig remote) {
         this.remote = remote;
-    }
-
-    public List<String> include() {
-        return include;
-    }
-
-    public void include(List<String> include) {
-        this.include = include;
-    }
-
-    public Optional<List<String>> exclude() {
-        return exclude;
-    }
-
-    public void exclude(Optional<List<String>> exclude) {
-        this.exclude = exclude;
-    }
-
-    public List<String> searchPath() {
-        return searchPath;
-    }
-
-    public void searchPath(List<String> searchPath) {
-        this.searchPath = searchPath;
-    }
-
-    public Optional<String> output() {
-        return outputPath;
-    }
-
-    public void output(Optional<String> outputPath) {
-        this.outputPath = outputPath;
     }
 
     public Optional<List<DocumentMetadata>> metadata() {
