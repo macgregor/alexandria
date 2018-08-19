@@ -12,23 +12,38 @@
     <artifactId>alexandria-reports</artifactId>
     <packaging>pom</packaging>
 
+    <properties>
+        <code.coverage.project.folder>${basedir}/../</code.coverage.project.folder>
+        <code.coverage.overall.data.folder>${basedir}/../target/aggregate.exec</code.coverage.overall.data.folder>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.github.macgregor</groupId>
-            <artifactId>alexandria-core</artifactId>
+            <artifactId>alexandria-cli</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.github.macgregor</groupId>
-            <artifactId>alexandria-cli</artifactId>
+            <artifactId>alexandria-core</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.github.macgregor</groupId>
             <artifactId>alexandria-maven-plugin</artifactId>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -36,10 +51,16 @@
                 <executions>
                     <execution>
                         <id>report-aggregate</id>
-                        <phase>verify</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>report-aggregate</goal>
                         </goals>
+                        <configuration>
+                            <includes>
+                                <!-- Analyze class files only to exclude shaded agent JAR from report -->
+                                <include>**/*.class</include>
+                            </includes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
