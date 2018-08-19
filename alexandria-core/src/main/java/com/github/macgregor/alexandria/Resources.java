@@ -230,7 +230,7 @@ public class Resources {
 
     public static Collection<Path> relativeTo(Path base, Collection<Path> paths){
         return paths.stream()
-                .map(p -> base.relativize(p))
+                .map(p -> p.isAbsolute() ? base.relativize(p) : p)
                 .collect(Collectors.toList());
     }
 }
