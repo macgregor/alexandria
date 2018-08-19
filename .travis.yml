@@ -28,7 +28,7 @@ before_deploy:
   - git config --global user.name "Travis CI"
 deploy:
   - provider: script
-    script: "mvn deploy --settings ci/.maven.xml"
+    script: "mvn deploy coveralls:report --settings ci/.maven.xml"
     skip_cleanup: true
     on:
       tags: true

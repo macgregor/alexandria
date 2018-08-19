@@ -31,12 +31,14 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
         <jackson.version>2.9.6</jackson.version>
+        <jacoco.reportPath>${project.basedir}/../target/coverage-reports</jacoco.reportPath>
     </properties>
 
     <modules>
         <module>alexandria-core</module>
         <module>alexandria-maven-plugin</module>
         <module>alexandria-cli</module>
+        <module>alexandria-reports</module>
     </modules>
 
     <distributionManagement>
@@ -55,6 +57,16 @@
             <dependency>
                 <groupId>com.github.macgregor</groupId>
                 <artifactId>alexandria-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.macgregor</groupId>
+                <artifactId>alexandria-cli</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.macgregor</groupId>
+                <artifactId>alexandria-maven-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -334,6 +346,32 @@
                     <groupId>com.github.macgregor</groupId>
                     <artifactId>alexandria-maven-plugin</artifactId>
                     <version>${project.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.eluder.coveralls</groupId>
+                    <artifactId>coveralls-maven-plugin</artifactId>
+                    <version>4.3.0</version>
+                    <configuration>
+                        <repoToken>${env.COVERALLS_TOKEN}</repoToken>
+                        <failOnServiceError>false</failOnServiceError>
+                        <jacocoReports>
+                            <jacocoReport>alexandria-reports/target/site/jacoco-aggregate/jacoco.xml</jacocoReport>
+                        </jacocoReports>
+                        <coverallsFile>alexandria-reports/target/coveralls.json</coverallsFile>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.1</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
