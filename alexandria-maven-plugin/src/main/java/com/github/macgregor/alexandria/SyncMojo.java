@@ -13,12 +13,14 @@ public class SyncMojo extends AlexandriaMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        try{
-            Context context = alexandriaContext();
-            logConfig(context);
-            Alexandria.syncWithRemote(context);
-        } catch (IOException | BatchProcessException e){
-            throw new MojoFailureException("Failed to sync documents with remote.", e);
+        if(isExecutionRoot()) {
+            try {
+                Context context = alexandriaContext();
+                logConfig(context);
+                Alexandria.syncWithRemote(context);
+            } catch (IOException | BatchProcessException e) {
+                throw new MojoFailureException("Failed to sync documents with remote.", e);
+            }
         }
     }
 }

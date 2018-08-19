@@ -59,13 +59,13 @@ public abstract class AlexandriaCommand implements Callable<Void> {
 
     public Context alexandriaContext() throws IOException {
         Context context = Alexandria.load(configPath);
-        context.config().searchPath(input);
-        context.config().output(Optional.ofNullable(output));
+        context.searchPath(input);
+        context.output(Optional.ofNullable(output));
         if (include.size() > 0) {
-            context.config().include(include);
+            context.include(include);
         }
         if (exclude.size() > 0) {
-            context.config().exclude(Optional.of(exclude));
+            context.exclude(exclude);
         }
         return context;
     }
@@ -73,10 +73,10 @@ public abstract class AlexandriaCommand implements Callable<Void> {
     public void logContext(Context context){
         log.info("Alexandria - config file: " + context.configPath());
         log.info("Alexandria - project base dir: " + context.projectBase());
-        log.info("Alexandria - input directories: " + context.config().searchPath());
-        log.info("Alexandria - output directory: " + context.config().output());
-        log.info("Alexandria - include files: " + context.config().include());
-        log.info("Alexandria - exclude files: " + context.config().exclude());
+        log.info("Alexandria - input directories: " + context.searchPath());
+        log.info("Alexandria - output directory: " + context.output());
+        log.info("Alexandria - include files: " + context.include());
+        log.info("Alexandria - exclude files: " + context.exclude());
     }
 
     public String getConfigPath() {

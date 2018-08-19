@@ -23,42 +23,6 @@ public class ConfigSaveTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testSaveSearchPath() throws IOException, URISyntaxException {
-        Config config = new Config();
-        config.searchPath(expected().searchPath());
-
-        Config reloaded = saveAndReload(config);
-        assertThat(reloaded.searchPath()).containsExactlyInAnyOrder(expected().searchPath().toArray(new String[]{}));
-    }
-
-    @Test
-    public void testSaveOutputPath() throws IOException, URISyntaxException {
-        Config config = new Config();
-        config.output(expected().output());
-
-        Config reloaded = saveAndReload(config);
-        assertThat(reloaded.output().get()).isEqualTo(expected().output().get());
-    }
-
-    @Test
-    public void testSaveInclude() throws IOException, URISyntaxException {
-        Config config = new Config();
-        config.include(expected().include());
-
-        Config reloaded = saveAndReload(config);
-        assertThat(reloaded.include()).containsExactlyInAnyOrder(expected().include().toArray(new String[]{}));
-    }
-
-    @Test
-    public void testSaveExclude() throws IOException, URISyntaxException {
-        Config config = new Config();
-        config.exclude(expected().exclude());
-
-        Config reloaded = saveAndReload(config);
-        assertThat(reloaded.exclude().get()).containsExactlyInAnyOrder(expected().exclude().get().toArray(new String[]{}));
-    }
-
-    @Test
     public void testSaveDefaultTags() throws IOException, URISyntaxException {
         Config config = new Config();
         config.defaultTags(expected().defaultTags());
@@ -271,10 +235,6 @@ public class ConfigSaveTest {
 
     private Config expected() throws URISyntaxException {
         Config config = new Config();
-        config.searchPath(Arrays.asList("src/test/resources"));
-        config.output(Optional.of("src/test/resources"));
-        config.include(Arrays.asList("*.txt"));
-        config.exclude(Optional.of(Arrays.asList("*.md")));
         config.defaultTags(Optional.of(Arrays.asList("foo", "bar")));
 
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();

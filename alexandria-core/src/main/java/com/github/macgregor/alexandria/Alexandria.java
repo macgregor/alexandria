@@ -67,9 +67,9 @@ public class Alexandria {
         log.debug("Updating metadata index.");
         try {
             Collection<File> matchedDocuments = new Resources.PathFinder()
-                    .startingIn(context.config().searchPath())
-                    .including(context.config().include())
-                    .excluding(context.config().exclude().get())
+                    .startingIn(context.searchPath())
+                    .including(context.include())
+                    .excluding(context.exclude())
                     .find();
 
             Collection<Path> relativeMatchedDocuments = Resources.relativeTo(context.projectBase(),
@@ -103,7 +103,7 @@ public class Alexandria {
     }
 
     /**
-     * Convert HTML files from the files in the metadata index. Converted files will be saved to the configured {@link Config#outputPath}, if set.
+     * Convert HTML files from the files in the metadata index. Converted files will be saved to the configured {@link Context#outputPath}, if set.
      * Otherwise the files will be converted in place in the same directory as the markdown file being converted. Any exceptions
      * thrown will be collected and thrown after processing all documents.
      *
@@ -122,7 +122,7 @@ public class Alexandria {
         for(Config.DocumentMetadata metadata : context.config().metadata().get()){
             log.debug(String.format("Converting %s.", metadata.sourcePath().toFile().getName()));
             try {
-                String convertedDir = context.config().output().orElse(metadata.sourcePath().toAbsolutePath().getParent().toString());
+                String convertedDir = context.output().orElse(metadata.sourcePath().toAbsolutePath().getParent().toString());
                 String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
                 context.convertedPath(metadata, Paths.get(convertedDir, convertedFileName));
                 Markdown.toHtml(metadata.sourcePath(), context.convertedPath(metadata).get());

@@ -1,14 +1,16 @@
 package com.github.macgregor.alexandria;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class Context {
 
     private Path configPath;
     private Path projectBase;
+    private List<String> searchPath;
+    private Optional<String> outputPath = Optional.empty();
+    private List<String> include = new ArrayList<>(Arrays.asList("*.md"));
+    private List<String> exclude = new ArrayList<>();
     private Config config;
     private Map<Config.DocumentMetadata, Path> convertedPaths = new HashMap<>();
 
@@ -34,6 +36,38 @@ public class Context {
 
     public void projectBase(Path projectBase) {
         this.projectBase = projectBase;
+    }
+
+    public List<String> searchPath() {
+        return searchPath;
+    }
+
+    public void searchPath(List<String> searchPath) {
+        this.searchPath = searchPath;
+    }
+
+    public Optional<String> output() {
+        return outputPath;
+    }
+
+    public void output(Optional<String> outputPath) {
+        this.outputPath = outputPath;
+    }
+
+    public List<String> include() {
+        return include;
+    }
+
+    public void include(List<String> include) {
+        this.include = include;
+    }
+
+    public List<String> exclude() {
+        return exclude;
+    }
+
+    public void exclude(List<String> exclude) {
+        this.exclude = exclude;
     }
 
     public Config config() {

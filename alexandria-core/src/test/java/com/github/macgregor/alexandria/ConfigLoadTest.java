@@ -23,30 +23,6 @@ public class ConfigLoadTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testLoadSearchPath() throws IOException, URISyntaxException {
-        Config loaded = Alexandria.load("src/test/resources/config.yaml").config();
-        assertThat(loaded.searchPath()).containsExactlyInAnyOrder(expected().searchPath().toArray(new String[]{}));
-    }
-
-    @Test
-    public void testLoadOutputPath() throws IOException, URISyntaxException {
-        Config loaded = Alexandria.load("src/test/resources/config.yaml").config();
-        assertThat(loaded.output()).isEqualTo(expected().output());
-    }
-
-    @Test
-    public void testLoadInclude() throws IOException, URISyntaxException {
-        Config loaded = Alexandria.load("src/test/resources/config.yaml").config();
-        assertThat(loaded.include()).containsExactlyInAnyOrder(expected().include().toArray(new String[]{}));
-    }
-
-    @Test
-    public void testLoadExclude() throws IOException, URISyntaxException {
-        Config loaded = Alexandria.load("src/test/resources/config.yaml").config();
-        assertThat(loaded.exclude().get()).containsExactlyInAnyOrder(expected().exclude().get().toArray(new String[]{}));
-    }
-
-    @Test
     public void testLoadDefaultTags() throws IOException, URISyntaxException {
         Config loaded = Alexandria.load("src/test/resources/config.yaml").config();
         assertThat(loaded.defaultTags().get()).containsExactlyInAnyOrder(expected().defaultTags().get().toArray(new String[]{}));
@@ -159,10 +135,6 @@ public class ConfigLoadTest {
 
     private Config expected() throws URISyntaxException {
         Config config = new Config();
-        config.searchPath(Arrays.asList("src/test/resources"));
-        config.output(Optional.of("src/test/resources"));
-        config.include(Arrays.asList("*.txt"));
-        config.exclude(Optional.of(Arrays.asList("*.md")));
         config.defaultTags(Optional.of(Arrays.asList("foo", "bar")));
 
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();

@@ -12,12 +12,14 @@ public class IndexMojo extends AlexandriaMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        try{
-            Context context = alexandriaContext();
-            logConfig(context);
-            Alexandria.index(context);
-        } catch (IOException e){
-            throw new MojoFailureException("Failed to index documents.", e);
+        if(isExecutionRoot()) {
+            try {
+                Context context = alexandriaContext();
+                logConfig(context);
+                Alexandria.index(context);
+            } catch (IOException e) {
+                throw new MojoFailureException("Failed to index documents.", e);
+            }
         }
     }
 }
