@@ -14,9 +14,9 @@ public class IndexMojo extends AlexandriaMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         if(isExecutionRoot()) {
             try {
-                Context context = alexandriaContext();
-                logConfig(context);
-                Alexandria.index(context);
+                init();
+                logContext();
+                getAlexandria().index();
             } catch (IOException e) {
                 throw new MojoFailureException("Failed to index documents.", e);
             }

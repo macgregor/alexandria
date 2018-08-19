@@ -27,8 +27,19 @@ import java.util.stream.Collectors;
 public class Alexandria {
     private static Logger log = LoggerFactory.getLogger(Alexandria.class);
 
+    private Context context;
 
-    public static Context load(String filePath) throws IOException {
+    public Alexandria(){}
+
+    public Context context() {
+        return context;
+    }
+
+    public void context(Context context) {
+        this.context = context;
+    }
+
+    public Alexandria load(String filePath) throws IOException {
         Context context = new Context();
         Path path = Resources.path(filePath, false).toAbsolutePath();
         context.configPath(path);
@@ -44,12 +55,14 @@ public class Alexandria {
         }
         context.config(config);
 
-        return context;
+        this.context = context;
+        return this;
     }
 
-    public static void save(Context context) throws IOException {
+    public Alexandria save() throws IOException {
         Jackson.yamlMapper().writeValue(context.configPath().toFile(), context.config());
         log.debug(String.format("Saved configuration to %s", context.configPath().toString()));
+        return this;
     }
 
     /**
@@ -60,10 +73,9 @@ public class Alexandria {
      *   - files found in the index but not on the file system should be marked for deletion in the remote.
      *   - pull title from header in the source document
      *
-     * @param context
      * @throws AlexandriaException Any exception is thrown, most likely an IOException due to a missing file or invalid path.
      */
-    public static void index(Context context) throws AlexandriaException {
+    public Alexandria index() throws AlexandriaException {
         log.debug("Updating metadata index.");
         try {
             Collection<File> matchedDocuments = new Resources.PathFinder()
@@ -92,7 +104,8 @@ public class Alexandria {
                 metadata.title(p.toFile().getName());
                 context.config().metadata().get().add(metadata);
             }
-            Alexandria.save(context);
+            this.save();
+            return this;
         } catch(Exception e){
             log.warn("Unexpeccted exception generating local metadata index", e);
             throw new AlexandriaException.Builder()
@@ -107,14 +120,13 @@ public class Alexandria {
      * Otherwise the files will be converted in place in the same directory as the markdown file being converted. Any exceptions
      * thrown will be collected and thrown after processing all documents.
      *
-     * @param context
      * @throws BatchProcessException Exception wrapping all exceptions thrown during document processing.
      */
-    public static void convert(Context context) throws BatchProcessException {
+    public Alexandria convert() throws BatchProcessException {
         log.debug("Converting files to html.");
         if(context.config().remote().supportsNativeMarkdown().isPresent() && context.config().remote().supportsNativeMarkdown().get()){
             log.debug("Remote supports native markdown, no need to convert anything.");
-            return;
+            return this;
         }
 
         List<AlexandriaException> exceptions = new ArrayList<>();
@@ -138,7 +150,7 @@ public class Alexandria {
         log.debug(String.format("%d out of %d files converted successfully.", context.config().metadata().get().size()-exceptions.size(), context.config().metadata().get().size()));
 
         try {
-            Alexandria.save(context);
+            this.save();
         } catch (IOException e) {
             log.warn(String.format("Unable to save configuration to %s", context.configPath()));
             exceptions.add(new AlexandriaException.Builder()
@@ -153,6 +165,7 @@ public class Alexandria {
                     .causedBy(exceptions)
                     .build();
         }
+        return this;
     }
 
     /**
@@ -169,11 +182,10 @@ public class Alexandria {
      *
      * Delete - not implemented yet.
      *
-     * @param context
      * @throws BatchProcessException Any errors are thrown for any {@link com.github.macgregor.alexandria.Config.DocumentMetadata}
      * @throws IllegalStateException No remote is configured, the remote configuration is invalid.
      */
-    public static void syncWithRemote(Context context) throws BatchProcessException {
+    public Alexandria syncWithRemote() throws BatchProcessException {
         log.debug("Syncing files to html.");
         Remote remote;
         try {
@@ -204,7 +216,7 @@ public class Alexandria {
                     }
                 }
                 metadata.sourceChecksum(Optional.of(currentChecksum));
-                Alexandria.save(context);
+                this.save();
             } catch(HttpException e){
                 log.warn(e.getMessage(), e);
                 exceptions.add(e);
@@ -224,5 +236,6 @@ public class Alexandria {
                     .causedBy(exceptions)
                     .build();
         }
+        return this;
     }
 }

@@ -37,6 +37,8 @@ public abstract class AlexandriaCommand implements Callable<Void> {
     @CommandLine.Parameters(arity = "0..*", paramLabel = "EXCLUDES", description = "One or more file naming patterns to explicitly exclude. Defaults to empty list (no exclusions).")
     private List<String> exclude = new ArrayList<>();
 
+    private Alexandria alexandria;
+
     public void configureLogging(){
         switch(verbosity.length){
             case 0:
@@ -57,26 +59,27 @@ public abstract class AlexandriaCommand implements Callable<Void> {
         }
     }
 
-    public Context alexandriaContext() throws IOException {
-        Context context = Alexandria.load(configPath);
-        context.searchPath(input);
-        context.output(Optional.ofNullable(output));
+    public Alexandria init() throws IOException {
+        alexandria = new Alexandria();
+        alexandria.load(configPath);
+        alexandria.context().searchPath(input);
+        alexandria.context().output(Optional.ofNullable(output));
         if (include.size() > 0) {
-            context.include(include);
+            alexandria.context().include(include);
         }
         if (exclude.size() > 0) {
-            context.exclude(exclude);
+            alexandria.context().exclude(exclude);
         }
-        return context;
+        return alexandria;
     }
 
-    public void logContext(Context context){
-        log.info("Alexandria - config file: " + context.configPath());
-        log.info("Alexandria - project base dir: " + context.projectBase());
-        log.info("Alexandria - input directories: " + context.searchPath());
-        log.info("Alexandria - output directory: " + context.output());
-        log.info("Alexandria - include files: " + context.include());
-        log.info("Alexandria - exclude files: " + context.exclude());
+    public void logContext(){
+        log.info("Alexandria - config file: " + alexandria.context().configPath());
+        log.info("Alexandria - project base dir: " + alexandria.context().projectBase());
+        log.info("Alexandria - input directories: " + alexandria.context().searchPath());
+        log.info("Alexandria - output directory: " + alexandria.context().output());
+        log.info("Alexandria - include files: " + alexandria.context().include());
+        log.info("Alexandria - exclude files: " + alexandria.context().exclude());
     }
 
     public String getConfigPath() {
@@ -117,5 +120,21 @@ public abstract class AlexandriaCommand implements Callable<Void> {
 
     public void setExclude(List<String> exclude) {
         this.exclude = exclude;
+    }
+
+    public boolean[] getVerbosity() {
+        return verbosity;
+    }
+
+    public void setVerbosity(boolean[] verbosity) {
+        this.verbosity = verbosity;
+    }
+
+    public Alexandria getAlexandria() {
+        return alexandria;
+    }
+
+    public void setAlexandria(Alexandria alexandria) {
+        this.alexandria = alexandria;
     }
 }

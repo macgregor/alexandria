@@ -9,9 +9,9 @@ public class SyncCommand extends AlexandriaCommand {
     @Override
     public Void call() throws Exception {
         configureLogging();
-        Context context = alexandriaContext();
-        logContext(context);
-        Alexandria.syncWithRemote(context);
+        init();
+        logContext();
+        getAlexandria().syncWithRemote();
         return null;
     }
 }

@@ -32,7 +32,9 @@ public class AlexandriaTest {
         context.projectBase(folder.getRoot().toPath());
         context.config(config);
 
-        Alexandria.index(context);
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.index();
         assertThat(config.metadata()).isPresent();
         assertThat(config.metadata().get()
                 .stream()
@@ -59,7 +61,9 @@ public class AlexandriaTest {
         context.projectBase(folder.getRoot().toPath());
         context.config(config);
 
-        Alexandria.index(context);
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.index();
         assertThat(config.metadata()).isPresent();
         assertThat(config.metadata().get()
                 .stream()
@@ -82,7 +86,9 @@ public class AlexandriaTest {
         context.projectBase(folder.getRoot().toPath());
         context.config(config);
 
-        Alexandria.index(context);
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.index();
         assertThat(config.metadata()).isPresent();
         assertThat(config.metadata().get()
                 .stream()
@@ -109,7 +115,9 @@ public class AlexandriaTest {
         context.projectBase(Paths.get(folder.getRoot().toString()));
         context.config(config);
 
-        Alexandria.index(context);
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.index();
         assertThat(config.metadata()).isPresent();
         assertThat(config.metadata().get()).hasSize(3);
 
@@ -142,18 +150,20 @@ public class AlexandriaTest {
         context.config(config);
 
 
-        Alexandria.index(context);
-        Context reloaded = Alexandria.load(context.configPath().toString());
-        reloaded.searchPath(Arrays.asList(folder.getRoot().toString()));
-        Alexandria.index(reloaded);
-        assertThat(reloaded.config().metadata()).isPresent();
-        assertThat(reloaded.config().metadata().get()).hasSize(3);
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.index();
+        Alexandria reloaded = alexandria.load(context.configPath().toString());
+        reloaded.context().searchPath(Arrays.asList(folder.getRoot().toString()));
+        alexandria.index();
+        assertThat(reloaded.context().config().metadata()).isPresent();
+        assertThat(reloaded.context().config().metadata().get()).hasSize(3);
 
         Path[] expected = new Path[3];
         expected[0] = Paths.get(folder.getRoot().toString()).relativize(l1Readme.toPath());
         expected[1] = Paths.get(folder.getRoot().toString()).relativize(l2Readme.toPath());
         expected[2] = Paths.get(folder.getRoot().toString()).relativize(l3Readme.toPath());
-        assertThat(reloaded.config().metadata().get().stream()
+        assertThat(reloaded.context().config().metadata().get().stream()
                 .map(m -> m.sourcePath())
                 .collect(Collectors.toList()))
                 .containsExactlyInAnyOrder(expected);
@@ -172,7 +182,9 @@ public class AlexandriaTest {
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
 
-        Alexandria.convert(context);
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.convert();
         assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).doesNotExist();
     }
 
@@ -191,7 +203,9 @@ public class AlexandriaTest {
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
 
-        Alexandria.convert(context);
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.convert();
         assertThat(context.convertedPath(readmeMetadata).get()).isEqualTo(Paths.get(subdir.getPath(), "readme.html"));
         assertThat(Paths.get(subdir.getPath(), "readme.html")).exists();
     }
@@ -209,7 +223,9 @@ public class AlexandriaTest {
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
 
-        Alexandria.convert(context);
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.convert();
         assertThat(context.convertedPath(readmeMetadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), "readme.html"));
         assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).exists();
     }

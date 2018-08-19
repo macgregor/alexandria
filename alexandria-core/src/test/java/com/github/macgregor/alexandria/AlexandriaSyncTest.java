@@ -30,7 +30,10 @@ public class AlexandriaSyncTest {
         Context context = new Context();
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
-        Alexandria.syncWithRemote(context);
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
     }
 
     @Test
@@ -41,7 +44,10 @@ public class AlexandriaSyncTest {
         Context context = new Context();
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
-        Alexandria.syncWithRemote(context);
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
     }
 
     @Test
@@ -55,7 +61,10 @@ public class AlexandriaSyncTest {
         Context context = new Context();
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
-        Alexandria.syncWithRemote(context);
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
     }
 
     @Test
@@ -66,7 +75,10 @@ public class AlexandriaSyncTest {
         Context context = new Context();
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
-        assertThatThrownBy(() -> Alexandria.syncWithRemote(context))
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        assertThatThrownBy(() -> alexandria.syncWithRemote())
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("com.github.macgregor.alexandria.remotes.NotAThing");
     }
@@ -83,7 +95,9 @@ public class AlexandriaSyncTest {
         metadata.sourcePath(f.toPath());
         config.metadata(Optional.of(Arrays.asList(metadata)));
 
-        Alexandria.syncWithRemote(context);
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
         assertThat(metadata.sourceChecksum()).isPresent();
     }
 }

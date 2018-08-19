@@ -34,32 +34,35 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     @Parameter( property = "alexandria.input.exclude")
     private List<String> exclude = new ArrayList<>();
 
-    public Context alexandriaContext() throws IOException {
+    private Alexandria alexandria;
+
+    public Alexandria init() throws IOException {
         if(input == null || input.size() < 1){
             input.add(rootDir());
         }
         if(configPath == null){
             configPath = Paths.get(rootDir(), ".alexandria").toString();
         }
-        Context context = Alexandria.load(configPath);
-        context.searchPath(input);
-        context.output(Optional.of(output));
+        alexandria = new Alexandria();
+        alexandria.load(configPath);
+        alexandria.context().searchPath(input);
+        alexandria.context().output(Optional.of(output));
         if(include.size() > 0) {
-            context.include(include);
+            alexandria.context().include(include);
         }
         if(exclude.size() > 0) {
-            context.exclude(exclude);
+            alexandria.context().exclude(exclude);
         }
-        return context;
+        return alexandria;
     }
 
-    public void logConfig(Context context){
-        getLog().info("Alexandria - config file: " + context.configPath());
-        getLog().info("Alexandria - project base dir: " + context.projectBase());
-        getLog().info("Alexandria - input directories: " + context.searchPath());
-        getLog().info("Alexandria - output directory: " + context.output());
-        getLog().info("Alexandria - include files: " + context.include());
-        getLog().info("Alexandria - exclude files: " + context.exclude());
+    public void logContext(){
+        getLog().info("Alexandria - config file: " + alexandria.context().configPath());
+        getLog().info("Alexandria - project base dir: " + alexandria.context().projectBase());
+        getLog().info("Alexandria - input directories: " + alexandria.context().searchPath());
+        getLog().info("Alexandria - output directory: " + alexandria.context().output());
+        getLog().info("Alexandria - include files: " + alexandria.context().include());
+        getLog().info("Alexandria - exclude files: " + alexandria.context().exclude());
     }
 
     protected boolean isExecutionRoot() {
@@ -120,5 +123,21 @@ public abstract class AlexandriaMojo extends AbstractMojo {
 
     public void setExclude(List<String> exclude) {
         this.exclude = exclude;
+    }
+
+    public MavenSession getMavenSession() {
+        return mavenSession;
+    }
+
+    public void setMavenSession(MavenSession mavenSession) {
+        this.mavenSession = mavenSession;
+    }
+
+    public Alexandria getAlexandria() {
+        return alexandria;
+    }
+
+    public void setAlexandria(Alexandria alexandria) {
+        this.alexandria = alexandria;
     }
 }
