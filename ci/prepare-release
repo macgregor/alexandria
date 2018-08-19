@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 help(){
-    echo -e "Prepare repository for release by removing SNAPSHOT, tagging branch, pushing the tags and incrementing the project"
-    echo -e "version and adding SNAPSHOT. The actual build and deploy is handled by travis which is triggered by the tag.\n"
+    echo -e "Prepare repository for release by removing SNAPSHOT, tagging branch, pushing the tag. The actual build and \n
+    echo -e "deploy is handled by travis which is triggered by the tag.\n"
     echo -e "Usage:"
     echo -e "./prepare-release [--major] [--minor] [--patch] [--dry-run]"
     echo -e "--major\t\tIncrement major version."
@@ -48,12 +48,26 @@ esac
 shift
 done
 
-if [[ $MAJOR -eq 0 && $MINOR -eq 0 && $PATCH -eq 0 ]]
-then PATCH=1
+NEW_MAJOR_VERSION='${parsedVersion.majorVersion}'
+NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
+NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
+
+if [[ $MAJOR -eq 1 ]]; then
+    NEW_MAJOR_VERSION='${parsedVersion.nextMajorVersion}'
+    NEW_MINOR_VERSION='0'
+    NEW_PATCH_VERSION='0'
 fi
 
-mvn versions:set -DremoveSnapshot &> /dev/null
-echo -e "Preparing release"
+if [[ $MINOR -eq 1 ]]; then
+    NEW_MINOR_VERSION='${parsedVersion.nextMinorVersion}'
+    NEW_PATCH_VERSION='0'
+fi
+
+if [[ $PATCH -eq 1 ]]; then
+    NEW_PATCH_VERSION='${parsedVersion.nextIncrementalVersion}'
+fi
+
+mvn build-helper:parse-version versions:set -DnewVersion=$NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION &> /dev/null
 
 if [[ $DRY_RUN -eq 0 ]]
 then
