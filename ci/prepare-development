@@ -1,0 +1,29 @@
+if [[ $MAJOR -eq 1 ]]
+then NEW_MAJOR_VERSION='${parsedVersion.nextMajorVersion}'
+else NEW_MAJOR_VERSION='${parsedVersion.majorVersion}'
+fi
+
+if [[ $MINOR -eq 1 ]]
+then NEW_MINOR_VERSION='${parsedVersion.nextMinorVersion}'
+else NEW_MINOR_VERSION='${parsedVersion.minorVersion}'
+fi
+
+if [[ $PATCH -eq 1 ]]
+then NEW_PATCH_VERSION='${parsedVersion.nextIncrementalVersion}'
+else NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
+fi
+
+mvn build-helper:parse-version versions:set -DnewVersion=$NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION-SNAPSHOT &> /dev/null
+echo -e "Setting version for development."
+
+if [[ $DRY_RUN -eq 0 ]]
+then
+    git commit -am "Setting version $project_version for development."
+    mvn versions:commit &> /dev/null
+    git push -u origin HEAD:master
+else
+    echo -e "git commit -am 'Setting version for development.'"
+    echo -e "mvn versions:commit &> /dev/null"
+    echo -e "git push -u origin HEAD:master"
+    mvn versions:revert &> /dev/null
+fi
