@@ -49,7 +49,7 @@ shift
 done
 
 NEW_MAJOR_VERSION='${parsedVersion.majorVersion}'
-NEW_PATCH_VERSION='${parsedVersion.minorVersion}'
+NEW_MINOR_VERSION='${parsedVersion.minorVersion}'
 NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
 
 if [[ $MAJOR -eq 1 ]]
@@ -67,10 +67,10 @@ fi
 
 if [[ $PATCH -eq 1 ]]
 then
-    NEW_PATCH_VERSION='${parsedVersion.nextIncrementalVersion}'
+    NEW_PATCH_VERSION="${parsedVersion.nextIncrementalVersion}"
 fi
 
-echo -e 'release version: $NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION'
+echo -e "release version: $NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION"
 mvn build-helper:parse-version versions:set -DnewVersion=$NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION &> /dev/null
 
 if [[ $DRY_RUN -eq 0 ]]
