@@ -49,7 +49,7 @@ shift
 done
 
 NEW_MAJOR_VERSION='${parsedVersion.majorVersion}'
-NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
+NEW_PATCH_VERSION='${parsedVersion.minorVersion}'
 NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
 
 if [[ $MAJOR -eq 1 ]]
