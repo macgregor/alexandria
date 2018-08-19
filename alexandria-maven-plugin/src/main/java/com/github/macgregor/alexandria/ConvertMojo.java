@@ -14,9 +14,9 @@ public class ConvertMojo extends AlexandriaMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try{
-            Config config = alexandriaConfig();
-            logConfig(config);
-            Alexandria.convert(config);
+            Context context = alexandriaContext();
+            logConfig(context);
+            Alexandria.convert(context);
         } catch (IOException | BatchProcessException e){
             throw new MojoFailureException("Failed to convert documents.", e);
         }

@@ -2,6 +2,7 @@ package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Config.RemoteConfig;
+import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.Resources;
 import com.github.macgregor.alexandria.exceptions.HttpException;
@@ -45,7 +46,7 @@ public class JiveRemoteTest {
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.syncMetadata(metadata))
+                .isThrownBy(() -> jiveRemote.syncMetadata(new Context(), metadata))
                 .withMessageContaining("Bad request");
     }
 
@@ -58,7 +59,7 @@ public class JiveRemoteTest {
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.syncMetadata(metadata))
+                .isThrownBy(() -> jiveRemote.syncMetadata(new Context(), metadata))
                 .withMessageContaining("Unexpected status code");
     }
 
@@ -69,7 +70,7 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        jiveRemote.syncMetadata(metadata);
+        jiveRemote.syncMetadata(new Context(), metadata);
 
         assertThat(metadata.lastUpdated().get())
                 .isEqualTo(ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
@@ -87,8 +88,9 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
-        jiveRemote.create(metadata);
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
+        jiveRemote.create(context, metadata);
 
         assertThat(metadata.lastUpdated().get())
                 .isEqualTo(ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
@@ -106,10 +108,11 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.create(metadata))
+                .isThrownBy(() -> jiveRemote.create(context, metadata))
                 .withMessageContaining("Bad request");
     }
 
@@ -120,10 +123,11 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.create(metadata))
+                .isThrownBy(() -> jiveRemote.create(context, metadata))
                 .withMessageContaining("Document conflicts with existing document");
     }
 
@@ -134,10 +138,11 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.create(metadata))
+                .isThrownBy(() -> jiveRemote.create(context, metadata))
                 .withMessageContaining("Unauthorized to access document");
     }
 
@@ -150,8 +155,9 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
-        jiveRemote.update(metadata);
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
+        jiveRemote.update(context, metadata);
 
         assertThat(metadata.lastUpdated().get())
                 .isEqualTo(ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
@@ -169,10 +175,11 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.update(metadata))
+                .isThrownBy(() -> jiveRemote.update(context, metadata))
                 .withMessageContaining("Bad request");
     }
 
@@ -183,10 +190,11 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.update(metadata))
+                .isThrownBy(() -> jiveRemote.update(context, metadata))
                 .withMessageContaining("Document conflicts with existing document");
     }
 
@@ -197,10 +205,11 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.update(metadata))
+                .isThrownBy(() -> jiveRemote.update(context, metadata))
                 .withMessageContaining("Unauthorized to access document");
     }
 
@@ -211,10 +220,11 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.convertedPath(Optional.of(folder.newFile().toPath()));
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.update(metadata))
+                .isThrownBy(() -> jiveRemote.update(context, metadata))
                 .withMessageContaining("Document doesnt exist");
     }
 
@@ -227,7 +237,7 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        jiveRemote.delete(metadata);
+        jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
     }
 
@@ -240,7 +250,7 @@ public class JiveRemoteTest {
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.delete(metadata))
+                .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
                 .withMessageContaining("Bad request");
     }
 
@@ -253,7 +263,7 @@ public class JiveRemoteTest {
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.delete(metadata))
+                .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
                 .withMessageContaining("Unauthorized to access document");
     }
 
@@ -266,7 +276,7 @@ public class JiveRemoteTest {
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
 
         assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.delete(metadata))
+                .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
                 .withMessageContaining("Document doesnt exist");
     }
 

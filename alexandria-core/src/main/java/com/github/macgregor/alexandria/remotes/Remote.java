@@ -2,6 +2,7 @@ package com.github.macgregor.alexandria.remotes;
 
 
 import com.github.macgregor.alexandria.Config;
+import com.github.macgregor.alexandria.Context;
 
 import java.io.IOException;
 
@@ -37,7 +38,7 @@ public interface Remote {
      * @param metadata
      * @throws IOException Errors with local files or any requests made to the remote.
      */
-    void create(Config.DocumentMetadata metadata) throws IOException;
+    void create(Context context, Config.DocumentMetadata metadata) throws IOException;
 
     /**
      * Called to update an existing document on the remote. If the remote doesnt support native markdown, the metadata
@@ -49,7 +50,7 @@ public interface Remote {
      * @param metadata
      * @throws IOException Errors with local files or any requests made to the remote.
      */
-    void update(Config.DocumentMetadata metadata) throws IOException;
+    void update(Context context, Config.DocumentMetadata metadata) throws IOException;
 
     /**
      * Called to delete an existing document on the remote. The implementation is responsible for updating the metadata with:
@@ -59,5 +60,5 @@ public interface Remote {
      * @param metadata
      * @throws IOException Errors with local files or any requests made to the remote.
      */
-    void delete(Config.DocumentMetadata metadata) throws IOException;
+    void delete(Context context, Config.DocumentMetadata metadata) throws IOException;
 }

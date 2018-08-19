@@ -20,39 +20,51 @@ public class AlexandriaSyncTest {
     @Test
     public void testSyncWithJiveRemote() throws BatchProcessException {
         Config config = new Config();
-        config.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         config.remote().clazz("com.github.macgregor.alexandria.remotes.JiveRemote");
         config.remote().baseUrl(Optional.of(""));
         config.remote().username(Optional.of(""));
         config.remote().password(Optional.of(""));
-        Alexandria.syncWithRemote(config);
+
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+        Alexandria.syncWithRemote(context);
     }
 
     @Test
     public void testSyncWithNoopRemote() throws BatchProcessException {
         Config config = new Config();
-        config.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
-        Alexandria.syncWithRemote(config);
+
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+        Alexandria.syncWithRemote(context);
     }
 
     @Test
     public void testSyncWithNoopRemoteWithDocument() throws BatchProcessException, IOException {
         Config config = new Config();
-        config.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(folder.newFile().toPath());
         config.metadata(Optional.of(Arrays.asList(metadata)));
-        Alexandria.syncWithRemote(config);
+
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+        Alexandria.syncWithRemote(context);
     }
 
     @Test
     public void testSyncWithNonExistentClass() {
         Config config = new Config();
-        config.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         config.remote().clazz("com.github.macgregor.alexandria.remotes.NotAThing");
-        assertThatThrownBy(() -> Alexandria.syncWithRemote(config))
+
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+        assertThatThrownBy(() -> Alexandria.syncWithRemote(context))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("com.github.macgregor.alexandria.remotes.NotAThing");
     }

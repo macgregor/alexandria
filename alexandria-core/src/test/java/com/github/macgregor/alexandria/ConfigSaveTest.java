@@ -244,22 +244,27 @@ public class ConfigSaveTest {
     @Test
     public void testSaveMetadataMultiDocument() throws IOException {
         Config config = new Config();
-        Path path = folder.newFile().toPath();
-        config.configPath(path);
         Config.DocumentMetadata metadata1 = new Config.DocumentMetadata();
         metadata1.sourcePath(Paths.get(folder.getRoot().toString(),"README.md"));
         Config.DocumentMetadata metadata2 = new Config.DocumentMetadata();
         metadata1.sourcePath(Paths.get(folder.getRoot().toString(),"README2.md"));
         config.metadata(Optional.of(Arrays.asList(metadata1, metadata2)));
-        Config.save(config);
+
+        Path path = folder.newFile().toPath();
+        Context context = new Context();
+        context.configPath(path);
+        context.config(config);
+        Alexandria.save(context);
     }
 
     private Config saveAndReload(Config config) throws IOException {
         Path path = folder.newFile().toPath();
-        config.configPath(path);
-        Config.save(config);
+        Context context = new Context();
+        context.configPath(path);
+        context.config(config);
+        Alexandria.save(context);
 
-        Config reloaded = Config.load(path.toString());
+        Config reloaded = Alexandria.load(path.toString()).config();
         assertThat(reloaded).isNotNull();
         return reloaded;
     }

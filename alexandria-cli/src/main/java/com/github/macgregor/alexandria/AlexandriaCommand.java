@@ -57,25 +57,26 @@ public abstract class AlexandriaCommand implements Callable<Void> {
         }
     }
 
-    public Config alexandriaConfig() throws IOException {
-        Config config = Config.load(configPath);
-        config.searchPath(input);
-        config.output(Optional.ofNullable(output));
+    public Context alexandriaContext() throws IOException {
+        Context context = Alexandria.load(configPath);
+        context.config().searchPath(input);
+        context.config().output(Optional.ofNullable(output));
         if (include.size() > 0) {
-            config.include(include);
+            context.config().include(include);
         }
         if (exclude.size() > 0) {
-            config.exclude(Optional.of(exclude));
+            context.config().exclude(Optional.of(exclude));
         }
-        return config;
+        return context;
     }
 
-    public void logConfig(Config config){
-        log.info("Alexandria - config file: " + config.configPath());
-        log.info("Alexandria - input directories: " + config.searchPath());
-        log.info("Alexandria - output directory: " + config.output());
-        log.info("Alexandria - include files: " + config.include());
-        log.info("Alexandria - exclude files: " + config.exclude());
+    public void logContext(Context context){
+        log.info("Alexandria - config file: " + context.configPath());
+        log.info("Alexandria - project base dir: " + context.projectBase());
+        log.info("Alexandria - input directories: " + context.config().searchPath());
+        log.info("Alexandria - output directory: " + context.config().output());
+        log.info("Alexandria - include files: " + context.config().include());
+        log.info("Alexandria - exclude files: " + context.config().exclude());
     }
 
     public String getConfigPath() {

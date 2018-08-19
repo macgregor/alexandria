@@ -1,6 +1,7 @@
 package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
+import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.Resources;
 import com.github.macgregor.alexandria.exceptions.HttpException;
@@ -67,7 +68,7 @@ public class JiveRemote implements Remote{
      * @throws IOException
      */
     @Override
-    public void create(Config.DocumentMetadata metadata) throws IOException {
+    public void create(Context context, Config.DocumentMetadata metadata) throws IOException {
         HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
                 .addPathSegment("contents")
                 .addQueryParameter("fields", STANDARD_FIELD_PROJECTION)
@@ -75,7 +76,7 @@ public class JiveRemote implements Remote{
 
         Request request = authenticated(new Request.Builder())
                 .url(route)
-                .post(RequestBody.create(JSON, documentPostBody(metadata)))
+                .post(RequestBody.create(JSON, documentPostBody(context, metadata)))
                 .build();
 
         Response response = doRequest(request);
@@ -98,10 +99,10 @@ public class JiveRemote implements Remote{
      * @throws IOException
      */
     @Override
-    public void update(Config.DocumentMetadata metadata) throws IOException {
+    public void update(Context context, Config.DocumentMetadata metadata) throws IOException {
         if(!metadata.extraProps().isPresent() || !metadata.extraProps().get().containsKey("jiveContentId")){
             log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.remoteUri().get().toString()));
-            syncMetadata(metadata);
+            syncMetadata(context, metadata);
         }
         String contentId = metadata.extraProps().get().get("jiveContentId");
 
@@ -112,7 +113,7 @@ public class JiveRemote implements Remote{
 
         Request request = authenticated(new Request.Builder())
                 .url(route)
-                .put(RequestBody.create(JSON, documentPostBody(metadata)))
+                .put(RequestBody.create(JSON, documentPostBody(context, metadata)))
                 .build();
 
         Response response = doRequest(request);
@@ -137,10 +138,10 @@ public class JiveRemote implements Remote{
      * @throws IOException
      */
     @Override
-    public void delete(Config.DocumentMetadata metadata) throws IOException {
+    public void delete(Context context, Config.DocumentMetadata metadata) throws IOException {
         if(!metadata.extraProps().isPresent() || !metadata.extraProps().get().containsKey("jiveContentId")){
             log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.remoteUri().get().toString()));
-            syncMetadata(metadata);
+            syncMetadata(context, metadata);
         }
         String contentId = metadata.extraProps().get().get("jiveContentId");
 
@@ -216,7 +217,7 @@ public class JiveRemote implements Remote{
      * @param metadata
      * @throws IOException
      */
-    public void syncMetadata(Config.DocumentMetadata metadata) throws IOException {
+    public void syncMetadata(Context context, Config.DocumentMetadata metadata) throws IOException {
         if(metadata.remoteUri().isPresent()) {
             // https://community.jivesoftware.com/docs/DOC-153931
             String filter = String.format("entityDescriptor(102,%s)", jiveObjectId(metadata.remoteUri().get()));
@@ -297,7 +298,7 @@ public class JiveRemote implements Remote{
      * @param metadata
      * @return
      */
-    protected String documentPostBody(Config.DocumentMetadata metadata) throws IOException {
+    protected String documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
         JiveContent jiveDocument = new JiveContent();
 
         if(metadata.extraProps().get().containsKey("jiveContentId")){
@@ -309,7 +310,7 @@ public class JiveRemote implements Remote{
             jiveDocument.tags = metadata.tags().get();
         }
 
-        jiveDocument.content.text = Resources.load(metadata.convertedPath().get().toString());
+        jiveDocument.content.text = Resources.load(context.convertedPath(metadata).get().toString());
 
         //TODO: add parent
 

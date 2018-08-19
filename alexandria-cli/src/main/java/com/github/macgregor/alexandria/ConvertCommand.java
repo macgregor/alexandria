@@ -9,9 +9,9 @@ public class ConvertCommand extends AlexandriaCommand {
     @Override
     public Void call() throws Exception {
         configureLogging();
-        Config config = alexandriaConfig();
-        logConfig(config);
-        Alexandria.convert(config);
+        Context context = alexandriaContext();
+        logContext(context);
+        Alexandria.convert(context);
         return null;
     }
 }

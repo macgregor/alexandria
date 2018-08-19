@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,10 +23,7 @@ public class MarkdownTest {
         Resources.save(f.getPath(), "# Header");
         File outDir = folder.newFolder("output");
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(f.toPath());
-        metadata.convertedPath(Optional.of(Paths.get(outDir.toString(), "readme.html")));
-        Markdown.toHtml(metadata);
+        Markdown.toHtml(f.toPath(), Paths.get(outDir.toString(), "readme.html"));
         assertThat(Resources.load(Paths.get(outDir.toString(), "readme.html").toString())).isEqualTo("<h1>Header</h1>\n");
     }
 
@@ -38,10 +34,8 @@ public class MarkdownTest {
         Resources.save(f.getPath(), "~~strikethrough~~");
         File outDir = folder.newFolder("output");
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(f.toPath());
-        metadata.convertedPath(Optional.of(Paths.get(outDir.toString(), "readme.html")));
-        Markdown.toHtml(metadata);
+
+        Markdown.toHtml(f.toPath(), Paths.get(outDir.toString(), "readme.html"));
         assertThat(Resources.load(Paths.get(outDir.toString(), "readme.html").toString())).isEqualTo("<p><del>strikethrough</del></p>\n");
     }
 }
