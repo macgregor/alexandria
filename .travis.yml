@@ -11,6 +11,11 @@ env:
     - # ^^ SIGNING_KEY_NAME
     - secure: "Gv5D8z/pRPeC2B4L1G5w+iuXGHoZdXRx5iwMPRKBaKbrULWGgJkh9UmqhnFbsS3Wj5maGFYzkPHzNW8a6m/8J5PudF1qGuF96SC9ztTFj3y/O+CE/FkAzwivw3zMHDnqZj3nDX5io1n0d6INGJn9Mmj8R9e8tRGm8T9pA1Go3C4BOSQjSOlhlFvLmn87lbBYCX+34Zt0KN4TghRnBb0w/YW4xu+H7FLwl7COgI4hFeorV+hIij5lVn902Ulp0f/SBFRbMXcUfRQMQZXiCnl5+VcZmHzWBNoD3uCgjfFyeCc0oHdeZTY8mCI2c8SPgQimtNnO2kmm54W/PBKjBg5gu5cJc/exV5nIVtfyX7oIST6bcjLVZWsgwtSYAajNJrzYknhbcTDH1IRndToJAqzObeaavj1IdCtySgKjM/UZRUUBdOGZqG7U3ObUDMSANcr2KBhe81loKCEqkVawFpaRM2842OpOnOREPzFzj6odq8i/A/0495kGTzMPduvc5UiNU4G8759wk0d5qYxIg1KJfpN67stUhTdjZ/j7ilJi58WTNUUY8o+konouB0Jz4tWHXkmajmN9qrEeH08wWhG3Xak6vsy6Xb19S192ZBsI4j+RG8GF1mHFPK8K3bQnCuWFpbCH0QNQw+IteN9yF33dASu+ILgpV7yGIAwqFjapq5w="
     - # ^^ SIGNING_KEY_PASS
+branches:
+  only:
+    - master
+    - gh-pages
+    - /^\d+\.\d+(\.\d+)?(-\S*)?$/
 install: mvn install -DskipTests
 cache:
   directories:
