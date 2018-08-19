@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 help(){
-    echo -e "Prepare repository for release by removing SNAPSHOT, tagging branch, pushing the tag. The actual build and \n
+    echo -e "Prepare repository for release by removing SNAPSHOT, tagging branch, pushing the tag. The actual build and \n"
     echo -e "deploy is handled by travis which is triggered by the tag.\n"
     echo -e "Usage:"
     echo -e "./prepare-release [--major] [--minor] [--patch] [--dry-run]"
@@ -52,18 +52,21 @@ NEW_MAJOR_VERSION='${parsedVersion.majorVersion}'
 NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
 NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
 
-if [[ $MAJOR -eq 1 ]]; then
+if [[ $MAJOR -eq 1 ]]
+then
     NEW_MAJOR_VERSION='${parsedVersion.nextMajorVersion}'
     NEW_MINOR_VERSION='0'
     NEW_PATCH_VERSION='0'
 fi
 
-if [[ $MINOR -eq 1 ]]; then
+if [[ $MINOR -eq 1 ]]
+then
     NEW_MINOR_VERSION='${parsedVersion.nextMinorVersion}'
     NEW_PATCH_VERSION='0'
 fi
 
-if [[ $PATCH -eq 1 ]]; then
+if [[ $PATCH -eq 1 ]]
+then
     NEW_PATCH_VERSION='${parsedVersion.nextIncrementalVersion}'
 fi
 
