@@ -28,13 +28,13 @@ public abstract class AlexandriaCommand implements Callable<Void> {
     @CommandLine.Option(names = { "-o", "--output" }, description = "Output directory for converted files. If not specified, will convert file in place.")
     private String output;
 
-    @CommandLine.Parameters(arity = "0..*", paramLabel = "INPUT_DIRECTORIES", description = "One or more directories to search for files in. Defaults to current directory.")
+    @CommandLine.Option(names = {"-p", "--input"}, arity = "1..*", description = "One or more directories to search for files in. Defaults to current directory.")
     private List<String> input = Arrays.asList(System.getProperty("user.dir"));
 
-    @CommandLine.Parameters(arity = "0..*", paramLabel = "INCLUDES", description = "One or more file naming patterns to explicitly include. Defaults to *.md")
+    @CommandLine.Option(names = {"-i", "--include"}, arity = "1..*", description = "One or more file naming patterns to explicitly include. Defaults to *.md")
     private List<String> include = new ArrayList<>();
 
-    @CommandLine.Parameters(arity = "0..*", paramLabel = "EXCLUDES", description = "One or more file naming patterns to explicitly exclude. Defaults to empty list (no exclusions).")
+    @CommandLine.Option(names = {"-e", "--exclude"}, arity = "1..*", description = "One or more file naming patterns to explicitly exclude. Defaults to empty list (no exclusions).")
     private List<String> exclude = new ArrayList<>();
 
     private Alexandria alexandria;
@@ -43,6 +43,7 @@ public abstract class AlexandriaCommand implements Callable<Void> {
         switch(verbosity.length){
             case 0:
                 ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger("com.github.macgregor.alexandria")) .setLevel(Level.OFF);
+                break;
             case 1:
                 ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger("com.github.macgregor.alexandria")) .setLevel(Level.WARN);
                 break;
@@ -80,6 +81,14 @@ public abstract class AlexandriaCommand implements Callable<Void> {
         log.info("Alexandria - output directory: " + alexandria.context().output());
         log.info("Alexandria - include files: " + alexandria.context().include());
         log.info("Alexandria - exclude files: " + alexandria.context().exclude());
+    }
+
+    public Logger getLog() {
+        return log;
+    }
+
+    public void setLog(Logger log) {
+        this.log = log;
     }
 
     public String getConfigPath() {
