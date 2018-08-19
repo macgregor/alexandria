@@ -70,6 +70,7 @@ then
     NEW_PATCH_VERSION='${parsedVersion.nextIncrementalVersion}'
 fi
 
+echo -e 'release version: $NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION'
 mvn build-helper:parse-version versions:set -DnewVersion=$NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION &> /dev/null
 
 if [[ $DRY_RUN -eq 0 ]]
