@@ -24,110 +24,110 @@ public class ConfigLoadTest {
 
     @Test
     public void testLoadDefaultTags() throws IOException, URISyntaxException {
-        Config loaded = Alexandria.load("src/test/resources/config.yaml").config();
+        Config loaded = new Alexandria().load("src/test/resources/config.yaml").context().config();
         assertThat(loaded.defaultTags().get()).containsExactlyInAnyOrder(expected().defaultTags().get().toArray(new String[]{}));
     }
 
     @Test
     public void testLoadRemoteClass() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Alexandria.load("src/test/resources/config.yaml").config().remote();
+        Config.RemoteConfig loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().remote();
         assertThat(loaded.clazz()).isEqualTo(expected().remote().clazz());
     }
 
     @Test
     public void testLoadRemoteBaseUrl() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Alexandria.load("src/test/resources/config.yaml").config().remote();
+        Config.RemoteConfig loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().remote();
         assertThat(loaded.baseUrl()).isEqualTo(expected().remote().baseUrl());
     }
 
     @Test
     public void testLoadRemoteUsername() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Alexandria.load("src/test/resources/config.yaml").config().remote();
+        Config.RemoteConfig loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().remote();
         assertThat(loaded.username()).isEqualTo(expected().remote().username());
     }
 
     @Test
     public void testLoadRemotePassword() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Alexandria.load("src/test/resources/config.yaml").config().remote();
+        Config.RemoteConfig loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().remote();
         assertThat(loaded.password()).isEqualTo(expected().remote().password());
     }
 
     @Test
     public void testLoadRemoteSupportNativeMarkdown() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Alexandria.load("src/test/resources/config.yaml").config().remote();
+        Config.RemoteConfig loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().remote();
         assertThat(loaded.supportsNativeMarkdown()).isEqualTo(expected().remote().supportsNativeMarkdown());
     }
 
     @Test
     public void testLoadRemoteDateTimeFormat() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Alexandria.load("src/test/resources/config.yaml").config().remote();
+        Config.RemoteConfig loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().remote();
         assertThat(loaded.datetimeFormat()).isEqualTo(expected().remote().datetimeFormat());
     }
 
     @Test
     public void testLoadMetadataSourcePath() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
+        Config.DocumentMetadata loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().metadata().get().get(0);
         assertThat(loaded.sourcePath()).isEqualTo(expected().metadata().get().get(0).sourcePath());
     }
 
     @Test
     public void testLoadMetadataTitle() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
+        Config.DocumentMetadata loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().metadata().get().get(0);
         assertThat(loaded.title()).isEqualTo(expected().metadata().get().get(0).title());
     }
 
     @Test
     public void testLoadMetadataRemoteUri() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
+        Config.DocumentMetadata loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().metadata().get().get(0);
         assertThat(loaded.remoteUri()).isEqualTo(expected().metadata().get().get(0).remoteUri());
     }
 
     @Test
     public void testLoadMetadataCreatedOn() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
+        Config.DocumentMetadata loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().metadata().get().get(0);
         assertThat(loaded.createdOn()).isEqualTo(expected().metadata().get().get(0).createdOn());
     }
 
     @Test
     public void testLoadMetadataLastUpdated() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
+        Config.DocumentMetadata loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().metadata().get().get(0);
         assertThat(loaded.lastUpdated()).isEqualTo(expected().metadata().get().get(0).lastUpdated());
     }
 
     @Test
     public void testLoadMetadataDeletedOn() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
+        Config.DocumentMetadata loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().metadata().get().get(0);
         assertThat(loaded.deletedOn()).isEqualTo(expected().metadata().get().get(0).deletedOn());
     }
 
     @Test
     public void testLoadMetadataSourceChecksum() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
+        Config.DocumentMetadata loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().metadata().get().get(0);
         assertThat(loaded.sourceChecksum()).isEqualTo(expected().metadata().get().get(0).sourceChecksum());
     }
 
     @Test
     public void testLoadMetadataTags() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
+        Config.DocumentMetadata loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().metadata().get().get(0);
         assertThat(loaded.tags()).isEqualTo(expected().metadata().get().get(0).tags());
     }
 
     @Test
     public void testLoadMetadataExtraProps() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
+        Config.DocumentMetadata loaded = new Alexandria().load("src/test/resources/config.yaml").context().config().metadata().get().get(0);
         assertThat(loaded.extraProps()).isEqualTo(expected().metadata().get().get(0).extraProps());
     }
 
     @Test
     public void testLoadHandlesEmptyFile() throws IOException {
-        Config config = Alexandria.load("src/test/resources/empty.yaml").config();
+        Config config = new Alexandria().load("src/test/resources/config.yaml").context().config();
         assertThat(config).isNotNull();
     }
 
     @Test
     public void testLoadHandlesMissingFile() throws IOException {
         String doesntExist = new File(folder.getRoot(), "missing_config.yaml").getPath();
-        Context context = Alexandria.load(doesntExist);
+        Context context = new Alexandria().load(doesntExist).context();
         Config config = context.config();
         assertThat(config).isNotNull();
         assertThat(context.configPath()).isEqualTo(Paths.get(doesntExist));

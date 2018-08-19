@@ -9,9 +9,9 @@ public class IndexCommand extends AlexandriaCommand {
     @Override
     public Void call() throws Exception {
         configureLogging();
-        Context context = alexandriaContext();
-        logContext(context);
-        Alexandria.index(context);
+        init();
+        logContext();
+        getAlexandria().index();
         return null;
     }
 }

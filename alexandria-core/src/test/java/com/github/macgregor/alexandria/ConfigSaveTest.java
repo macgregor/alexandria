@@ -218,7 +218,10 @@ public class ConfigSaveTest {
         Context context = new Context();
         context.configPath(path);
         context.config(config);
-        Alexandria.save(context);
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.save();
     }
 
     private Config saveAndReload(Config config) throws IOException {
@@ -226,9 +229,12 @@ public class ConfigSaveTest {
         Context context = new Context();
         context.configPath(path);
         context.config(config);
-        Alexandria.save(context);
 
-        Config reloaded = Alexandria.load(path.toString()).config();
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.save();
+
+        Config reloaded = alexandria.load(path.toString()).context().config();
         assertThat(reloaded).isNotNull();
         return reloaded;
     }
