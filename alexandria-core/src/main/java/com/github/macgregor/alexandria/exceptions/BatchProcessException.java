@@ -19,6 +19,8 @@ public class BatchProcessException extends Exception {
 
     @Override
     public String toString() {
+
+
         return "BatchProcessException{" +
                 "exceptions=" + exceptions +
                 '}';

@@ -124,6 +124,41 @@ public class AlexandriaTest {
     }
 
     @Test
+    public void testIndexLoadsRelativeSourcePathsCorrectly() throws IOException {
+        File l1Readme = folder.newFile("readme.md");
+        File l2Dir = folder.newFolder("l2");
+        File l2Readme = new File(l2Dir, "readme.md");
+        l2Readme.createNewFile();
+        File l3Dir = new File(l2Dir, "l3");
+        l3Dir.mkdir();
+        File l3Readme = new File(l3Dir, "readme.md");
+        l3Readme.createNewFile();
+
+        Config config = new Config();
+        config.searchPath(Arrays.asList(folder.getRoot().toString()));
+        Context context = new Context();
+        context.configPath(folder.newFile().toPath());
+        context.projectBase(Paths.get(folder.getRoot().toString()));
+        context.config(config);
+
+
+        Alexandria.index(context);
+        Context reloaded = Alexandria.load(context.configPath().toString());
+        Alexandria.index(reloaded);
+        assertThat(reloaded.config().metadata()).isPresent();
+        assertThat(reloaded.config().metadata().get()).hasSize(3);
+
+        Path[] expected = new Path[3];
+        expected[0] = Paths.get(folder.getRoot().toString()).relativize(l1Readme.toPath());
+        expected[1] = Paths.get(folder.getRoot().toString()).relativize(l2Readme.toPath());
+        expected[2] = Paths.get(folder.getRoot().toString()).relativize(l3Readme.toPath());
+        assertThat(reloaded.config().metadata().get().stream()
+                .map(m -> m.sourcePath())
+                .collect(Collectors.toList()))
+                .containsExactlyInAnyOrder(expected);
+    }
+
+    @Test
     public void testConvertDoesntConvertWhenRemoteSupportsMarkdown() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
 
