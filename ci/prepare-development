@@ -1,19 +1,34 @@
-if [[ $MAJOR -eq 1 ]]
-then NEW_MAJOR_VERSION='${parsedVersion.nextMajorVersion}'
-else NEW_MAJOR_VERSION='${parsedVersion.majorVersion}'
-fi
+#!/usr/bin/env bash
 
-if [[ $MINOR -eq 1 ]]
-then NEW_MINOR_VERSION='${parsedVersion.nextMinorVersion}'
-else NEW_MINOR_VERSION='${parsedVersion.minorVersion}'
-fi
+help(){
+    echo -e "Prepare next development cycle by incrementing the patch version and adding snapshot to the project version.\n"
+    echo -e "Usage:"
+    echo -e "./prepare-development [--dry-run]"
+    echo -e "--dry-run\tRun without making modifications to repository."
+}
 
-if [[ $PATCH -eq 1 ]]
-then NEW_PATCH_VERSION='${parsedVersion.nextIncrementalVersion}'
-else NEW_PATCH_VERSION='${parsedVersion.incrementalVersion}'
-fi
+while [[ $# > 0 ]]
+do
+key="$1"
+DRY_RUN=0
 
-mvn build-helper:parse-version versions:set -DnewVersion=$NEW_MAJOR_VERSION.$NEW_MINOR_VERSION.$NEW_PATCH_VERSION-SNAPSHOT &> /dev/null
+case $key in
+		-h|--help)
+		help
+		exit 0
+		;;
+    --dry-run)
+    DRY_RUN=1
+    shift
+    ;;
+    *)
+    # unknown option
+    ;;
+esac
+shift
+done
+
+mvn build-helper:parse-version versions:set -DnewVersion=${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}-SNAPSHOT &> /dev/null
 echo -e "Setting version for development."
 
 if [[ $DRY_RUN -eq 0 ]]
