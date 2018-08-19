@@ -23,8 +23,9 @@ cache:
 before_deploy:
   - openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d
   - gpg --fast-import signing_key.gpg
-  - mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
-  - export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep -v '\[')
+  - export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
+  - git config --global user.email "builds@travis-ci.org"
+  - git config --global user.name "Travis CI"
 deploy:
   - provider: script
     script: "mvn deploy --settings ci/.maven.xml"
