@@ -1,0 +1,5 @@
+---
+remote:
+  supportsNativeMarkdown: false
+  datetimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+  class: "com.github.macgregor.alexandria.remotes.NoopRemote"

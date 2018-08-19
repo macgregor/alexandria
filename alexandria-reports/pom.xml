@@ -60,6 +60,9 @@
                                 <!-- Analyze class files only to exclude shaded agent JAR from report -->
                                 <include>**/*.class</include>
                             </includes>
+                            <excludes>
+                                <exclude>**/Application$ManifestVersionProvider.class</exclude>
+                            </excludes>
                         </configuration>
                     </execution>
                 </executions>
