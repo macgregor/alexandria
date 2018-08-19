@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+help(){
+    readarray message <<"    EOF"
+    Trigger a Travis build of a particular branch/tag.
+
+    Usage:
+        -h,--help       Show this message and exit
+        --dry-run       Show curl command without executing.
+        --branch        Name of the branch to build (default: master)
+        --latest-tag    Build the latest tag.
+        --token         Travis token to use with the api call (default: extract from `travis token` cmd)
+
+    Example:
+        ./trigger-build
+        ./trigger-build --latest-tag --token someToken --dry-run
+
+    EOF
+    printf '%s' "${message[@]#    }"
+}
+
+DRY_RUN=0
+BRANCH="master"
+TOKEN=0
+
+while [[ $# > 0 ]]
+do
+key="$1"
+
+case $key in
+    -h|--help)
+    help
+    exit 0
+    ;;
+    --dry-run)
+    DRY_RUN=1
+    shift
+    ;;
+    --branch)
+    BRANCH=$2
+    shift
+    ;;
+    --latest-tag)
+    BRANCH=$(git describe --abbrev=0 --tags)
+    shift
+    ;;
+    --token)
+    TOKEN=$2
+    shift
+    ;;
+    *)
+    # unknown option
+    ;;
+esac
+shift
+done
+
+if [[ $TOKEN -eq 0 ]]
+then
+    TOKEN=$(travis token | rev | cut -d " " -f 1 | rev)
+fi
+
+BODY="{
+\"request\": {
+\"branch\":\"$BRANCH\"
+}}"
+
+if [[ $DRY_RUN -eq 0 ]]
+then
+    curl -s -X POST \
+       -H "Content-Type: application/json" \
+       -H "Accept: application/json" \
+       -H "Travis-API-Version: 3" \
+       -H "Authorization: token $TOKEN" \
+       -d "$BODY" \
+       https://api.travis-ci.org/repo/macgregor%2Falexandria/requests
+else
+    readarray CURL_CMD <<"    EOF"
+        curl -s -X POST \
+           -H "Content-Type: application/json" \
+           -H "Accept: application/json" \
+           -H "Travis-API-Version: 3" \
+           -H "Authorization: token $TOKEN" \
+           -d "$BODY" \
+           https://api.travis-ci.org/repo/macgregor%2Falexandria/requests
+    EOF
+    printf '%s' "${CURL_CMD[@]#        }"
+fi
+

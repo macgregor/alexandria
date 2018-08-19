@@ -49,12 +49,14 @@ RELEASE=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non
 
 if [[ $DRY_RUN -eq 0 ]]
 then
-    git commit -am "Setting version $RELEASE for development."
+    git add $(find . -name pom.xml)
+    git commit -m "Setting version $RELEASE for development."
     mvn versions:commit &> /dev/null
     git push -u origin HEAD:master
 else
     readarray message <<"    EOF"
-        git commit -am "Setting version $RELEASE for development."
+        git add $(find . -name pom.xml)
+        git commit -m "Setting version $RELEASE for development."
         mvn versions:commit &> /dev/null
         git push -u origin HEAD:master
     EOF
