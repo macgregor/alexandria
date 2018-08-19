@@ -67,7 +67,7 @@ public class ConfigLoadTest {
     @Test
     public void testLoadMetadataSourcePath() throws IOException, URISyntaxException {
         Config.DocumentMetadata loaded = Alexandria.load("src/test/resources/config.yaml").config().metadata().get().get(0);
-        assertThat(loaded.sourcePath().toAbsolutePath()).isEqualTo(expected().metadata().get().get(0).sourcePath().toAbsolutePath());
+        assertThat(loaded.sourcePath()).isEqualTo(expected().metadata().get().get(0).sourcePath());
     }
 
     @Test
