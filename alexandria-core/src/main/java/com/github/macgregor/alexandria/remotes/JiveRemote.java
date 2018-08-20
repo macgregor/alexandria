@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -218,34 +217,32 @@ public class JiveRemote implements Remote{
      * @throws IOException
      */
     public void syncMetadata(Context context, Config.DocumentMetadata metadata) throws IOException {
-        if(metadata.remoteUri().isPresent()) {
-            // https://community.jivesoftware.com/docs/DOC-153931
-            String filter = String.format("entityDescriptor(102,%s)", jiveObjectId(metadata.remoteUri().get()));
+        // https://community.jivesoftware.com/docs/DOC-153931
+        String filter = String.format("entityDescriptor(102,%s)", jiveObjectId(metadata.remoteUri().get()));
 
-            HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
-                    .addPathSegment("contents")
-                    .addQueryParameter("filter", filter)
-                    .addQueryParameter("startIndex", "0")
-                    .addQueryParameter("count", "1")
-                    .addQueryParameter("fields", STANDARD_FIELD_PROJECTION)
-                    .build();
+        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
+                .addPathSegment("contents")
+                .addQueryParameter("filter", filter)
+                .addQueryParameter("startIndex", "0")
+                .addQueryParameter("count", "1")
+                .addQueryParameter("fields", STANDARD_FIELD_PROJECTION)
+                .build();
 
-            Request request = authenticated(new Request.Builder())
-                    .url(route)
-                    .get()
-                    .build();
+        Request request = authenticated(new Request.Builder())
+                .url(route)
+                .get()
+                .build();
 
-            Response response = doRequest(request);
-            try {
-                PagedJiveContent pagedJiveContent = Jackson.jsonMapper().readValue(response.body().charStream(), PagedJiveContent.class);
-                updateMetadata(metadata, pagedJiveContent);
-            } catch (IOException e) {
-                log.warn("Cannot parse response content", e);
-                HttpException exception = new HttpException("Cannot parse response content", e);
-                exception.setRequest(Optional.of(request));
-                exception.setResponse(Optional.ofNullable(response));
-                throw exception;
-            }
+        Response response = doRequest(request);
+        try {
+            PagedJiveContent pagedJiveContent = Jackson.jsonMapper().readValue(response.body().charStream(), PagedJiveContent.class);
+            updateMetadata(metadata, pagedJiveContent);
+        } catch (IOException e) {
+            log.warn("Cannot parse response content", e);
+            HttpException exception = new HttpException("Cannot parse response content", e);
+            exception.setRequest(Optional.of(request));
+            exception.setResponse(Optional.ofNullable(response));
+            throw exception;
         }
     }
 
@@ -269,7 +266,7 @@ public class JiveRemote implements Remote{
         if(content.resources != null && content.resources.containsKey("html")){
             try {
                 metadata.remoteUri(Optional.of(new URI(content.resources.get("html").ref)));
-            } catch (URISyntaxException e) {}
+            } catch (Exception e) {}
         }
         if(content.parentPlace != null){
             if(StringUtils.isNotBlank(content.parentPlace.html)){

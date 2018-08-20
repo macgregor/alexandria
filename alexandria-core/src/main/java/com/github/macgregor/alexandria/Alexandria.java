@@ -132,8 +132,8 @@ public class Alexandria {
         List<AlexandriaException> exceptions = new ArrayList<>();
 
         for(Config.DocumentMetadata metadata : context.config().metadata().get()){
-            log.debug(String.format("Converting %s.", metadata.sourcePath().toFile().getName()));
             try {
+                log.debug(String.format("Converting %s.", metadata.sourcePath().toFile().getName()));
                 String convertedDir = context.output().orElse(metadata.sourcePath().toAbsolutePath().getParent().toString());
                 String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
                 context.convertedPath(metadata, Paths.get(convertedDir, convertedFileName));
@@ -151,7 +151,7 @@ public class Alexandria {
 
         try {
             this.save();
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.warn(String.format("Unable to save configuration to %s", context.configPath()));
             exceptions.add(new AlexandriaException.Builder()
                     .withMessage(String.format("Unable to save configuration to %s", context.configPath()))
