@@ -22,16 +22,16 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     @Parameter( property = "alexandria.config")
     private String configPath;
 
-    @Parameter( property = "alexandria.output.directory", defaultValue = "${project.build.directory}/alexandria" )
+    @Parameter( property = "alexandria.output", defaultValue = "${project.build.directory}/alexandria" )
     private String output;
 
-    @Parameter( property = "alexandria.input.directory")
+    @Parameter( property = "alexandria.input")
     private List<String> input = new ArrayList<>();
 
-    @Parameter( property = "alexandria.input.include")
+    @Parameter( property = "alexandria.include")
     private List<String> include = new ArrayList<>();
 
-    @Parameter( property = "alexandria.input.exclude")
+    @Parameter( property = "alexandria.exclude")
     private List<String> exclude = new ArrayList<>();
 
     private Alexandria alexandria;
