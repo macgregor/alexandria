@@ -19,39 +19,39 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     @Parameter(defaultValue = "${session}", required = true, readonly = true)
     private MavenSession mavenSession;
 
-    @Parameter( property = "alexandria.config")
+    @Parameter( property = "alexandria.configPath")
     private String configPath;
 
-    @Parameter( property = "alexandria.output", defaultValue = "${project.build.directory}/alexandria" )
-    private String output;
+    @Parameter( property = "alexandria.outputPath", defaultValue = "${project.build.directory}/alexandria" )
+    private String outputPath;
 
-    @Parameter( property = "alexandria.input")
-    private List<String> input = new ArrayList<>();
+    @Parameter( property = "alexandria.inputs")
+    private List<String> inputs = new ArrayList<>();
 
-    @Parameter( property = "alexandria.include")
-    private List<String> include = new ArrayList<>();
+    @Parameter( property = "alexandria.includes")
+    private List<String> includes = new ArrayList<>();
 
-    @Parameter( property = "alexandria.exclude")
-    private List<String> exclude = new ArrayList<>();
+    @Parameter( property = "alexandria.excludes")
+    private List<String> excludes = new ArrayList<>();
 
     private Alexandria alexandria;
 
     public Alexandria init() throws IOException {
-        if(input == null || input.size() < 1){
-            input.add(rootDir());
+        if(inputs == null || inputs.size() < 1){
+            inputs.add(rootDir());
         }
         if(configPath == null){
             configPath = Paths.get(rootDir(), ".alexandria").toString();
         }
         alexandria = new Alexandria();
         alexandria.load(configPath);
-        alexandria.context().searchPath(input);
-        alexandria.context().output(Optional.of(output));
-        if(include.size() > 0) {
-            alexandria.context().include(include);
+        alexandria.context().searchPath(inputs);
+        alexandria.context().output(Optional.of(outputPath));
+        if(includes.size() > 0) {
+            alexandria.context().include(includes);
         }
-        if(exclude.size() > 0) {
-            alexandria.context().exclude(exclude);
+        if(excludes.size() > 0) {
+            alexandria.context().exclude(excludes);
         }
         return alexandria;
     }
@@ -59,10 +59,10 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     public void logContext(){
         getLog().info("Alexandria - config file: " + alexandria.context().configPath());
         getLog().info("Alexandria - project base dir: " + alexandria.context().projectBase());
-        getLog().info("Alexandria - input directories: " + alexandria.context().searchPath());
-        getLog().info("Alexandria - output directory: " + alexandria.context().output());
-        getLog().info("Alexandria - include files: " + alexandria.context().include());
-        getLog().info("Alexandria - exclude files: " + alexandria.context().exclude());
+        getLog().info("Alexandria - inputs directories: " + alexandria.context().searchPath());
+        getLog().info("Alexandria - outputPath directory: " + alexandria.context().output());
+        getLog().info("Alexandria - includes files: " + alexandria.context().include());
+        getLog().info("Alexandria - excludes files: " + alexandria.context().exclude());
     }
 
     protected boolean isExecutionRoot() {
@@ -93,36 +93,36 @@ public abstract class AlexandriaMojo extends AbstractMojo {
         this.configPath = configPath;
     }
 
-    public String getOutput() {
-        return output;
+    public String getOutputPath() {
+        return outputPath;
     }
 
-    public void setOutput(String output) {
-        this.output = output;
+    public void setOutputPath(String outputPath) {
+        this.outputPath = outputPath;
     }
 
-    public List<String> getInput() {
-        return input;
+    public List<String> getInputs() {
+        return inputs;
     }
 
-    public void setInput(List<String> input) {
-        this.input = input;
+    public void setInputs(List<String> inputs) {
+        this.inputs = inputs;
     }
 
-    public List<String> getInclude() {
-        return include;
+    public List<String> getIncludes() {
+        return includes;
     }
 
-    public void setInclude(List<String> include) {
-        this.include = include;
+    public void setIncludes(List<String> includes) {
+        this.includes = includes;
     }
 
-    public List<String> getExclude() {
-        return exclude;
+    public List<String> getExcludes() {
+        return excludes;
     }
 
-    public void setExclude(List<String> exclude) {
-        this.exclude = exclude;
+    public void setExcludes(List<String> excludes) {
+        this.excludes = excludes;
     }
 
     public MavenSession getMavenSession() {

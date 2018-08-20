@@ -1,0 +1,36 @@
+---
+remote:
+  supportsNativeMarkdown: false
+  datetimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+  class: "com.github.macgregor.alexandria.remotes.NoopRemote"
+metadata:
+- sourcePath: "docs/images.md"
+  title: "images.md"
+  sourceChecksum: 1751689934
+- sourcePath: "docs/tables.md"
+  title: "tables.md"
+  sourceChecksum: 4054608692
+- sourcePath: "docs/empahsis.md"
+  title: "empahsis.md"
+  sourceChecksum: 2517968447
+- sourcePath: "docs/codeblocks.md"
+  title: "codeblocks.md"
+  sourceChecksum: 517594253
+- sourcePath: "docs/horizontal_rule.md"
+  title: "horizontal_rule.md"
+  sourceChecksum: 3247894671
+- sourcePath: "docs/headers.md"
+  title: "headers.md"
+  sourceChecksum: 1343231395
+- sourcePath: "docs/inline_html.md"
+  title: "inline_html.md"
+  sourceChecksum: 3042996089
+- sourcePath: "docs/lists.md"
+  title: "lists.md"
+  sourceChecksum: 1503736789
+- sourcePath: "docs/links.md"
+  title: "links.md"
+  sourceChecksum: 2954229193
+- sourcePath: "docs/blockquotes.md"
+  title: "blockquotes.md"
+  sourceChecksum: 2993210002
