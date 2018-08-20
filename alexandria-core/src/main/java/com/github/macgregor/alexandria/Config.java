@@ -223,7 +223,6 @@ public class Config {
 
         @Override
         public int hashCode() {
-
             return Objects.hash(sourcePath, title);
         }
 

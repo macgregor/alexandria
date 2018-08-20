@@ -62,6 +62,7 @@
                             </includes>
                             <excludes>
                                 <exclude>**/Application$ManifestVersionProvider.class</exclude>
+                                <exclude>com/github/macgregor/alexandria/exceptions/**/*</exclude>
                             </excludes>
                         </configuration>
                     </execution>

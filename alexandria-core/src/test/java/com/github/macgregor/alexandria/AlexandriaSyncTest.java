@@ -1,12 +1,15 @@
 package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
@@ -51,23 +54,6 @@ public class AlexandriaSyncTest {
     }
 
     @Test
-    public void testSyncWithNoopRemoteWithDocument() throws BatchProcessException, IOException {
-        Config config = new Config();
-        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(folder.newFile().toPath());
-        config.metadata(Optional.of(Arrays.asList(metadata)));
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
-    }
-
-    @Test
     public void testSyncWithNonExistentClass() {
         Config config = new Config();
         config.remote().clazz("com.github.macgregor.alexandria.remotes.NotAThing");
@@ -99,5 +85,82 @@ public class AlexandriaSyncTest {
         alexandria.context(context);
         alexandria.syncWithRemote();
         assertThat(metadata.sourceChecksum()).isPresent();
+    }
+
+    @Test
+    public void testSyncCreatesDocument() throws BatchProcessException, IOException {
+        Config config = new Config();
+        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(folder.newFile().toPath());
+        config.metadata(Optional.of(Arrays.asList(metadata)));
+
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
+    }
+
+    @Test
+    public void testSyncUpdatesDocumentNoChecksum() throws BatchProcessException, IOException, URISyntaxException {
+        Config config = new Config();
+        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(folder.newFile().toPath());
+        metadata.remoteUri(Optional.of(new URI("http://www.google.com")));
+        config.metadata(Optional.of(Arrays.asList(metadata)));
+
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
+
+        //todo: need a way to confirm update was actually called
+    }
+
+    @Test
+    public void testSyncUpdatesDocumentWithSameChecksum() throws BatchProcessException, IOException, URISyntaxException {
+        Config config = new Config();
+        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(folder.newFile().toPath());
+        metadata.remoteUri(Optional.of(new URI("http://www.google.com")));
+        metadata.sourceChecksum(Optional.of(FileUtils.checksumCRC32(metadata.sourcePath().toFile())));
+        config.metadata(Optional.of(Arrays.asList(metadata)));
+
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
+        //todo: need a way to confirm update was not called
+    }
+
+    @Test
+    public void testSyncUpdatesDocumentWithDifferentChecksum() throws BatchProcessException, IOException, URISyntaxException {
+        Config config = new Config();
+        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(folder.newFile().toPath());
+        metadata.remoteUri(Optional.of(new URI("http://www.google.com")));
+        metadata.sourceChecksum(Optional.of(1234L));
+        config.metadata(Optional.of(Arrays.asList(metadata)));
+
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
+        //todo: need a way to confirm update was not called
     }
 }

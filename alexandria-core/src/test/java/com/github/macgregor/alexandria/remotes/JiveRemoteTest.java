@@ -21,9 +21,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 public class JiveRemoteTest {
 
@@ -79,6 +77,19 @@ public class JiveRemoteTest {
         assertThat(metadata.extraProps().get().get("jiveParentUrl")).isEqualTo("https://jive.com/groups/parent_group");
         assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
         assertThat(metadata.extraProps().get().get("jiveContentId")).isEqualTo("1278973");
+    }
+
+    @Test
+    public void testSyncMetadataUnparsableResponse() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
+
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+
+        assertThatThrownBy(() -> jiveRemote.syncMetadata(new Context(), metadata))
+                .isInstanceOf(HttpException.class)
+                .hasMessageContaining("Cannot parse response content");
     }
 
     @Test
@@ -147,6 +158,21 @@ public class JiveRemoteTest {
     }
 
     @Test
+    public void tesCreateUnparsableResponse() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
+
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
+
+        assertThatThrownBy(() -> jiveRemote.create(context, metadata))
+                .isInstanceOf(HttpException.class)
+                .hasMessageContaining("Cannot parse response content");
+    }
+
+    @Test
     public void testUpdateUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
@@ -155,6 +181,28 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
+        jiveRemote.update(context, metadata);
+
+        assertThat(metadata.lastUpdated().get())
+                .isEqualTo(ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
+        assertThat(metadata.createdOn().get())
+                .isEqualTo(ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
+        assertThat(metadata.extraProps().get().get("jiveParentUrl")).isEqualTo("https://jive.com/groups/parent_group");
+        assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
+        assertThat(metadata.extraProps().get().get("jiveContentId")).isEqualTo("1278973");
+    }
+
+    @Test
+    public void testUpdateDoesntLookupContentIdIfPresent() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))));
+
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.extraProps().get().put("jiveContentId", "1234");
         Context context = new Context();
         context.convertedPath(metadata, folder.newFile().toPath());
         jiveRemote.update(context, metadata);
@@ -229,6 +277,19 @@ public class JiveRemoteTest {
     }
 
     @Test
+    public void tesUpdateUnparsableResponse() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
+
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+
+        assertThatThrownBy(() -> jiveRemote.update(new Context(), metadata))
+                .isInstanceOf(HttpException.class)
+                .hasMessageContaining("Cannot parse response content");
+    }
+
+    @Test
     public void testDeleteSetsDeletedDateTime() throws URISyntaxException, IOException {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
@@ -237,6 +298,18 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("DOC-1072237.md"));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        jiveRemote.delete(new Context(), metadata);
+        assertThat(metadata.deletedOn()).isPresent();
+    }
+
+    @Test
+    public void testDeleteDoesntLookupContentIdIfPresent() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(new MockResponse().setResponseCode(204)));
+
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.extraProps().get().put("jiveContentId", "1234");
         jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
     }
@@ -311,6 +384,79 @@ public class JiveRemoteTest {
         assertThatThrownBy(() -> remote.validateRemoteConfig())
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("remote.password");
+    }
+
+    @Test
+    public void testJiveRemoteUpdateMetadataRemoteUri() throws URISyntaxException {
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
+        JiveRemote.JiveContent.Link link = new JiveRemote.JiveContent.Link();
+        link.ref = "http://www.google.com";
+        link.allowed = Collections.singletonList("GET");
+        content.resources.put("html", link);
+        JiveRemote remote = new JiveRemote();
+        remote.updateMetadata(metadata, content);
+        assertThat(metadata.remoteUri().get()).isEqualTo(new URI("http://www.google.com"));
+    }
+
+    @Test
+    public void testJiveRemoteUpdateMetadataRemoteUriBadLink() {
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
+        JiveRemote.JiveContent.Link link = new JiveRemote.JiveContent.Link();
+        link.ref = null;
+        link.allowed = Collections.singletonList("GET");
+        content.resources.put("html", link);
+        JiveRemote remote = new JiveRemote();
+        remote.updateMetadata(metadata, content);
+        assertThat(metadata.remoteUri()).isEmpty();
+    }
+
+    @Test
+    public void testJiveRemoteUpdateMetadataParentUrl() {
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
+        content.parentPlace = new JiveRemote.JiveContent.ParentPlace();
+        content.parentPlace.html = "http://www.google.com";
+        JiveRemote remote = new JiveRemote();
+        remote.updateMetadata(metadata, content);
+        assertThat(metadata.extraProps().get().get("jiveParentUrl")).isEqualTo("http://www.google.com");
+    }
+
+    @Test
+    public void testJiveRemoteUpdateMetadataParentId() {
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
+        content.parentPlace = new JiveRemote.JiveContent.ParentPlace();
+        content.parentPlace.placeID = "1234";
+        JiveRemote remote = new JiveRemote();
+        remote.updateMetadata(metadata, content);
+        assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("1234");
+    }
+
+    @Test
+    public void testJiveRemoteUpdateMetadataContentId() {
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
+        content.contentID = "1234";
+        JiveRemote remote = new JiveRemote();
+        remote.updateMetadata(metadata, content);
+        assertThat(metadata.extraProps().get().get("jiveContentId")).isEqualTo("1234");
+    }
+
+    @Test
+    public void testJiveRemoteUpdateMetadataPagedEmpty() {
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        JiveRemote.PagedJiveContent content = new JiveRemote.PagedJiveContent();
+        content.list = Collections.EMPTY_LIST;
+        JiveRemote remote = new JiveRemote();
+        remote.updateMetadata(metadata, content);
     }
 
 

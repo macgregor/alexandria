@@ -1,6 +1,6 @@
 package com.github.macgregor.alexandria;
 
-import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -10,12 +10,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class AlexandriaTest {
+public class AlexandriaIndexTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -149,7 +149,6 @@ public class AlexandriaTest {
         context.projectBase(Paths.get(folder.getRoot().toString()));
         context.config(config);
 
-
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
         alexandria.index();
@@ -170,63 +169,14 @@ public class AlexandriaTest {
     }
 
     @Test
-    public void testConvertDoesntConvertWhenRemoteSupportsMarkdown() throws IOException, BatchProcessException {
-        File f1 = folder.newFile("readme.md");
-
+    public void testIndexWrapsExceptionsInAlexandriaException(){
         Config config = new Config();
-        Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.supportsNativeMarkdown(Optional.of(true));
-        config.remote(remoteConfig);
-
         Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
 
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
-        alexandria.convert();
-        assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).doesNotExist();
-    }
-
-    @Test
-    public void testConvertSetsConvertedPathPreferringConfigOverride() throws IOException, BatchProcessException {
-        File f1 = folder.newFile("readme.md");
-        File subdir = folder.newFolder("out");
-
-        Config config = new Config();
-        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
-        readmeMetadata.sourcePath(f1.toPath());
-        config.metadata().get().add(readmeMetadata);
-
-        Context context = new Context();
-        context.output(Optional.of(subdir.getPath()));
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.convert();
-        assertThat(context.convertedPath(readmeMetadata).get()).isEqualTo(Paths.get(subdir.getPath(), "readme.html"));
-        assertThat(Paths.get(subdir.getPath(), "readme.html")).exists();
-    }
-
-    @Test
-    public void testConvertSetsConvertedPathUsesSourceDirAsOutput() throws IOException, BatchProcessException {
-        File f1 = folder.newFile("readme.md");
-
-        Config config = new Config();
-        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
-        readmeMetadata.sourcePath(f1.toPath());
-        config.metadata().get().add(readmeMetadata);
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.convert();
-        assertThat(context.convertedPath(readmeMetadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), "readme.html"));
-        assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).exists();
+        assertThatThrownBy(() -> alexandria.index())
+                .isInstanceOf(AlexandriaException.class);
     }
 }
