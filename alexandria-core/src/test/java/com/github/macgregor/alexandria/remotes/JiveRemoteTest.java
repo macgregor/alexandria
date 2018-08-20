@@ -20,10 +20,15 @@ import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.logging.LogManager;
 
 import static org.assertj.core.api.Assertions.*;
 
 public class JiveRemoteTest {
+
+    static{
+        LogManager.getLogManager().reset();
+    }
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
