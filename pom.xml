@@ -241,6 +241,7 @@
                             </goals>
                             <configuration>
                                 <minimizeJar>true</minimizeJar>
+                                <createDependencyReducedPom>false</createDependencyReducedPom>
                                 <filters>
                                     <filter>
                                         <artifact>com.fasterxml.jackson.core:jackson-databind</artifact>
