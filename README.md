@@ -19,29 +19,13 @@ many benefits including:
 * keep documentation up to date automatically as part of your build process
 * decouple you from document hosting platforms
 
+## Requirements
+* maven 3.5.2 or greater
+* Java 8
+
 ## Markdown to HTML Conversion
 Alexandria looks for all markdown files in your project and converts them to html using [flexmark](https://github.com/vsch/flexmark-java).
 It can be configured to look in multiple directories if needed.
-
-## Metadata
-Alexandria relies on metadata in the markdown files to know where to publish the convertedPath files. 
-
-```markdown
-<!--- alexandria
-title: My Painstaking Documentation
-remote: http://jive.corp.com/docs/remote-document-url
-tags: tag1, tag2
-createdOn: 2016-03-21T15:07:34.533+0000
-lastUpdated: 2018-06-22T18:42:59.652+0000
--->
-```
-
-The plugin will update metadata as it runs, for example adding the remote url when it creates a new document. The
-keys in the example above are standard metadata, but different remote implementations may need extra metadata. For example
-the `JiveRemote` uses `jiveParentUrl` to add documents to a particular group, which is a Jive specific concept.
-
-This means it is important to add a git commit as part of the deploy step to ensure metadata is persisted.
-
 
 ## Remotes
 Remotes are hosting platforms to upload convertedPath files to. This will almost always be a rest interface for interacting 
@@ -52,3 +36,6 @@ If you want to manually convert and upload files you can use the `alexandria-cli
 
 ## Maven Plugin
 The `alexandria-maven-plugin` can be used to add conversion/publishing to your maven project as part of the project build.
+
+## Trobleshooting
+* [crazy long error about eclipse loggers](https://stackoverflow.com/questions/47920305/can-not-set-org-eclipse-aether-spi-log-logger-with-custom-maven-plugin) when trying to install alexandria-maven-plugin. Upgrade maven to at least 3.5.2

@@ -8,7 +8,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import java.io.IOException;
 
-@Mojo( name = "convert", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
+@Mojo( name = "convert", defaultPhase = LifecyclePhase.PACKAGE)
 public class ConvertMojo extends AlexandriaMojo {
 
     @Override

@@ -8,7 +8,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 
 import java.io.IOException;
 
-@Mojo( name = "sync", defaultPhase = LifecyclePhase.PACKAGE)
+@Mojo( name = "sync", defaultPhase = LifecyclePhase.DEPLOY)
 public class SyncMojo extends AlexandriaMojo {
 
     @Override

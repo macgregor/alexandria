@@ -57,12 +57,12 @@
                         </goals>
                         <configuration>
                             <includes>
-                                <!-- Analyze class files only to exclude shaded agent JAR from report -->
-                                <include>**/*.class</include>
+                                <!-- Analyze class files only to excludes shaded agent JAR from report -->
+                                <includes>**/*.class</includes>
                             </includes>
                             <excludes>
-                                <exclude>**/Application$ManifestVersionProvider.class</exclude>
-                                <exclude>com/github/macgregor/alexandria/exceptions/**/*</exclude>
+                                <excludes>**/Application$ManifestVersionProvider.class</excludes>
+                                <excludes>com/github/macgregor/alexandria/exceptions/**/*</excludes>
                             </excludes>
                         </configuration>
                     </execution>
