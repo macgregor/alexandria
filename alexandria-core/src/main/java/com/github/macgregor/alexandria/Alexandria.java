@@ -124,7 +124,7 @@ public class Alexandria {
      */
     public Alexandria convert() throws BatchProcessException {
         log.debug("Converting files to html.");
-        if(context.config().remote().supportsNativeMarkdown().isPresent() && context.config().remote().supportsNativeMarkdown().get()){
+        if(supportsNativeMarkdown(context)){
             log.debug("Remote supports native markdown, no need to convert anything.");
             return this;
         }
@@ -134,9 +134,7 @@ public class Alexandria {
         for(Config.DocumentMetadata metadata : context.config().metadata().get()){
             try {
                 log.debug(String.format("Converting %s.", metadata.sourcePath().toFile().getName()));
-                String convertedDir = context.output().orElse(metadata.sourcePath().toAbsolutePath().getParent().toString());
-                String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
-                context.convertedPath(metadata, Paths.get(convertedDir, convertedFileName));
+                context.convertedPath(metadata, convertedPath(context, metadata));
                 Markdown.toHtml(metadata.sourcePath(), context.convertedPath(metadata).get());
             } catch(Exception e){
                 log.warn(String.format("Unexcepted error converting %s to html", metadata.sourcePath()), e);
@@ -204,6 +202,15 @@ public class Alexandria {
             log.debug(String.format("Syncing %s with remote.", metadata.sourcePath().toFile().getName()));
             try {
                 remote.validateDocumentMetadata(metadata);
+
+                if(!context.convertedPath(metadata).isPresent() && !supportsNativeMarkdown(context)){
+                    Path convertedPath = convertedPath(context, metadata);
+                    if(!convertedPath.toFile().exists()){
+                        Markdown.toHtml(metadata.sourcePath(), convertedPath);
+                    }
+                    context.convertedPath(metadata, convertedPath);
+                }
+
                 long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
                 log.debug(String.format("Old checksum: %d; New checksum: %d.", metadata.sourceChecksum().orElse(null), currentChecksum));
                 if (!metadata.remoteUri().isPresent()) {
@@ -237,5 +244,16 @@ public class Alexandria {
                     .build();
         }
         return this;
+    }
+
+    private Path convertedPath(Context context, Config.DocumentMetadata metadata){
+        String convertedDir = context.output().orElse(metadata.sourcePath().toAbsolutePath().getParent().toString());
+        String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
+        return Paths.get(convertedDir, convertedFileName);
+    }
+
+    private boolean supportsNativeMarkdown(Context context){
+        return context.config().remote().supportsNativeMarkdown().isPresent() &&
+                context.config().remote().supportsNativeMarkdown().get();
     }
 }

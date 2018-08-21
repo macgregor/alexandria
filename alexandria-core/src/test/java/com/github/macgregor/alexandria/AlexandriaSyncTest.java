@@ -163,4 +163,66 @@ public class AlexandriaSyncTest {
         alexandria.syncWithRemote();
         //todo: need a way to confirm update was not called
     }
+
+    @Test
+    public void testSyncRecreatesConvertedPathData() throws BatchProcessException, IOException {
+        File f1 = folder.newFile("hello.md");
+        File f2 = folder.newFile("hello.html");
+        Resources.save(f1.getPath(), "hello");
+        Resources.save(f2.getPath(), "hello");
+
+        Config config = new Config();
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(f1.toPath());
+        config.metadata(Optional.of(Arrays.asList(metadata)));
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
+        assertThat(context.convertedPath(metadata).get()).isEqualTo(f2.toPath());
+    }
+
+    @Test
+    public void testSyncReconvertsHtml() throws BatchProcessException, IOException {
+        File f1 = folder.newFile("hello.md");
+        File f2 = folder.newFile("hello.html");
+        Resources.save(f1.getPath(), "hello");
+
+        Config config = new Config();
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(f1.toPath());
+        config.metadata(Optional.of(Arrays.asList(metadata)));
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
+        assertThat(context.convertedPath(metadata).get()).isEqualTo(f2.toPath());
+        assertThat(context.convertedPath(metadata).get()).exists();
+    }
+
+    @Test
+    public void testSyncDoesntConvertNativeMarkdownRemotes() throws BatchProcessException, IOException {
+        File f1 = folder.newFile("hello.md");
+        Resources.save(f1.getPath(), "hello");
+
+        Config config = new Config();
+        config.remote().supportsNativeMarkdown(Optional.of(true));
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(f1.toPath());
+        config.metadata(Optional.of(Arrays.asList(metadata)));
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
+        assertThat(context.convertedPath(metadata)).isEmpty();
+    }
 }
