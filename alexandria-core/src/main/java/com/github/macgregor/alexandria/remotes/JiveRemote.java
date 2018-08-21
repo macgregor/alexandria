@@ -15,6 +15,7 @@ import java.net.URI;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class JiveRemote implements Remote{
     private static Logger log = LoggerFactory.getLogger(JiveRemote.class);
@@ -33,7 +34,12 @@ public class JiveRemote implements Remote{
     }
 
     public JiveRemote(Config.RemoteConfig config){
-        this(new OkHttpClient(), config);
+        this(new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build(),
+                config);
     }
 
     @Override
@@ -297,21 +303,29 @@ public class JiveRemote implements Remote{
      */
     protected String documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
         JiveContent jiveDocument = new JiveContent();
+        jiveDocument.parentPlace = null;
+        jiveDocument.subject = metadata.title();
+        jiveDocument.content.text = Resources.load(context.convertedPath(metadata).get().toString());
+        jiveDocument.type = "document";
+        jiveDocument.typeCode = 102;
 
         if(metadata.extraProps().get().containsKey("jiveContentId")){
             jiveDocument.contentID = metadata.extraProps().get().get("jiveContentId");
         }
-        jiveDocument.subject = metadata.title();
+
+        //need to convert this somwhere
+        //https://developers.jivesoftware.com/api/v3/cloud/rest/PlaceService.html#getPlaces(List%3CString%3E,%20String,%20int,%20int,%20String)
+        if(metadata.extraProps().get().containsKey("jiveParentUrl")){
+            jiveDocument.parent = metadata.extraProps().get().get("jiveParentUrl");
+        }
 
         if(metadata.tags().isPresent()){
             jiveDocument.tags = metadata.tags().get();
         }
 
-        jiveDocument.content.text = Resources.load(context.convertedPath(metadata).get().toString());
-
-        //TODO: add parent
-
-        return Jackson.jsonMapper().writeValueAsString(jiveDocument);
+        String body = Jackson.jsonMapper().writeValueAsString(jiveDocument);
+        log.trace(body);
+        return body;
     }
 
     public static class PagedJiveContent{
