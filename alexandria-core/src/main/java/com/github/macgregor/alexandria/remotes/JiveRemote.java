@@ -16,6 +16,8 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class JiveRemote implements Remote{
     private static Logger log = LoggerFactory.getLogger(JiveRemote.class);
@@ -74,6 +76,10 @@ public class JiveRemote implements Remote{
      */
     @Override
     public void create(Context context, Config.DocumentMetadata metadata) throws IOException {
+        if(needsParentPlaceUri(metadata)){
+            findParentPlace(context, metadata);
+        }
+
         HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
                 .addPathSegment("contents")
                 .addQueryParameter("fields", STANDARD_FIELD_PROJECTION)
@@ -105,11 +111,14 @@ public class JiveRemote implements Remote{
      */
     @Override
     public void update(Context context, Config.DocumentMetadata metadata) throws IOException {
-        if(!metadata.extraProps().isPresent() || !metadata.extraProps().get().containsKey("jiveContentId")){
-            log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.remoteUri().get().toString()));
-            syncMetadata(context, metadata);
+        if(needsContentId(metadata)){
+            findDocument(context, metadata);
         }
         String contentId = metadata.extraProps().get().get("jiveContentId");
+
+        if(needsParentPlaceUri(metadata)){
+            findParentPlace(context, metadata);
+        }
 
         HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
                 .addPathSegment("contents")
@@ -144,9 +153,8 @@ public class JiveRemote implements Remote{
      */
     @Override
     public void delete(Context context, Config.DocumentMetadata metadata) throws IOException {
-        if(!metadata.extraProps().isPresent() || !metadata.extraProps().get().containsKey("jiveContentId")){
-            log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.remoteUri().get().toString()));
-            syncMetadata(context, metadata);
+        if(needsContentId(metadata)){
+            findDocument(context, metadata);
         }
         String contentId = metadata.extraProps().get().get("jiveContentId");
 
@@ -216,13 +224,21 @@ public class JiveRemote implements Remote{
         }
     }
 
+    public boolean needsContentId(Config.DocumentMetadata metadata){
+        return metadata.remoteUri().isPresent() &&
+                metadata.extraProps().isPresent() &&
+                !metadata.extraProps().get().containsKey("jiveContentId");
+    }
+
     /**
      * https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#getContents(List%3CString%3E,%20String,%20int,%20int,%20String,%20boolean,%20boolean)
      *
      * @param metadata
      * @throws IOException
      */
-    public void syncMetadata(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public void findDocument(Context context, Config.DocumentMetadata metadata) throws IOException {
+        log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.remoteUri().get().toString()));
+
         // https://community.jivesoftware.com/docs/DOC-153931
         String filter = String.format("entityDescriptor(102,%s)", jiveObjectId(metadata.remoteUri().get()));
 
@@ -242,6 +258,45 @@ public class JiveRemote implements Remote{
         Response response = doRequest(request);
         try {
             PagedJiveContent pagedJiveContent = Jackson.jsonMapper().readValue(response.body().charStream(), PagedJiveContent.class);
+            updateMetadata(metadata, pagedJiveContent);
+        } catch (IOException e) {
+            log.warn("Cannot parse response content", e);
+            HttpException exception = new HttpException("Cannot parse response content", e);
+            exception.setRequest(Optional.of(request));
+            exception.setResponse(Optional.ofNullable(response));
+            throw exception;
+        }
+    }
+
+    public boolean needsParentPlaceUri(Config.DocumentMetadata metadata){
+        return metadata.extraProps().isPresent() &&
+                metadata.extraProps().get().containsKey("jiveParentUri") &&
+                !metadata.extraProps().get().containsKey("jiveParentApiUri");
+    }
+
+    // curl -u sa_es_alexandria:HvvstY3vgiE= "https://mojo-stage.jiveon.com/api/core/v3/places?filter=search(alexandria-test-group)&fields=id,resources,placeID,displayName,name,type,typeCode&startIndex=0&count=1
+    public void findParentPlace(Context context, Config.DocumentMetadata metadata) throws IOException {
+        log.debug(String.format("Jive parent place detected, attempting to retrieve from remote."));
+
+        String parentPlaceUrl = metadata.extraProps().get().get("jiveParentUri");
+        String filter = String.format("search(%s)", jiveParentPlaceName(parentPlaceUrl));
+
+        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
+                .addPathSegment("places")
+                .addQueryParameter("filter", filter)
+                .addQueryParameter("startIndex", "0")
+                .addQueryParameter("count", "1")
+                .addQueryParameter("fields", JivePlace.FIELDS)
+                .build();
+
+        Request request = authenticated(new Request.Builder())
+                .url(route)
+                .get()
+                .build();
+
+        Response response = doRequest(request);
+        try {
+            PagedJivePlace pagedJiveContent = Jackson.jsonMapper().readValue(response.body().charStream(), PagedJivePlace.class);
             updateMetadata(metadata, pagedJiveContent);
         } catch (IOException e) {
             log.warn("Cannot parse response content", e);
@@ -276,10 +331,13 @@ public class JiveRemote implements Remote{
         }
         if(content.parentPlace != null){
             if(StringUtils.isNotBlank(content.parentPlace.html)){
-                metadata.extraProps().get().put("jiveParentUrl", content.parentPlace.html);
+                metadata.extraProps().get().put("jiveParentUri", content.parentPlace.html);
             }
             if(StringUtils.isNotBlank(content.parentPlace.placeID)){
                 metadata.extraProps().get().put("jiveParentPlaceId", content.parentPlace.placeID);
+            }
+            if(StringUtils.isNotBlank(content.parentPlace.uri)){
+                metadata.extraProps().get().put("jiveParentApiUri", content.parentPlace.uri);
             }
         }
         if(StringUtils.isNotBlank(content.contentID)){
@@ -290,9 +348,47 @@ public class JiveRemote implements Remote{
         return metadata;
     }
 
+    protected Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJivePlace places) {
+        if(places != null && places.list != null && places.list.size() > 0){
+            return updateMetadata(metadata, places.list.get(0));
+        }
+
+        return metadata;
+    }
+
+    protected Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JivePlace place) {
+        if(StringUtils.isNotBlank(place.placeID)){
+            metadata.extraProps().get().put("jiveParentPlaceId", place.placeID);
+        }
+        if(place.resources != null && place.resources.containsKey("html")){
+            metadata.extraProps().get().put("jiveParentUri", place.resources.get("html").ref);
+        }
+        if(place.resources != null && place.resources.containsKey("html")){
+            metadata.extraProps().get().put("jiveParentApiUri", place.resources.get("self").ref);
+        }
+
+        log.debug(String.format("Updated %s metadata from response content.", metadata.sourcePath().toAbsolutePath().toString()));
+        return metadata;
+    }
+
     protected String jiveObjectId(URI remoteDoc){
-        String[] segments = remoteDoc.getPath().split("/");
-        return segments[segments.length-1].replace("DOC-", "");
+        Pattern p = Pattern.compile(".*DOC-(\\d+)-*.*");
+        Matcher m = p.matcher(remoteDoc.getPath());
+        if(m.matches()) {
+            return m.group(1);
+        } else {
+            throw new IllegalStateException(String.format("Unable to extract jive object id from %s.", remoteDoc.toString()));
+        }
+    }
+
+    protected String jiveParentPlaceName(String parentPlaceUrl){
+        Pattern p = Pattern.compile(".*/(.*)");
+        Matcher m = p.matcher(parentPlaceUrl);
+        if(m.matches()) {
+            return m.group(1);
+        } else {
+            throw new IllegalStateException(String.format("Unable to parent place name from %s.", parentPlaceUrl));
+        }
     }
 
     /**
@@ -313,10 +409,8 @@ public class JiveRemote implements Remote{
             jiveDocument.contentID = metadata.extraProps().get().get("jiveContentId");
         }
 
-        //need to convert this somwhere
-        //https://developers.jivesoftware.com/api/v3/cloud/rest/PlaceService.html#getPlaces(List%3CString%3E,%20String,%20int,%20int,%20String)
-        if(metadata.extraProps().get().containsKey("jiveParentUrl")){
-            jiveDocument.parent = metadata.extraProps().get().get("jiveParentUrl");
+        if(metadata.extraProps().get().containsKey("jiveParentApiUri")) {
+            jiveDocument.parent = metadata.extraProps().get().get("jiveParentApiUri");
         }
 
         if(metadata.tags().isPresent()){
@@ -326,6 +420,28 @@ public class JiveRemote implements Remote{
         String body = Jackson.jsonMapper().writeValueAsString(jiveDocument);
         log.trace(body);
         return body;
+    }
+
+    public static class Link{
+        public String ref;
+        public List<String> allowed;
+    }
+
+    public static class PagedJivePlace{
+        public List<JivePlace> list = new ArrayList<>();
+        public Integer startIndex;
+        public Integer itemsPerPage;
+    }
+
+    public static class JivePlace{
+        public static final String FIELDS = "id,resources,placeID,displayName,name,type,typeCode";
+        public Integer id;
+        public Map<String, Link> resources = new HashMap<>();
+        public String placeID;
+        public String displayName;
+        public String name;
+        public String type;
+        public Integer typeCode;
     }
 
     public static class PagedJiveContent{
@@ -361,11 +477,6 @@ public class JiveRemote implements Remote{
         public static class Via{
             public final String displayName = "Alexandria";
             public final String url = "https://github.com/macgregor/alexandria";
-        }
-
-        public static class Link{
-            public String ref;
-            public List<String> allowed;
         }
 
         public static class ParentPlace{
