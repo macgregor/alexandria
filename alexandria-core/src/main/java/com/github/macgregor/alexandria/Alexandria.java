@@ -104,6 +104,9 @@ public class Alexandria {
                 metadata.title(p.toFile().getName());
                 context.config().metadata().get().add(metadata);
             }
+
+            log.info(String.format("Matched %d files (%d indexed, %d already indexed)",
+                    matchedDocuments.size(), unindexed.size(), alreadyIndexed.size()));
             this.save();
             return this;
         } catch(Exception e){
@@ -145,7 +148,7 @@ public class Alexandria {
                         .build());
             }
         }
-        log.debug(String.format("%d out of %d files converted successfully.", context.config().metadata().get().size()-exceptions.size(), context.config().metadata().get().size()));
+        log.info(String.format("%d out of %d files converted successfully.", context.config().metadata().get().size()-exceptions.size(), context.config().metadata().get().size()));
 
         try {
             this.save();
@@ -212,14 +215,17 @@ public class Alexandria {
                 }
 
                 long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
-                log.debug(String.format("Old checksum: %d; New checksum: %d.", metadata.sourceChecksum().orElse(null), currentChecksum));
+                log.debug(String.format("Old checksum: %d; New checksum: %d", metadata.sourceChecksum().orElse(null), currentChecksum));
                 if (!metadata.remoteUri().isPresent()) {
                     remote.create(context, metadata);
-                    log.debug(String.format("Created new document at %s.", metadata.remoteUri().orElse(null)));
+                    log.info(String.format("Created new document at %s", metadata.remoteUri().orElse(null)));
                 } else {
                     if (!metadata.sourceChecksum().isPresent() || !metadata.sourceChecksum().get().equals(currentChecksum)) {
                         remote.update(context, metadata);
-                        log.debug(String.format("Update document at %s.", metadata.remoteUri().orElse(null)));
+                        log.info(String.format("Updated document at %s", metadata.remoteUri().orElse(null)));
+                    } else{
+                        log.info(String.format("%s is already up to date (checksum: %d, last updated: %s)",
+                                metadata.sourcePath().toFile().getName(), currentChecksum, metadata.lastUpdated().orElse(null)));
                     }
                 }
                 metadata.sourceChecksum(Optional.of(currentChecksum));
@@ -236,6 +242,11 @@ public class Alexandria {
                         .build());
             }
         }
+
+        log.info(String.format("Synced %d out of %d documents with remote %s",
+                context.config().metadata().get().size() - exceptions.size(),
+                context.config().metadata().get().size(),
+                context.config().remote().baseUrl().orElse(null)));
 
         if(exceptions.size() > 0){
             throw new BatchProcessException.Builder()

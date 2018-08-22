@@ -57,12 +57,12 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     }
 
     public void logContext(){
-        getLog().info("Alexandria - config file: " + alexandria.context().configPath());
-        getLog().info("Alexandria - project base dir: " + alexandria.context().projectBase());
-        getLog().info("Alexandria - inputs directories: " + alexandria.context().searchPath());
-        getLog().info("Alexandria - outputPath directory: " + alexandria.context().output());
-        getLog().info("Alexandria - includes files: " + alexandria.context().include());
-        getLog().info("Alexandria - excludes files: " + alexandria.context().exclude());
+        getLog().debug("Alexandria - config file: " + alexandria.context().configPath());
+        getLog().debug("Alexandria - project base dir: " + alexandria.context().projectBase());
+        getLog().debug("Alexandria - inputs directories: " + alexandria.context().searchPath());
+        getLog().debug("Alexandria - outputPath directory: " + alexandria.context().output());
+        getLog().debug("Alexandria - includes files: " + alexandria.context().include());
+        getLog().debug("Alexandria - excludes files: " + alexandria.context().exclude());
     }
 
     protected boolean isExecutionRoot() {
