@@ -3,45 +3,47 @@ jdk:
 - oraclejdk8
 env:
   global:
-    - secure: "I33KMzHtkAU4rO31EjgSISkfhJO/yv4a5sy4oAqKtISOQZlVKcfIW8ZEHz5DK+uVEWK5rQFF9MC2HMFp0r1JJ4dEjhkuNEJ+EhFLBGDSokao0wd/gHbFkBS0rpqEDWozLyoWVwfBN0hUsAV2GE90kmomBxHVhr4nZkLlX7lLZUyylbi+/YMdE5ZYiljsayv5g+mCAA8ytTewCvhEo1eQLka/u0+n94jeivU/qxrhjQOYzKe1kqt7eIllOUlIqc3OMtpcGzvgVXdvcRZEOnWCdGqRx1OUJPdiUWKF5XRJjs47TARzanHyh32OtdIkKmFQRRBe7HpHV/v1hIgpHapIOQcSBxTcqWKtLEKuwM54mf5lHkcECv3Im/uBP9eI32tinEdbxHUQCCFllugiwtAXnn1q6qykALjs1anBk7rYFlogL+DQO91Pva8VH4VV7KvkxLRnMIiOwOIf2vhl3VV6e8Paw7cO1d2wTjOrpouS+6ebLW08A7INGKHpgkpxD3eVyP7qQoaWar/IYoktHnmdBdVKZ0nzvS8Wo+GPBoaHV9obG3icQvYGSmON6YXKRzkEXp8mJZlzsdTc74uBGuyEXR/VJDOWQnOl8/oXiGAlve4K5INDMZ52n7+KOYewxokELse+UPCp7UJhmyS/hiJmNZ215Y+7MH9hFYs0JPs94qs="
-    - # ^^ SONATYPE_USERNAME
-    - secure: "YXJQTM9mnZZYsQ4GuWP2rPcQo7uQP1sHJyY1/AE6dpqb4nLUEltpCJzkewBXBI6AQ9p3+6LkXhB4TlySznjFurF4y1d+Nn0V1MmXW4agGVJCjJzIyuPmmvmjpRPu08CfrMo0H9+olYjij9uE5h5lLxx2sIZDbTZYyUFcb8pNExCdzzejP+tMcFnHqGKQyAaD/xZcZKQNNEQmvCIjhfgpo8X/OVwem1BhfJVs77d4OayWyAXumEfunzyvJ5fYjzkZ91jjvJKD4IZv/8fDojOnx27nHXRPE6/GFWXZk/L5LUkZEv1CGsw1qyLFqTzFY/uieUH99trz6lezJbdU9bhiViG7NYJxWti1WRMu5emWM4A1LAkaUJqPKHX2JR7inDsZ18iKQxjCKzSbXcY4rzcK8+zIjfFZPWDBIewT2O3HWz3vzLHdHjbHj7nLZ5Nx2j47mgZh/DJ3FLng37Ni765fWWlU1XynNOyyfol72qpgu5kpX9Kyp4Ayji8ALPPCDon3ftsP1ZbCfVWiHdsn4wUWpHuG2Lbgrv3LwSeEL7tFWln1WbzeOllflhc/82vnucTslwWetjOYluc6/pVrq/cNRog3HBVYmhrPVNIo2qUN316i55a2A9x7Tb5yE6NsR8PCCbt58jT96anzEOdbVaCqhPsmIrqWjwpiNjeBiPBZaYw="
-    - # ^^ SONATYPE_PASSWORD
-    - secure: "PLLu+kd7BNgB2zckYd2W0llY3SM9GdO8ORvQKXHp+ZYHVxm60VBFcEH49oLb/M3A1Z56jmI4W5ICONpeqUpV58BHwnuE4ONyZk9YH6mgM9oCiWueEk1151Zfcfm3+pu1icbBQfbU9vpTwk+ShDfmG4Dj0zgf/261Z+jUPxGNTqWeLEzlvenxeLJUrM/fbJ8APcetw0NyDwlIP0dSTL9HsL+mB+LPzlIJYiPweU3GLbcp8ONtFIqWNSaaWDyqyFbHpIJ+M8cFfAIGDw8PsZsQkbr849NEFAHS1PAfSG5Cm2R5uEtlmz1aBKsJdR/2LNDuk8/4009rMkDDveGweSb1cCL//CA3b1MQn69C3crdJ3f7FmsV6Yp115tfqE46Mr9o/Fy9N3aJjGK5CVb8qR4m4LQ2MIdi/oZV97DzELwlP39J58/ma63PMNnAeLT4oX0YwJD+IAsusamglZQvdHj54TVazajI9i9Rgq6dfDccr/vA9k1ttR3NXkDBnNgyYT6iTG6O9CXX1/TIF3y4oOLjLEQaFJrWvm8+Cd9/GHcpO1CjLTlVGU9zkVI/0A2kxbsxKh8970g9Acd6kGeEmVSo9Ifd57JB3vR8fiGuy1jJQ5jvbn342gXxbnpH29ImEXcHucEWfFnIMJvhrzK7j5KlOXgRBkS1kBSuao33kzpZq3Y="
-    - # ^^ SIGNING_KEY_NAME
-    - secure: "Gv5D8z/pRPeC2B4L1G5w+iuXGHoZdXRx5iwMPRKBaKbrULWGgJkh9UmqhnFbsS3Wj5maGFYzkPHzNW8a6m/8J5PudF1qGuF96SC9ztTFj3y/O+CE/FkAzwivw3zMHDnqZj3nDX5io1n0d6INGJn9Mmj8R9e8tRGm8T9pA1Go3C4BOSQjSOlhlFvLmn87lbBYCX+34Zt0KN4TghRnBb0w/YW4xu+H7FLwl7COgI4hFeorV+hIij5lVn902Ulp0f/SBFRbMXcUfRQMQZXiCnl5+VcZmHzWBNoD3uCgjfFyeCc0oHdeZTY8mCI2c8SPgQimtNnO2kmm54W/PBKjBg5gu5cJc/exV5nIVtfyX7oIST6bcjLVZWsgwtSYAajNJrzYknhbcTDH1IRndToJAqzObeaavj1IdCtySgKjM/UZRUUBdOGZqG7U3ObUDMSANcr2KBhe81loKCEqkVawFpaRM2842OpOnOREPzFzj6odq8i/A/0495kGTzMPduvc5UiNU4G8759wk0d5qYxIg1KJfpN67stUhTdjZ/j7ilJi58WTNUUY8o+konouB0Jz4tWHXkmajmN9qrEeH08wWhG3Xak6vsy6Xb19S192ZBsI4j+RG8GF1mHFPK8K3bQnCuWFpbCH0QNQw+IteN9yF33dASu+ILgpV7yGIAwqFjapq5w="
-    - # ^^ SIGNING_KEY_PASS
+  - secure: AxvkEfE4uSnoUwn+hRtbKmpxPFv7X4hovUu4iFuU4qVww6ZVhRd8imSy9K933bmOn4k52BO8pkuhxcPQ8UCdiq4Igrvk64V4XofRW/T18STkEg/8GfdwfF8WrRk4xE5FjNo0rlvT5qAEPorP3GL2d69CkIHQ6FVADXAy1nBJV3JX+K+tWl8GGtaOXq1cOn987ioDCdwDiEUZtqAI5pGstDYyl4OsugUo7QM2ngQeu7aDff7tOCuBvJ2Yyq+DZVW19EJqUnkWPHu4S2JVzSt5hRjdZP8ZeaVMhCsEIPG9GCJUDZ2hxE00O0h64w4EqKrpf0ITxcsTzpbHx0Wcy8lwWgZgrtv9V3Nq4sFEyWcBLyMVd9vPU+y+eF2Gl2LdgVddylfiLmXX/uSqkjsQR8qghg65+L8p65AEQ1vssTe/tOuHIMGJ4ZckDZjN/8lnUTmndHvel9spc+3x4uoqIL1Esh1utQEGZtIWOCRnsbHuciCvl7sLS6z18z1xoa0PFZ2b+Pwl7DRLXvXJ2sGPo1Rcq7x2OKMep6c8K0oWNi8rYlvfHlIC7XqeIPBI5e6U2UuL/HTKvfdOldflgsgskFcnwTvbryLMZ8KvcW/ws9E/Xb3zPl5MVBg0ZXIDP99i11bFeznIUyJs7+iWUaQOeO3yn9MyZOYFsJswfM9cpnY3qGU=
+  - # ^^ SONATYPE_USERNAME
+  - secure: tfQLC7MA7nWT5sfJza4j0IzOPDm3Kslz9B9xojOWiK2BfVxjg2Os6XKHbRSNwG6Bp4JOV0GmhWQzUQOF3yMrQ6d/W0/Xz/xcwCb5BUOCaFspFEXTGJfxWkzQQnlhgymuKDifCRpK6UYTVSoXQ6RxKKMgRGvHlgqMKJ+SFkz4DwJ5nHyS7t6Hfyg0o6p1OOxsWJvyd/hCZh1XAZB+E8DKs4BP40q0mvdM0qXkd8wcwR3FoimNERJUXAhIbH/86NONfKzGhV7JfdpvfSMT5bIpNi5my4i/4jVFtmrgE2CENqecaNyuIihN/ScZ5zl3kpsKDdak7/EDKDqftjbndnTTRTsoraeuDrIXlymQB0S3dGcY1IMmwle2AAKoetwf+96B96/GnoLLVQ13zdf444IBp4gOeT8uhdYwR7iwnuUzmlYF6Cce+ShskEYTGsWo3cRCxD3PahRt4o3ulpan3VmnRuqCxFn5a42QUpUA1GehLJDfwrY5GHJtFPc7Qye4/6k/rZHvigVfViRE1eOgXadfBEmmYMeXrNdWWf2zZkVc7Phw24D+bbpfg+sMbSBeKEc1d81DZFUuP+bjxJf+TXUkudxgG+SI7q9yu+AAmBaQpnHfd2VlLq5vYGeBXggGG567G0CkgJoxkRNv43oVkG4j0eImgrU1H6O84MDZ2Rp7ek0=
+  - # ^^ SONATYPE_PASSWORD
+  - secure: ZJb7HxINLHct17/2ziAXPt39TGrLeq8rsbiQH0x8JVJhXhDWzYwyEC0r+iogHfAsiGQfLJg/6G3S3U1TziKAraWhyTjOEiJh0TnGRxC+XLRX2gEcrjB8nxoYYTbCe09DSpvYyIo5GEgvAjWWuU0jTb1JFtjqt4sCSEoDhAuIJxDMDe9SqedtxM+U/OxGxKDiE7+xxYBfYpR+R3fIc7MX/6LrVOp8GJJUcSi+tEp5K7g7ITqaoetWZL6W2wX7D891CiKgp6b60Unw4ah9kjRs4qojRrsswjZM+4FCRVB+U3l9Lxbhqs49SPsVkySJTgg71DoGLB8GtlNkXKuZbtEEYGZFVRKRThb1eC3yUA9y260KMN3p9hBzNsxiah4EDDv+B1zXxvOHC5lFO1rFqs6C/PYst6kO0Wz5Hs2M+MDP+e4LQy6a5wq2/PX69aY1UPPdB+WTvx+5bqMchuggBV/PKrVelLCztAgDeoAtcRfmk2mwFIPaFmtj3g3LC1yhLpV4nASCvDE7b0hkY7gYm5es9XTRR6Tu+utJpthHdXOZubEfzS1hAdqMMstZBYjhR+gH7i7NvmgrK3GrxABjCvYf4zBWEJqyDxVF+7uLwLYmbOeBHlGmCVVh5vmuBYHrTywnJEitW2waHODSJuLN69Vr1CEYpvz4eCw+ZFdWYcAzE3c=
+  - # ^^ SIGNING_KEY_NAME
+  - secure: c06pQn4uXrAlegtf7P5+efhROII7lE2LDmWs5JlglbP4Jdbl54rA/TYMdVbn2bZ66YwASSqpsnyQcN0ION2LISf0MpKaC5J1osGdZ9QBqwz8nt0uvwMkiBLXfw21VecWRVlFvo/lUHfGdx2wNGTt+mUNtzfvBgC12TdHGJ570/TPpW6lFUbFsXxwDzCpy1K0dwWWJv88ms3aeBX71F9NG1cKv1ceR8xroLmAJL4/+bZRM1BbQyuvVYu9qhzkSfCyw/lK4g2z9u1eb3yU6O+nDEkAykNLROde7dQGFtYW4DIR+NRHO2LTLGXRUA1c3cNJhNZtfz3xEf+n1Uc6bV5EB8TW+QtUkdal9ekjZRaGwlx5TIGbvswjLiy8p6GAEqoHbDzWy0sFiY+lCwANw04CFcRnDzmh+LQsp0S9j55Ts5e7BDL9OOP7qNGj0e5CIX6hw4tI7PGqwyP+xWBFFLcUVPiULXPqlgRngofRrviG+aEkQDKflOSwDyT2flvPA0VsUJ9avJ3IWsERYCGiz8uQ23x2cH6eMkZC1MKnMJAnd7EcdHRS7lIadSseykKAGWXzjhORvfVAeeKFKCfTs/czSlSjf7TDoGn8DzkSHB8pSursiWxjWOoOJC2CmcmKNE7TW7QARUjt52MGyakhz4Qq/8S+SrOFhNCjxQwqBwGlKRY=
+  - # ^^ SIGNING_KEY_PASS
 branches:
   only:
-    - master
-    - gh-pages
-    - /^\d+\.\d+(\.\d+)?(-\S*)?$/
+  - master
+  - gh-pages
+  - "/^\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 install: mvn install -DskipTests
 cache:
   directories:
-    - ~/.m2/repository
+  - "~/.m2/repository"
 before_deploy:
-  - openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d
-  - gpg --fast-import signing_key.gpg
-  - export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
-  - git config --global user.email "builds@travis-ci.org"
-  - git config --global user.name "Travis CI"
+- openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv
+  -in ci/signing_key.gpg.enc -out signing_key.gpg -d
+- gpg --fast-import signing_key.gpg
+- export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}'
+  --non-recursive exec:exec)
+- git config --global user.email "builds@travis-ci.org"
+- git config --global user.name "Travis CI"
 deploy:
-  - provider: script
-    script: "mvn deploy coveralls:report --settings ci/.maven.xml"
-    skip_cleanup: true
-    on:
-      tags: true
-  - provider: releases
-    name: $project_version
-    api-key:
-      secure: fjBjaAy7wOUbfa66Bv+UUfHnjjFl8k/FuGlULenknvUao5RLPMRs8GTlY1nhum7TG3071rCKb/VIS2HhseikGEWubUXr0sWwSSS5v31enViG/RP1T+4cOz3i8Vgb9mswqv2tqselbwIoQW3xpBgPPFuiNgij3WAqRSlKv17Fa/cBdCRsgWXDGvPfPlyCJmXEnMDQK0O5/uxZIWO5IIAxo/PnQlkWcKQaA/kE9wEQsfxbyYtT3sQVP/FSApimBhOC9iTz6/rw6OZM8ehVkYpygrcEyjeRxM2ZibRb6osTrNrOMSH6mDlzWTLYv/cGPo4Ch/riMFqv/lFcCZvH1+leOPdoqkokOHAvgTRuFHs9LCu1hMd4suWrowwKJc4RUkZFrATMfXUyRHd48kRj4whc3YhwaSX07sCEMRN94Ztvc336DsMWMid49yH1/1kapQCFRxfQBimBHKobD9LYrZdBK4ZwQeR/P910En4QOmeaeOiLGxoiqxwHgX7pjhZfiZJovq/vc5+AVByAAFrBc1TfXcZDrDmzWNXje4db6iEwMdGAd2hTMyGt1SIp9g4ui7/QvOiiID9O/Pflr4E+zAKJTtc+LjmwWriYFnaGz6SOaRznLIj0WGXx8ixpjCj02EttOhkwsIK172d1CQ438O5GciIDrHtXurKieRjRoCXkJTw=
-    file:
-    - alexandria-maven-plugin/target/alexandria-maven-plugin-$project_version.jar
-    - alexandria-core/target/alexandria-core-$project_version.jar
-    - alexandria-cli/target/alexandria-cli-$project_version.jar
-    skip_cleanup: true
-    on:
-      tags: true
+- provider: script
+  script: mvn deploy coveralls:report --settings ci/.maven.xml
+  skip_cleanup: true
+  on:
+    tags: true
+- provider: releases
+  name: "$project_version"
+  api-key:
+    secure: fjBjaAy7wOUbfa66Bv+UUfHnjjFl8k/FuGlULenknvUao5RLPMRs8GTlY1nhum7TG3071rCKb/VIS2HhseikGEWubUXr0sWwSSS5v31enViG/RP1T+4cOz3i8Vgb9mswqv2tqselbwIoQW3xpBgPPFuiNgij3WAqRSlKv17Fa/cBdCRsgWXDGvPfPlyCJmXEnMDQK0O5/uxZIWO5IIAxo/PnQlkWcKQaA/kE9wEQsfxbyYtT3sQVP/FSApimBhOC9iTz6/rw6OZM8ehVkYpygrcEyjeRxM2ZibRb6osTrNrOMSH6mDlzWTLYv/cGPo4Ch/riMFqv/lFcCZvH1+leOPdoqkokOHAvgTRuFHs9LCu1hMd4suWrowwKJc4RUkZFrATMfXUyRHd48kRj4whc3YhwaSX07sCEMRN94Ztvc336DsMWMid49yH1/1kapQCFRxfQBimBHKobD9LYrZdBK4ZwQeR/P910En4QOmeaeOiLGxoiqxwHgX7pjhZfiZJovq/vc5+AVByAAFrBc1TfXcZDrDmzWNXje4db6iEwMdGAd2hTMyGt1SIp9g4ui7/QvOiiID9O/Pflr4E+zAKJTtc+LjmwWriYFnaGz6SOaRznLIj0WGXx8ixpjCj02EttOhkwsIK172d1CQ438O5GciIDrHtXurKieRjRoCXkJTw=
+  file:
+  - alexandria-maven-plugin/target/alexandria-maven-plugin-$project_version.jar
+  - alexandria-core/target/alexandria-core-$project_version.jar
+  - alexandria-cli/target/alexandria-cli-$project_version.jar
+  skip_cleanup: true
+  on:
+    tags: true
 after_deploy:
-  - ./ci/prepare-development
+- "./ci/prepare-development"
