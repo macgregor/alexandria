@@ -14,7 +14,7 @@ import java.util.jar.Manifest;
         mixinStandardHelpOptions = true,
         versionProvider = Application.ManifestVersionProvider.class,
         subcommands = {
-            ConvertCommand.class, IndexCommand.class, SyncCommand.class
+            ConvertCommand.class, AlexandriaIndex.class, SyncCommand.class
         })
 public class Application extends AlexandriaCommand {
 

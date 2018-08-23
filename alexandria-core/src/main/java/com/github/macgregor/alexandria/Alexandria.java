@@ -9,15 +9,12 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Core class containing the high level commands to indexing metadata, converting html and
@@ -75,47 +72,9 @@ public class Alexandria {
      *
      * @throws AlexandriaException Any exception is thrown, most likely an IOException due to a missing file or invalid path.
      */
-    public Alexandria index() throws AlexandriaException {
-        log.debug("Updating metadata index.");
-        try {
-            Collection<File> matchedDocuments = new Resources.PathFinder()
-                    .startingIn(context.searchPath())
-                    .including(context.include())
-                    .excluding(context.exclude())
-                    .find();
-
-            Collection<Path> relativeMatchedDocuments = Resources.relativeTo(context.projectBase(),
-                    matchedDocuments.stream().map(File::toPath).collect(Collectors.toList()));
-
-            Collection<Path> alreadyIndexed = context.config().metadata().get().stream()
-                    .map(Config.DocumentMetadata::sourcePath)
-                    .collect(Collectors.toList());
-            Collection<Path> relativeAlreadyIndexed = Resources.relativeTo(context.projectBase(), alreadyIndexed);
-
-            Collection<Path> unindexed = relativeMatchedDocuments.stream()
-                    .filter(p -> !relativeAlreadyIndexed.contains(p))
-                    .collect(Collectors.toList());
-
-            log.debug(String.format("Found %d unindexed files.", unindexed.size()));
-            for (Path p : unindexed) {
-                log.debug("Creating metadata for unindexed file " + p.toAbsolutePath().toString());
-                Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-                metadata.sourcePath(p);
-                metadata.title(p.toFile().getName());
-                context.config().metadata().get().add(metadata);
-            }
-
-            log.info(String.format("Matched %d files (%d indexed, %d already indexed)",
-                    matchedDocuments.size(), unindexed.size(), alreadyIndexed.size()));
-            this.save();
-            return this;
-        } catch(Exception e){
-            log.warn("Unexpeccted exception generating local metadata index", e);
-            throw new AlexandriaException.Builder()
-                    .withMessage("Unexpeccted exception generating local metadata index")
-                    .causedBy(e)
-                    .build();
-        }
+    public Alexandria index() throws BatchProcessException {
+        new AlexandriaIndex(context).update();
+        return this;
     }
 
     /**
@@ -222,7 +181,8 @@ public class Alexandria {
                 } else {
                     if (!metadata.sourceChecksum().isPresent() || !metadata.sourceChecksum().get().equals(currentChecksum)) {
                         remote.update(context, metadata);
-                        log.info(String.format("Updated document at %s", metadata.remoteUri().orElse(null)));
+                        log.info(String.format("Updated document %s at %s",
+                                metadata.sourcePath().toFile().getName(), metadata.remoteUri().orElse(null)));
                     } else{
                         log.info(String.format("%s is already up to date (checksum: %d, last updated: %s)",
                                 metadata.sourcePath().toFile().getName(), currentChecksum, metadata.lastUpdated().orElse(null)));

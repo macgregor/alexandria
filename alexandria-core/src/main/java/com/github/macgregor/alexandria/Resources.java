@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class Resources {
 
     /**
-     * Builder to find files among directories matching based on include/exclude patterns. Makes use of
+     * Builder to files files among directories matching based on include/exclude patterns. Makes use of
      * {@link FileUtils#listFiles(File, IOFileFilter, IOFileFilter)} to do the heavy lifting.
      */
     public static class PathFinder{
@@ -118,7 +118,7 @@ public class Resources {
          * of the include patterns and non of the exclude filters.
          * @return
          */
-        public Collection<File> find(){
+        public Collection<File> files(){
             IOFileFilter dirFilter = recursive ? TrueFileFilter.INSTANCE : null;
             IOFileFilter fileFilter = new AndFileFilter(
                     new WildcardFileFilter(include),
@@ -127,6 +127,12 @@ public class Resources {
             return startingDirs.stream()
                     .map(d -> FileUtils.listFiles(d.toFile(), fileFilter, dirFilter))
                     .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+        }
+
+        public Collection<Path> paths(){
+            return files().stream()
+                    .map(f -> f.toPath())
                     .collect(Collectors.toList());
         }
     }

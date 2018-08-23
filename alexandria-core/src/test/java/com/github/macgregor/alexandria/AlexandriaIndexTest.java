@@ -1,6 +1,6 @@
 package com.github.macgregor.alexandria;
 
-import com.github.macgregor.alexandria.exceptions.AlexandriaException;
+import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -21,7 +21,7 @@ public class AlexandriaIndexTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testIndexFresh() throws IOException {
+    public void testIndexFresh() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
         File f2 = folder.newFile("doc.md");
         Config config = new Config();
@@ -44,7 +44,7 @@ public class AlexandriaIndexTest {
     }
 
     @Test
-    public void testIndexUpdate() throws IOException {
+    public void testIndexUpdate() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
         File f2 = folder.newFile("doc.md");
 
@@ -74,7 +74,7 @@ public class AlexandriaIndexTest {
     }
 
     @Test
-    public void testIndexSetsTitle() throws IOException {
+    public void testIndexSetsTitle() throws IOException, BatchProcessException {
         File f1 = folder.newFile("readme.md");
         File f2 = folder.newFile("doc.md");
 
@@ -98,7 +98,7 @@ public class AlexandriaIndexTest {
     }
 
     @Test
-    public void testIndexSetsSourcePathRelativeToProjectBase() throws IOException {
+    public void testIndexSetsSourcePathRelativeToProjectBase() throws IOException, BatchProcessException {
         File l1Readme = folder.newFile("readme.md");
         File l2Dir = folder.newFolder("l2");
         File l2Readme = new File(l2Dir, "readme.md");
@@ -132,7 +132,7 @@ public class AlexandriaIndexTest {
     }
 
     @Test
-    public void testIndexLoadsRelativeSourcePathsCorrectly() throws IOException {
+    public void testIndexLoadsRelativeSourcePathsCorrectly() throws IOException, BatchProcessException {
         File l1Readme = folder.newFile("readme.md");
         File l2Dir = folder.newFolder("l2");
         File l2Readme = new File(l2Dir, "readme.md");
@@ -152,6 +152,7 @@ public class AlexandriaIndexTest {
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
         alexandria.index();
+        alexandria.save();
         Alexandria reloaded = alexandria.load(context.configPath().toString());
         reloaded.context().searchPath(Arrays.asList(folder.getRoot().toString()));
         alexandria.index();
@@ -169,7 +170,7 @@ public class AlexandriaIndexTest {
     }
 
     @Test
-    public void testIndexWrapsExceptionsInAlexandriaException(){
+    public void testIndexWrapsExceptionsInBatchProcessException(){
         Config config = new Config();
         Context context = new Context();
         context.config(config);
@@ -177,6 +178,6 @@ public class AlexandriaIndexTest {
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
         assertThatThrownBy(() -> alexandria.index())
-                .isInstanceOf(AlexandriaException.class);
+                .isInstanceOf(BatchProcessException.class);
     }
 }
