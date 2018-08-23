@@ -30,7 +30,7 @@ public class ResourcesTest {
         folder.newFile("foo.txt");
         Collection<File> found = new Resources.PathFinder()
                 .startingIn(folder.getRoot().toString())
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                .containsExactlyInAnyOrder("readme.md", "readme2.md", "foo.txt");
     }
@@ -43,7 +43,7 @@ public class ResourcesTest {
         Collection<File> found = new Resources.PathFinder()
                 .startingIn(folder.getRoot().toString())
                 .including("*.md")
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md");
     }
@@ -57,7 +57,7 @@ public class ResourcesTest {
         Collection<File> found = new Resources.PathFinder()
                 .startingIn(folder.getRoot().toString())
                 .including(Arrays.asList("*.md", "*.txt"))
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md", "foo.txt");
     }
@@ -70,7 +70,7 @@ public class ResourcesTest {
         Collection<File> found = new Resources.PathFinder()
                 .startingIn(folder.getRoot().toString())
                 .excluding("*.txt")
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md");
     }
@@ -84,7 +84,7 @@ public class ResourcesTest {
         Collection<File> found = new Resources.PathFinder()
                 .startingIn(folder.getRoot().toString())
                 .excluding(Arrays.asList("*.txt", "*.java"))
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md");
     }
@@ -96,7 +96,7 @@ public class ResourcesTest {
         folder.newFolder("foo");
         Collection<File> found = new Resources.PathFinder()
                 .startingIn(folder.getRoot().toString())
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md");
     }
@@ -111,7 +111,7 @@ public class ResourcesTest {
 
         Collection<File> found = new Resources.PathFinder()
                 .startingIn(folder.getRoot().toString())
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md", "readme3.md");
     }
@@ -127,7 +127,7 @@ public class ResourcesTest {
         Collection<File> found = new Resources.PathFinder()
                 .startingIn(folder.getRoot().toString())
                 .recursive(false)
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md");
     }
@@ -141,7 +141,7 @@ public class ResourcesTest {
                 .startingIn(folder.getRoot().toString())
                 .including("*")
                 .excluding("*.txt")
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md");
     }
@@ -174,7 +174,7 @@ public class ResourcesTest {
 
         Collection<File> found = new Resources.PathFinder()
                 .startingIn(Arrays.asList(subDir1.getPath(), subDir2.getPath()))
-                .find();
+                .files();
         assertThat(found.stream().map(File::getName).collect(Collectors.toList()))
                 .containsExactlyInAnyOrder("readme.md", "readme2.md");
     }
