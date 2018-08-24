@@ -19,25 +19,24 @@ cache:
   - "~/.m2/repository"
 before_deploy:
 - >
-    if ! [ "$BEFORE_DEPLOY_RUN" ]; then
-      export BEFORE_DEPLOY_RUN=1;
-      export AFTER_DEPLOY_RUN=0;
-      openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d
-      gpg --fast-import signing_key.gpg
-      export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
-      git config --global user.email "builds@travis-ci.org"
-      git config --global user.name "Travis CI"
-    fi
+  if ! [ "$BEFORE_DEPLOY_RUN" ]; then
+    export BEFORE_DEPLOY_RUN=1;
+    export AFTER_DEPLOY_RUN=0;
+    openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d
+    gpg --fast-import signing_key.gpg
+    export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
+    git config --global user.email "builds@travis-ci.org"
+    git config --global user.name "Travis CI"
+  fi
 deploy:
 - provider: script
-  script: mvn deploy coveralls:report --settings ci/.maven.xml -DskipTests && export AFTER_DEPLOY=$((AFTER_DEPLOY + 1))
+  script: mvn deploy coveralls:report --settings ci/.maven.xml -Dmaven.test.skip=true && export AFTER_DEPLOY=$((AFTER_DEPLOY + 1))
   skip_cleanup: true
   on:
     tags: true
 - provider: releases
   name: "$project_version"
-  api-key:
-    secure: fjBjaAy7wOUbfa66Bv+UUfHnjjFl8k/FuGlULenknvUao5RLPMRs8GTlY1nhum7TG3071rCKb/VIS2HhseikGEWubUXr0sWwSSS5v31enViG/RP1T+4cOz3i8Vgb9mswqv2tqselbwIoQW3xpBgPPFuiNgij3WAqRSlKv17Fa/cBdCRsgWXDGvPfPlyCJmXEnMDQK0O5/uxZIWO5IIAxo/PnQlkWcKQaA/kE9wEQsfxbyYtT3sQVP/FSApimBhOC9iTz6/rw6OZM8ehVkYpygrcEyjeRxM2ZibRb6osTrNrOMSH6mDlzWTLYv/cGPo4Ch/riMFqv/lFcCZvH1+leOPdoqkokOHAvgTRuFHs9LCu1hMd4suWrowwKJc4RUkZFrATMfXUyRHd48kRj4whc3YhwaSX07sCEMRN94Ztvc336DsMWMid49yH1/1kapQCFRxfQBimBHKobD9LYrZdBK4ZwQeR/P910En4QOmeaeOiLGxoiqxwHgX7pjhZfiZJovq/vc5+AVByAAFrBc1TfXcZDrDmzWNXje4db6iEwMdGAd2hTMyGt1SIp9g4ui7/QvOiiID9O/Pflr4E+zAKJTtc+LjmwWriYFnaGz6SOaRznLIj0WGXx8ixpjCj02EttOhkwsIK172d1CQ438O5GciIDrHtXurKieRjRoCXkJTw=
+  api-key: $GH_TOKEN
   file:
   - alexandria-maven-plugin/target/alexandria-maven-plugin-$project_version.jar
   - alexandria-core/target/alexandria-core-$project_version.jar
