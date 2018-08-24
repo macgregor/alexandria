@@ -30,7 +30,9 @@ before_deploy:
   fi
 deploy:
 - provider: script
-  script: mvn deploy coveralls:report --settings ci/.maven.xml -Dmaven.test.skip=true && export AFTER_DEPLOY_RUN=$((AFTER_DEPLOY_RUN + 1))
+  script:
+    mvn deploy coveralls:report --settings ci/.maven.xml -Dmaven.test.skip=true;
+    export AFTER_DEPLOY_RUN=$((AFTER_DEPLOY_RUN + 1))
   skip_cleanup: true
   on:
     tags: true
@@ -45,5 +47,9 @@ deploy:
   on:
     tags: true
 after_deploy:
-  - echo $AFTER_DEPLOY_RUN
-  - if [ "$AFTER_DEPLOY_RUN" == "1" ]; then echo "please just run this"; sh ci/prepare-development; fi
+- echo $AFTER_DEPLOY_RUN
+- >
+  if [ "$AFTER_DEPLOY_RUN" == "1" ]; then
+    echo "please just run this";
+    bash ci/prepare-development;
+  fi
