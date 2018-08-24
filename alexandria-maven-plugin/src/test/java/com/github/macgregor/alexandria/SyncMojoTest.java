@@ -1,0 +1,90 @@
+package com.github.macgregor.alexandria;
+
+import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
+public class SyncMojoTest {
+
+    private MavenProject childProject = mock(MavenProject.class);
+    private MavenProject parentProject = mock(MavenProject.class);
+    private MavenSession session = mock(MavenSession.class);
+    private Log log = mock(Log.class);
+    private Context context = spy(new Context());
+    private Alexandria alexandria = spy(new Alexandria());
+    private SyncMojo syncMojo = spy(new SyncMojo());
+
+    @Before
+    public void setup() throws IOException, BatchProcessException {
+        when(childProject.getBasedir()).thenReturn(new File("childProject"));
+        when(childProject.getParent()).thenReturn(parentProject);
+        when(parentProject.getBasedir()).thenReturn(new File("parent"));
+        when(parentProject.getParent()).thenReturn(null);
+        when(session.getExecutionRootDirectory()).thenReturn(new File("parent").toString());
+
+        alexandria.context(context);
+        doReturn(alexandria).when(alexandria).load(anyString());
+        doReturn(alexandria).when(alexandria).index();
+        doReturn(alexandria).when(alexandria).convert();
+        doReturn(alexandria).when(alexandria).syncWithRemote();
+        syncMojo.setAlexandria(alexandria);
+        syncMojo.setProject(childProject);
+        syncMojo.setMavenSession(session);
+        syncMojo.setLog(log);
+        syncMojo.setOutputPath("foo");
+    }
+
+    @Test
+    public void testSyncDoesntRunOnChildProject() throws MojoFailureException, MojoExecutionException, IOException {
+        syncMojo.setProject(childProject);
+        syncMojo.execute();
+        verify(syncMojo, times(0)).init();
+        verify(syncMojo, times(0)).logContext();
+        verify(syncMojo, times(0)).getAlexandria();
+    }
+
+    @Test
+    public void testSyncRunsOnRootProject() throws MojoFailureException, MojoExecutionException, IOException {
+        syncMojo.setProject(parentProject);
+        syncMojo.execute();
+        verify(syncMojo, times(1)).init();
+        verify(syncMojo, times(1)).logContext();
+        verify(syncMojo, atLeastOnce()).getAlexandria();
+    }
+
+    @Test
+    public void testSyncCallsConvert() throws MojoFailureException, MojoExecutionException, IOException, BatchProcessException {
+        syncMojo.setProject(parentProject);
+        syncMojo.execute();
+        verify(syncMojo, times(1)).init();
+        verify(syncMojo, times(1)).logContext();
+        verify(syncMojo, atLeastOnce()).getAlexandria();
+        verify(alexandria, times(1)).syncWithRemote();
+    }
+
+    @Test
+    public void testSyncWrapsIOExceptions() throws IOException {
+        syncMojo.setProject(parentProject);
+        doThrow(IOException.class).when(syncMojo).init();
+        assertThatThrownBy(() -> syncMojo.execute()).isInstanceOf(MojoFailureException.class);
+    }
+
+    @Test
+    public void testSyncWrapsBatchProcessException() throws BatchProcessException {
+        syncMojo.setProject(parentProject);
+        doThrow(BatchProcessException.class).when(alexandria).syncWithRemote();
+        assertThatThrownBy(() -> syncMojo.execute()).isInstanceOf(MojoFailureException.class);
+    }
+}

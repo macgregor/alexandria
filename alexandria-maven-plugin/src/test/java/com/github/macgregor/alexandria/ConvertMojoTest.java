@@ -1,0 +1,90 @@
+package com.github.macgregor.alexandria;
+
+import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
+public class ConvertMojoTest {
+
+    private MavenProject childProject = mock(MavenProject.class);
+    private MavenProject parentProject = mock(MavenProject.class);
+    private MavenSession session = mock(MavenSession.class);
+    private Log log = mock(Log.class);
+    private Context context = spy(new Context());
+    private Alexandria alexandria = spy(new Alexandria());
+    private ConvertMojo convertMojo = spy(new ConvertMojo());
+
+    @Before
+    public void setup() throws IOException, BatchProcessException {
+        when(childProject.getBasedir()).thenReturn(new File("childProject"));
+        when(childProject.getParent()).thenReturn(parentProject);
+        when(parentProject.getBasedir()).thenReturn(new File("parent"));
+        when(parentProject.getParent()).thenReturn(null);
+        when(session.getExecutionRootDirectory()).thenReturn(new File("parent").toString());
+
+        alexandria.context(context);
+        doReturn(alexandria).when(alexandria).load(anyString());
+        doReturn(alexandria).when(alexandria).index();
+        doReturn(alexandria).when(alexandria).convert();
+        doReturn(alexandria).when(alexandria).syncWithRemote();
+        convertMojo.setAlexandria(alexandria);
+        convertMojo.setProject(childProject);
+        convertMojo.setMavenSession(session);
+        convertMojo.setLog(log);
+        convertMojo.setOutputPath("foo");
+    }
+
+    @Test
+    public void testConvertDoesntRunOnChildProject() throws MojoFailureException, MojoExecutionException, IOException {
+        convertMojo.setProject(childProject);
+        convertMojo.execute();
+        verify(convertMojo, times(0)).init();
+        verify(convertMojo, times(0)).logContext();
+        verify(convertMojo, times(0)).getAlexandria();
+    }
+
+    @Test
+    public void testConvertRunsOnRootProject() throws MojoFailureException, MojoExecutionException, IOException {
+        convertMojo.setProject(parentProject);
+        convertMojo.execute();
+        verify(convertMojo, times(1)).init();
+        verify(convertMojo, times(1)).logContext();
+        verify(convertMojo, atLeastOnce()).getAlexandria();
+    }
+
+    @Test
+    public void testConvertCallsConvert() throws MojoFailureException, MojoExecutionException, IOException, BatchProcessException {
+        convertMojo.setProject(parentProject);
+        convertMojo.execute();
+        verify(convertMojo, times(1)).init();
+        verify(convertMojo, times(1)).logContext();
+        verify(convertMojo, atLeastOnce()).getAlexandria();
+        verify(alexandria, times(1)).convert();
+    }
+
+    @Test
+    public void testConvertWrapsIOExceptions() throws IOException {
+        convertMojo.setProject(parentProject);
+        doThrow(IOException.class).when(convertMojo).init();
+        assertThatThrownBy(() -> convertMojo.execute()).isInstanceOf(MojoFailureException.class);
+    }
+
+    @Test
+    public void testConvertWrapsBatchProcessException() throws BatchProcessException {
+        convertMojo.setProject(parentProject);
+        doThrow(BatchProcessException.class).when(alexandria).convert();
+        assertThatThrownBy(() -> convertMojo.execute()).isInstanceOf(MojoFailureException.class);
+    }
+}

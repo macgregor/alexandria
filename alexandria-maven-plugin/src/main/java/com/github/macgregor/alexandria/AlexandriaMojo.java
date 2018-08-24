@@ -34,43 +34,42 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     @Parameter( property = "alexandria.excludes")
     private List<String> excludes = new ArrayList<>();
 
-    private Alexandria alexandria;
+    private Alexandria alexandria = new Alexandria();
 
     public Alexandria init() throws IOException {
-        if(inputs == null || inputs.size() < 1){
-            inputs.add(rootDir());
+        if(getInputs() == null || getInputs().size() < 1){
+            getInputs().add(rootDir());
         }
-        if(configPath == null){
-            configPath = Paths.get(rootDir(), ".alexandria").toString();
+        if(getConfigPath() == null){
+            setConfigPath(Paths.get(rootDir(), ".alexandria").toString());
         }
-        alexandria = new Alexandria();
-        alexandria.load(configPath);
-        alexandria.context().searchPath(inputs);
-        alexandria.context().output(Optional.of(outputPath));
-        if(includes.size() > 0) {
-            alexandria.context().include(includes);
+        getAlexandria().load(getConfigPath());
+        getAlexandria().context().searchPath(getInputs());
+        getAlexandria().context().output(Optional.of(getOutputPath()));
+        if(getIncludes().size() > 0) {
+            getAlexandria().context().include(getIncludes());
         }
-        if(excludes.size() > 0) {
-            alexandria.context().exclude(excludes);
+        if(getExcludes().size() > 0) {
+            getAlexandria().context().exclude(getExcludes());
         }
         return alexandria;
     }
 
     public void logContext(){
-        getLog().debug("Alexandria - config file: " + alexandria.context().configPath());
-        getLog().debug("Alexandria - project base dir: " + alexandria.context().projectBase());
-        getLog().debug("Alexandria - inputs directories: " + alexandria.context().searchPath());
-        getLog().debug("Alexandria - outputPath directory: " + alexandria.context().output());
-        getLog().debug("Alexandria - includes files: " + alexandria.context().include());
-        getLog().debug("Alexandria - excludes files: " + alexandria.context().exclude());
+        getLog().debug("Alexandria - config file: " + getAlexandria().context().configPath());
+        getLog().debug("Alexandria - project base dir: " + getAlexandria().context().projectBase());
+        getLog().debug("Alexandria - inputs directories: " + getAlexandria().context().searchPath());
+        getLog().debug("Alexandria - outputPath directory: " + getAlexandria().context().output());
+        getLog().debug("Alexandria - includes files: " + getAlexandria().context().include());
+        getLog().debug("Alexandria - excludes files: " + getAlexandria().context().exclude());
     }
 
-    protected boolean isExecutionRoot() {
-        return mavenSession.getExecutionRootDirectory().equalsIgnoreCase(project.getBasedir().toString());
+    public boolean isExecutionRoot() {
+        return getMavenSession().getExecutionRootDirectory().equalsIgnoreCase(getProject().getBasedir().toString());
     }
 
-    protected String rootDir(){
-        MavenProject parent = project;
+    public String rootDir(){
+        MavenProject parent = getProject();
         while(parent.getParent() != null){
             parent = parent.getParent();
         }
