@@ -30,7 +30,7 @@ before_deploy:
   fi
 deploy:
 - provider: script
-  script: mvn deploy coveralls:report --settings ci/.maven.xml -Dmaven.test.skip=true && export AFTER_DEPLOY=$((AFTER_DEPLOY + 1))
+  script: mvn deploy coveralls:report --settings ci/.maven.xml -Dmaven.test.skip=true && export AFTER_DEPLOY_RUN=$((AFTER_DEPLOY_RUN + 1))
   skip_cleanup: true
   on:
     tags: true
