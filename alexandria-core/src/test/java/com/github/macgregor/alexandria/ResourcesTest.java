@@ -12,7 +12,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -210,75 +209,6 @@ public class ResourcesTest {
         assertThatExceptionOfType(FileAlreadyExistsException.class)
                 .isThrownBy(() -> Resources.save(f.getPath(), "world"))
                 .withMessageContaining("File is a directory. Refusing to destroy.");
-    }
-
-    @Test
-    public void testPathsConvertsAllStrings() throws FileNotFoundException {
-        String path1 = "foo.txt";
-        String path2 = "dir/bar.txt";
-        Set<Path> paths = Resources.paths(Arrays.asList(path1, path2));
-        assertThat(paths.stream().map(Path::toString).collect(Collectors.toList()))
-                .containsExactlyInAnyOrder("foo.txt", "dir/bar.txt");
-    }
-
-    @Test
-    public void testPathsChecksForExistence() throws IOException {
-        File f1 = folder.newFile("readme.md");
-        File subDir = folder.newFolder("foo");
-        File f2 = new File(subDir, "readme.md");
-        f2.createNewFile();
-
-        Set<Path> paths = Resources.paths(Arrays.asList(f1.toString(), f2.toString()), true);
-        assertThat(paths).containsExactlyInAnyOrder(f1.toPath(), f2.toPath());
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void testPathsChecksForExistenceFails() throws IOException {
-        Resources.paths(Arrays.asList("nope"), true);
-    }
-
-    @Test
-    public void testPathsIgnoresDirectories() throws IOException {
-        File f1 = folder.newFile("readme.md");
-        File subDir = folder.newFolder("foo");
-        File f2 = new File(subDir, "readme.md");
-        f2.createNewFile();
-
-        Set<Path> paths = Resources.paths(Arrays.asList(f1.toString(), subDir.toString(), f2.toString()), false, false, true);
-        assertThat(paths).containsExactlyInAnyOrder(f1.toPath(), f2.toPath());
-    }
-
-    @Test
-    public void testFilePathsIgnoresDirectories() throws IOException {
-        File f1 = folder.newFile("readme.md");
-        File subDir = folder.newFolder("foo");
-        File f2 = new File(subDir, "readme.md");
-        f2.createNewFile();
-
-        Set<Path> paths = Resources.filePaths(Arrays.asList(f1.toString(), subDir.toString(), f2.toString()), false);
-        assertThat(paths).containsExactlyInAnyOrder(f1.toPath(), f2.toPath());
-    }
-
-    @Test
-    public void testPathsIgnoresFiles() throws IOException {
-        File f1 = folder.newFile("readme.md");
-        File subDir = folder.newFolder("foo");
-        File f2 = new File(subDir, "readme.md");
-        f2.createNewFile();
-
-        Set<Path> paths = Resources.paths(Arrays.asList(f1.toString(), subDir.toString(), f2.toString()), false, true, false);
-        assertThat(paths).containsExactlyInAnyOrder(subDir.toPath());
-    }
-
-    @Test
-    public void testDirectoryPathsIgnoresFiles() throws IOException {
-        File f1 = folder.newFile("readme.md");
-        File subDir = folder.newFolder("foo");
-        File f2 = new File(subDir, "readme.md");
-        f2.createNewFile();
-
-        Set<Path> paths = Resources.directoryPaths(Arrays.asList(f1.toString(), subDir.toString(), f2.toString()), false);
-        assertThat(paths).containsExactlyInAnyOrder(subDir.toPath());
     }
 
     @Test
