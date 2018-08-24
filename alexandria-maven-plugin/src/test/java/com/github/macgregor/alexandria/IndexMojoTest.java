@@ -82,7 +82,7 @@ public class IndexMojoTest {
     }
 
     @Test
-    public void testIndexWrapsBatchProcessException() throws BatchProcessException {
+    public void testIndexWrapsBatchProcessException() throws IOException {
         indexMojo.setProject(parentProject);
         doThrow(BatchProcessException.class).when(alexandria).index();
         assertThatThrownBy(() -> indexMojo.execute()).isInstanceOf(MojoFailureException.class);

@@ -1,6 +1,9 @@
 package com.github.macgregor.alexandria.exceptions;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.macgregor.alexandria.Config;
+import com.github.macgregor.alexandria.Jackson;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -67,8 +70,18 @@ public class AlexandriaException extends IOException {
 
     @Override
     public String toString() {
-        return "AlexandriaException{" +
-                "metadata=" + metadata +
-                '}';
+        String metadataString = null;
+        if(metadata.isPresent()){
+            try{
+                metadataString = Jackson.jsonWriter().writeValueAsString(metadata.get());
+            } catch(JsonProcessingException e){
+                metadataString = metadata.get().toString();
+            }
+        }
+        return "AlexandriaException{\n" +
+                "   message=\"" + ExceptionUtils.getMessage(this) + "\",\n" +
+                "   rootCauseMessage=\"" + ExceptionUtils.getRootCauseMessage(this) + "\",\n" +
+                "   metadata=" + metadataString + "\n" +
+                "}\n";
     }
 }

@@ -43,6 +43,8 @@ public class Resources {
 
         /**
          * Converts the provided strings into {@link Path} objects and validates they are directories that exist.
+         *
+         * TODO: consider making this continue on failures
          * @param dirs
          * @return
          * @throws IOException Any path doesnt exist or is not a directory.

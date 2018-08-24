@@ -82,7 +82,7 @@ public class ConvertMojoTest {
     }
 
     @Test
-    public void testConvertWrapsBatchProcessException() throws BatchProcessException {
+    public void testConvertWrapsBatchProcessException() throws IOException {
         convertMojo.setProject(parentProject);
         doThrow(BatchProcessException.class).when(alexandria).convert();
         assertThatThrownBy(() -> convertMojo.execute()).isInstanceOf(MojoFailureException.class);

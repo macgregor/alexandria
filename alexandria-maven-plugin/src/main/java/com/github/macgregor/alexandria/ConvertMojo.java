@@ -1,6 +1,5 @@
 package com.github.macgregor.alexandria;
 
-import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -18,7 +17,7 @@ public class ConvertMojo extends AlexandriaMojo {
                 init();
                 logContext();
                 getAlexandria().convert();
-            } catch (IOException | BatchProcessException e) {
+            } catch (IOException e) {
                 throw new MojoFailureException("Failed to convert documents.", e);
             }
         }
