@@ -27,6 +27,8 @@ before_deploy:
     export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
     git config --global user.email "builds@travis-ci.com"
     git config --global user.name "Travis CI"
+    git remote set-url origin https://${GH_TOKEN}@github.com/macgregor/alexandria.git
+    git checkout master
   fi
 deploy:
 - provider: script
