@@ -12,7 +12,7 @@
 ![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/https/oss.sonatype.org/com.google.guava/guava.svg)
 -->
 
-Alexandria bring CI concepts to antiquated document hosting platforms which dont integrate with the tools and processes 
+Alexandria bring CI concepts to document hosting platforms which dont integrate with the tools and processes 
 we have grown reliant on. Keep your documents with your source code in friendly markdown and let Alexandria convert and
 sync them as part of your project's build process. 
 
