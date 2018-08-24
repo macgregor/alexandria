@@ -93,21 +93,4 @@ public class AlexandriaConvertTest {
         alexandria.context(context);
         assertThatThrownBy(() -> alexandria.convert()).isInstanceOf(BatchProcessException.class);
     }
-
-    @Test
-    public void testConvertWrapsSaveErrors() throws IOException {
-        File f1 = folder.newFile("readme.md");
-
-        Config config = new Config();
-        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
-        readmeMetadata.sourcePath(f1.toPath());
-        config.metadata().get().add(readmeMetadata);
-
-        Context context = new Context();
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        assertThatThrownBy(() -> alexandria.convert()).isInstanceOf(BatchProcessException.class);
-    }
 }
