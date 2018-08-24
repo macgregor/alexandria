@@ -52,13 +52,18 @@ then
     git add $(find . -name pom.xml)
     git commit -m "Setting version $RELEASE for development."
     mvn versions:commit &> /dev/null
-    git push -u origin HEAD:master
+    if [ -z ${GH_TOKEN+x} ];
+    then
+        git push "https://${GH_TOKEN}@github.com/macgregor/alexandria.git" -u origin HEAD:master
+    else
+        git push -u origin HEAD:master
+    fi
 else
     readarray message <<"    EOF"
         git add $(find . -name pom.xml)
         git commit -m "Setting version $RELEASE for development."
         mvn versions:commit &> /dev/null
-        git push -u origin HEAD:master
+        git push "https://${GH_TOKEN}@github.com/macgregor/alexandria.git" -u origin HEAD:master
     EOF
     printf '%s' "${message[@]#        }"
     mvn versions:revert &> /dev/null
