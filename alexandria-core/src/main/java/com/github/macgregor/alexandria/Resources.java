@@ -20,8 +20,8 @@ import java.util.stream.Collectors;
 public class Resources {
 
     /**
-     * Builder to files files among directories matching based on include/exclude patterns. Makes use of
-     * {@link FileUtils#listFiles(File, IOFileFilter, IOFileFilter)} to do the heavy lifting.
+     * Find files along a set of directories that based on include/exclude patterns. Makes use of
+     * {@link FileUtils#listFiles(File, IOFileFilter, IOFileFilter)} to do most of the work.
      */
     public static class PathFinder{
 
@@ -117,7 +117,8 @@ public class Resources {
         /**
          * Find all files using the builder properties. Files will only be included if they match any
          * of the include patterns and non of the exclude filters.
-         * @return
+         *
+         * @return List of matching {@link File} or an empty list.
          */
         public Collection<File> files(){
             IOFileFilter dirFilter = recursive ? TrueFileFilter.INSTANCE : null;
@@ -131,6 +132,11 @@ public class Resources {
                     .collect(Collectors.toList());
         }
 
+        /**
+         * Same as {@link PathFinder#files()} but files are converted to {@link Path}s before
+         * being returned.
+         * @return List of matching {@link Path} or an empty list.
+         */
         public Collection<Path> paths(){
             return files().stream()
                     .map(f -> f.toPath())
@@ -138,6 +144,12 @@ public class Resources {
         }
     }
 
+    /**
+     * Save files contents to the file path, overwriting the file if it exists. See {@link Resources#save(String, String, boolean)}
+     * @param filePath Path to the file to save. File path cannot be to an existing directory.
+     * @param content File contents to write.
+     * @throws IOException If the file path cant be overwritten, the file path is invalid or an general IO error occurred.
+     */
     public static void save(String filePath, String content) throws IOException {
         Resources.save(filePath, content, true);
     }
@@ -164,10 +176,21 @@ public class Resources {
         FileUtils.writeStringToFile(path.toFile(), content, (String) null);
     }
 
+    /**
+     * Load the contents of the file located at the file path. See {@link FileUtils#readFileToString(File, String)}
+     * @param filePath
+     * @return File contents as a string.
+     * @throws IOException The file doesnt exist or cant be read.
+     */
     public static String load(String filePath) throws IOException {
         return FileUtils.readFileToString(Paths.get(filePath).toFile(), (String) null);
     }
 
+    /**
+     * Convert the path represented as a string into a {@link Path}.
+     * @param rawPath
+     * @return
+     */
     public static Path path(String rawPath){
         try {
             return path(rawPath, false);
@@ -176,6 +199,13 @@ public class Resources {
         }
     }
 
+    /**
+     * Convert the path represented as a string into a {@link Path}, optionally failing if the path doesnt exist.
+     * @param rawPath
+     * @param failOnNonExistantPath Whether or not to throw an exception if the file deosnt exist.
+     * @return
+     * @throws FileNotFoundException The path doesnt exist and failOnNonExistantPath is true.
+     */
     public static Path path(String rawPath, boolean failOnNonExistantPath) throws FileNotFoundException {
         Path p = Paths.get(rawPath);
         if(failOnNonExistantPath && !Files.exists(p)){
@@ -184,6 +214,12 @@ public class Resources {
         return p;
     }
 
+    /**
+     * Make a collection of {@link Path}s relative the to provided base. See {@link Path#relativize(Path)}
+     * @param base Base path other paths should be relative to
+     * @param paths
+     * @return
+     */
     public static Collection<Path> relativeTo(Path base, Collection<Path> paths){
         return paths.stream()
                 .map(p -> p.isAbsolute() ? base.relativize(p) : p)
