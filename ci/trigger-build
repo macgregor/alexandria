@@ -73,7 +73,7 @@ then
        -H "Travis-API-Version: 3" \
        -H "Authorization: token $TOKEN" \
        -d "$BODY" \
-       https://api.travis-ci.org/repo/macgregor%2Falexandria/requests
+       https://api.travis-ci.com/repo/macgregor%2Falexandria/requests
 else
     readarray CURL_CMD <<"    EOF"
         curl -s -X POST \
@@ -82,7 +82,7 @@ else
            -H "Travis-API-Version: 3" \
            -H "Authorization: token $TOKEN" \
            -d "$BODY" \
-           https://api.travis-ci.org/repo/macgregor%2Falexandria/requests
+           https://api.travis-ci.com/repo/macgregor%2Falexandria/requests
     EOF
     printf '%s' "${CURL_CMD[@]#        }"
 fi
