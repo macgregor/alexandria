@@ -85,46 +85,7 @@ public class Alexandria {
      * @throws BatchProcessException Exception wrapping all exceptions thrown during document processing.
      */
     public Alexandria convert() throws BatchProcessException {
-        log.debug("Converting files to html.");
-        if(supportsNativeMarkdown(context)){
-            log.debug("Remote supports native markdown, no need to convert anything.");
-            return this;
-        }
-
-        List<AlexandriaException> exceptions = new ArrayList<>();
-
-        for(Config.DocumentMetadata metadata : context.config().metadata().get()){
-            try {
-                log.debug(String.format("Converting %s.", metadata.sourcePath().toFile().getName()));
-                context.convertedPath(metadata, convertedPath(context, metadata));
-                Markdown.toHtml(metadata.sourcePath(), context.convertedPath(metadata).get());
-            } catch(Exception e){
-                log.warn(String.format("Unexcepted error converting %s to html", metadata.sourcePath()), e);
-                exceptions.add(new AlexandriaException.Builder()
-                        .withMessage(String.format("Unexcepted error converting %s to html", metadata.sourcePath()))
-                        .causedBy(e)
-                        .metadataContext(metadata)
-                        .build());
-            }
-        }
-        log.info(String.format("%d out of %d files converted successfully.", context.config().metadata().get().size()-exceptions.size(), context.config().metadata().get().size()));
-
-        try {
-            this.save();
-        } catch (Exception e) {
-            log.warn(String.format("Unable to save configuration to %s", context.configPath()));
-            exceptions.add(new AlexandriaException.Builder()
-                    .withMessage(String.format("Unable to save configuration to %s", context.configPath()))
-                    .causedBy(e)
-                    .build());
-        }
-
-        if(exceptions.size() > 0){
-            throw new BatchProcessException.Builder()
-                    .withMessage(String.format("Failed to convert %d out of %d documents to html", exceptions.size(), context.config().metadata().get().size()))
-                    .causedBy(exceptions)
-                    .build();
-        }
+        new AlexandriaConvert(context).convert();
         return this;
     }
 
