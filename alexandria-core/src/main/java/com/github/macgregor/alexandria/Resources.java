@@ -14,7 +14,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Utility class for working with file system resources.
+ * Utility class for working with file system resources. Find files/paths/directories that
+ * match patterns, saving and loading files, etc.
  */
 public class Resources {
 
@@ -165,57 +166,6 @@ public class Resources {
 
     public static String load(String filePath) throws IOException {
         return FileUtils.readFileToString(Paths.get(filePath).toFile(), (String) null);
-    }
-
-    public static Set<Path> paths(Collection<String>rawPaths) {
-        try {
-            return paths(rawPaths, false, false, false);
-        } catch(FileNotFoundException e){
-            throw new RuntimeException("This exception should not have happened, theres a bug in Resources.paths(Collection<String>, boolean, boolean, boolean)");
-        }
-    }
-
-    public static Set<Path> paths(Collection<String>rawPaths, boolean failOnNonExistantPath) throws FileNotFoundException {
-        return paths(rawPaths, failOnNonExistantPath, false, false);
-    }
-
-    public static Set<Path> filePaths(Collection<String> rawPaths, boolean failOnNonExistantPath) throws FileNotFoundException {
-        return paths(rawPaths, failOnNonExistantPath, false, true);
-    }
-
-    public static Set<Path> directoryPaths(Collection<String> rawPaths, boolean failOnNonExistantPath) throws FileNotFoundException {
-        return paths(rawPaths, failOnNonExistantPath, true, false);
-    }
-
-    /**
-     * Convert the collection of raw path strings into a set of parsed Path objects. Optionally fail if the path doesnt
-     * exist, ignore files and ignore directories.
-     *
-     * @param rawPaths
-     * @param failOnNonExistantPath
-     * @param ignoreFiles
-     * @param ignoreDirectories
-     * @return
-     * @throws FileNotFoundException
-     */
-    public static Set<Path> paths(Collection<String> rawPaths, boolean failOnNonExistantPath, boolean ignoreFiles, boolean ignoreDirectories) throws FileNotFoundException {
-        Set<Path> convertedPaths = new HashSet<>(rawPaths.size());
-        for(String rawPath : rawPaths){
-            Path p = Paths.get(rawPath);
-            if(Files.exists(p)){
-                if(Files.isRegularFile(p) && !ignoreFiles){
-                    convertedPaths.add(p);
-                } else if(Files.isDirectory(p) && !ignoreDirectories){
-                    convertedPaths.add(p);
-                }
-            } else{
-                if(failOnNonExistantPath){
-                    throw new FileNotFoundException(String.format("File %s doesnt exist", rawPath));
-                }
-                convertedPaths.add(p);
-            }
-        }
-        return convertedPaths;
     }
 
     public static Path path(String rawPath){
