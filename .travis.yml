@@ -46,6 +46,6 @@ deploy:
     tags: true
 after_deploy:
 - >
-  if [[ $DRY_RUN -eq 1 ]]
-    ./ci/prepare-development
+  if [[ $AFTER_DEPLOY_RUN -eq 1 ]]
+    sh ci/prepare-development
   fi
