@@ -2,19 +2,11 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
-import com.github.macgregor.alexandria.exceptions.HttpException;
-import com.github.macgregor.alexandria.remotes.Remote;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Core class containing the high level commands to indexing metadata, converting html and
@@ -72,7 +64,7 @@ public class Alexandria {
      *
      * @throws AlexandriaException Any exception is thrown, most likely an IOException due to a missing file or invalid path.
      */
-    public Alexandria index() throws BatchProcessException {
+    public Alexandria index() throws AlexandriaException {
         new AlexandriaIndex(context).update();
         return this;
     }
@@ -84,7 +76,7 @@ public class Alexandria {
      *
      * @throws BatchProcessException Exception wrapping all exceptions thrown during document processing.
      */
-    public Alexandria convert() throws BatchProcessException {
+    public Alexandria convert() throws AlexandriaException {
         new AlexandriaConvert(context).convert();
         return this;
     }
@@ -106,86 +98,8 @@ public class Alexandria {
      * @throws BatchProcessException Any errors are thrown for any {@link com.github.macgregor.alexandria.Config.DocumentMetadata}
      * @throws IllegalStateException No remote is configured, the remote configuration is invalid.
      */
-    public Alexandria syncWithRemote() throws BatchProcessException {
-        log.debug("Syncing files to html.");
-        Remote remote;
-        try {
-            Class remoteClass = Class.forName(context.config().remote().clazz());
-            remote = (Remote)remoteClass.newInstance();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            log.warn(String.format("Unable to instantiate remote of type %s", context.config().remote().clazz()), e);
-            throw new IllegalStateException(String.format("Unable to instantiate remote of type %s", context.config().remote().clazz()), e);
-        }
-        remote.configure(context.config().remote());
-        remote.validateRemoteConfig();
-
-        List<AlexandriaException> exceptions = new ArrayList<>();
-
-        for(Config.DocumentMetadata metadata : context.config().metadata().get()){
-            log.debug(String.format("Syncing %s with remote.", metadata.sourcePath().toFile().getName()));
-            try {
-                remote.validateDocumentMetadata(metadata);
-
-                if(!context.convertedPath(metadata).isPresent() && !supportsNativeMarkdown(context)){
-                    Path convertedPath = convertedPath(context, metadata);
-                    if(!convertedPath.toFile().exists()){
-                        Markdown.toHtml(metadata.sourcePath(), convertedPath);
-                    }
-                    context.convertedPath(metadata, convertedPath);
-                }
-
-                long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
-                log.debug(String.format("Old checksum: %d; New checksum: %d", metadata.sourceChecksum().orElse(null), currentChecksum));
-                if (!metadata.remoteUri().isPresent()) {
-                    remote.create(context, metadata);
-                    log.info(String.format("Created new document at %s", metadata.remoteUri().orElse(null)));
-                } else {
-                    if (!metadata.sourceChecksum().isPresent() || !metadata.sourceChecksum().get().equals(currentChecksum)) {
-                        remote.update(context, metadata);
-                        log.info(String.format("Updated document %s at %s",
-                                metadata.sourcePath().toFile().getName(), metadata.remoteUri().orElse(null)));
-                    } else{
-                        log.info(String.format("%s is already up to date (checksum: %d, last updated: %s)",
-                                metadata.sourcePath().toFile().getName(), currentChecksum, metadata.lastUpdated().orElse(null)));
-                    }
-                }
-                metadata.sourceChecksum(Optional.of(currentChecksum));
-                this.save();
-            } catch(HttpException e){
-                log.warn(e.getMessage(), e);
-                exceptions.add(e);
-            } catch(Exception e){
-                log.warn(String.format("Unexcepted error syncing %s to remote", metadata.sourcePath()), e);
-                exceptions.add(new AlexandriaException.Builder()
-                        .withMessage(String.format("Unexcepted error syncing %s to remote", metadata.sourcePath()))
-                        .causedBy(e)
-                        .metadataContext(metadata)
-                        .build());
-            }
-        }
-
-        log.info(String.format("Synced %d out of %d documents with remote %s",
-                context.config().metadata().get().size() - exceptions.size(),
-                context.config().metadata().get().size(),
-                context.config().remote().baseUrl().orElse(null)));
-
-        if(exceptions.size() > 0){
-            throw new BatchProcessException.Builder()
-                    .withMessage(String.format("Failed to sync %d out of %d documents to remote", exceptions.size(), context.config().metadata().get().size()))
-                    .causedBy(exceptions)
-                    .build();
-        }
+    public Alexandria syncWithRemote() throws AlexandriaException {
+        new AlexandriaSync(context).syncWithRemote();
         return this;
-    }
-
-    private Path convertedPath(Context context, Config.DocumentMetadata metadata){
-        String convertedDir = context.output().orElse(metadata.sourcePath().toAbsolutePath().getParent().toString());
-        String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
-        return Paths.get(convertedDir, convertedFileName);
-    }
-
-    private boolean supportsNativeMarkdown(Context context){
-        return context.config().remote().supportsNativeMarkdown().isPresent() &&
-                context.config().remote().supportsNativeMarkdown().get();
     }
 }

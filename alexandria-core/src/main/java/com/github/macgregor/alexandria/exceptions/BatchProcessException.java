@@ -1,10 +1,10 @@
 package com.github.macgregor.alexandria.exceptions;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
-public class BatchProcessException extends Exception {
-    private List<AlexandriaException> exceptions;
+public class BatchProcessException extends AlexandriaException {
+    private Collection<AlexandriaException> exceptions;
 
     public BatchProcessException() {
     }
@@ -13,7 +13,7 @@ public class BatchProcessException extends Exception {
         super(message);
     }
 
-    public List<AlexandriaException> getExceptions() {
+    public Collection<AlexandriaException> getExceptions() {
         return exceptions;
     }
 
@@ -26,12 +26,12 @@ public class BatchProcessException extends Exception {
                 '}';
     }
 
-    public void setExceptions(List<AlexandriaException> exceptions) {
+    public void setExceptions(Collection<AlexandriaException> exceptions) {
         this.exceptions = exceptions;
     }
 
     public static class Builder {
-        private List<AlexandriaException> exceptions;
+        private Collection<AlexandriaException> exceptions;
         private Optional<String> message = Optional.empty();
 
         public Builder withMessage(String message){
@@ -39,7 +39,7 @@ public class BatchProcessException extends Exception {
             return this;
         }
 
-        public Builder causedBy(List<AlexandriaException> exceptions){
+        public Builder causedBy(Collection<AlexandriaException> exceptions){
             this.exceptions = exceptions;
             return this;
         }

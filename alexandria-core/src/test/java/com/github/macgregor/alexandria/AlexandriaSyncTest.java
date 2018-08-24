@@ -1,5 +1,6 @@
 package com.github.macgregor.alexandria;
 
+import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
@@ -23,7 +24,7 @@ public class AlexandriaSyncTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testSyncWithJiveRemote() throws BatchProcessException {
+    public void testSyncWithJiveRemote() throws AlexandriaException {
         Config config = new Config();
         config.remote().clazz("com.github.macgregor.alexandria.remotes.JiveRemote");
         config.remote().baseUrl(Optional.of(""));
@@ -40,7 +41,7 @@ public class AlexandriaSyncTest {
     }
 
     @Test
-    public void testSyncWithNoopRemote() throws BatchProcessException {
+    public void testSyncWithNoopRemote() throws AlexandriaException {
         Config config = new Config();
         config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
 
@@ -65,7 +66,7 @@ public class AlexandriaSyncTest {
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
         assertThatThrownBy(() -> alexandria.syncWithRemote())
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AlexandriaException.class)
                 .hasMessageContaining("com.github.macgregor.alexandria.remotes.NotAThing");
     }
 

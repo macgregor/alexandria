@@ -9,7 +9,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 @CommandLine.Command(
-        description = "Command line interface for converting markdown files into html and publish them",
+        description = "Task line interface for converting markdown files into html and publish them",
         name = "alexandria",
         mixinStandardHelpOptions = true,
         versionProvider = Application.ManifestVersionProvider.class,

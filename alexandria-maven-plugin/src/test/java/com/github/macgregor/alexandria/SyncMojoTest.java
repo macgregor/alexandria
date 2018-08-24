@@ -82,7 +82,7 @@ public class SyncMojoTest {
     }
 
     @Test
-    public void testSyncWrapsBatchProcessException() throws BatchProcessException {
+    public void testSyncWrapsBatchProcessException() throws IOException {
         syncMojo.setProject(parentProject);
         doThrow(BatchProcessException.class).when(alexandria).syncWithRemote();
         assertThatThrownBy(() -> syncMojo.execute()).isInstanceOf(MojoFailureException.class);
