@@ -15,10 +15,11 @@ branches:
   - master
   - gh-pages
   - "/^\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
-install: mvn install -DskipTests
 cache:
   directories:
   - "~/.m2/repository"
+install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+script: mvn verify coveralls:report -Dmaven.javadoc.skip=true -B
 before_deploy:
 - >
   if ! [ "$BEFORE_DEPLOY_RUN" ]; then
@@ -36,7 +37,7 @@ before_deploy:
   fi
 deploy:
 - provider: script
-  script: mvn deploy coveralls:report --settings ci/.maven.xml -Dmaven.test.skip=true;
+  script: mvn deploy --settings ci/.maven.xml -Dmaven.test.skip=true;
   skip_cleanup: true
   on:
     tags: true

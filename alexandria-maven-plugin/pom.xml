@@ -44,6 +44,45 @@
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>3.5.2</version>
+                    <executions>
+                        <execution>
+                            <id>default-descriptor</id>
+                            <goals>
+                                <goal>descriptor</goal>
+                            </goals>
+                            <phase>process-classes</phase>
+                        </execution>
+                        <execution>
+                            <id>help-descriptor</id>
+                            <goals>
+                                <goal>helpmojo</goal>
+                            </goals>
+                            <phase>process-classes</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.plexus</groupId>
+                    <artifactId>plexus-component-metadata</artifactId>
+                    <version>1.7.1</version>
+                    <executions>
+                        <execution>
+                            <id>process-test-classes</id>
+                            <goals>
+                                <goal>generate-test-metadata</goal>
+                            </goals>
+                            <phase>process-test-classes</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -60,10 +99,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>com.github.macgregor</groupId>
-                <artifactId>alexandria-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
