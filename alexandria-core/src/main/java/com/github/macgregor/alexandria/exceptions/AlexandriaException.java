@@ -5,11 +5,13 @@ import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Jackson;
 import lombok.*;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.util.Optional;
 
+@Slf4j
 @NoArgsConstructor @AllArgsConstructor
 @Getter @Setter @Accessors(fluent = true)
 public class AlexandriaException extends IOException {
@@ -63,6 +65,7 @@ public class AlexandriaException extends IOException {
 
     @Override
     public String toString() {
+        log.debug(getMessage(), this);
         String metadataString = null;
         if(metadata.isPresent()){
             try{

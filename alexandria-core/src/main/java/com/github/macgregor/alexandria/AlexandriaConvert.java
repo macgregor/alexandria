@@ -38,6 +38,9 @@ public class AlexandriaConvert {
         BatchProcess<Config.DocumentMetadata> batchProcess = new BatchProcess<>(context);
         batchProcess.execute(context -> context.config().metadata().get(), (context, metadata) -> {
             log.debug(String.format("Converting %s.", metadata.sourcePath().toFile().getName()));
+            if(metadata.hasExtraProperty("delete") || metadata.deletedOn().isPresent()){
+                return;
+            }
             AlexandriaConvert.convert(context, metadata);
         }, (context, exceptions) -> {
             log.info(String.format("%d out of %d files converted successfully.",
@@ -56,8 +59,9 @@ public class AlexandriaConvert {
 
     protected static void convert(Context context, Config.DocumentMetadata metadata) throws AlexandriaException {
         Path convertedPath = convertedPath(context, metadata);
+        Path sourcePath = context.resolveRelativePath(metadata.sourcePath());
         try {
-            Markdown.toHtml(metadata.sourcePath(), convertedPath);
+            Markdown.toHtml(sourcePath, convertedPath);
             metadata.convertedChecksum(Optional.of(FileUtils.checksumCRC32(convertedPath.toFile())));
         } catch (IOException e) {
             throw new AlexandriaException.Builder()

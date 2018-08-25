@@ -100,7 +100,8 @@ public class TestData {
 
     public static Config.DocumentMetadata minimalDocumentMetadata(TemporaryFolder temporaryFolder, String name) throws IOException {
         Path path = temporaryFolder.getRoot().toPath().relativize(temporaryFolder.newFile(name).toPath());
-        Resources.save(path.toString(), String.format("# %s\n\nHello", name));
+
+        Resources.save(Paths.get(temporaryFolder.getRoot().toString(), name).toString(), String.format("# %s\n\nHello", name));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(path);
@@ -127,7 +128,7 @@ public class TestData {
     public static Config.DocumentMetadata completeDocumentMetadata(Context context, TemporaryFolder temporaryFolder, String name) throws IOException, URISyntaxException {
         Path path = temporaryFolder.getRoot().toPath().relativize(temporaryFolder.newFile(name).toPath());
         Path converted = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), FilenameUtils.getBaseName(path.toFile().getName()) + ".html");
-        Resources.save(path.toString(), String.format("# %s\n\nHello", name));
+        Resources.save(Paths.get(temporaryFolder.getRoot().toString(), name).toString(), String.format("# %s\n\nHello", name));
         Markdown.toHtml(path, converted);
         long sourceCheckSum = FileUtils.checksumCRC32(path.toFile());
         long convertedCheckSum = FileUtils.checksumCRC32(converted.toFile());

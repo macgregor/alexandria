@@ -31,7 +31,7 @@ public class Context {
     }
 
     public int documentCount(){
-        return config.metadata().isPresent() ? 0 : config.metadata().get().size();
+        return config.metadata().isPresent() ? config.metadata().get().size() : 0;
     }
 
     public Optional<Path> convertedPath(Config.DocumentMetadata metadata){

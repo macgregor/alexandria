@@ -3,7 +3,9 @@ package com.github.macgregor.alexandria;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.Accessors;
+import org.apache.commons.io.FileUtils;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
@@ -100,6 +102,31 @@ public class Config {
 
         public String sourceFileName(){
             return sourcePath.toFile().getName();
+        }
+
+        public State determineState(Context context) throws IOException {
+            if(this.deletedOn().isPresent()){
+                return State.DELETED;
+            }
+
+            if (!this.remoteUri().isPresent()) {
+                return State.CREATE;
+            }
+
+            if(this.extraProps().isPresent() && this.extraProps().get().containsKey("delete")){
+                return State.DELETE;
+            }
+
+            long currentChecksum = FileUtils.checksumCRC32(context.resolveRelativePath(this.sourcePath()).toFile());
+            if(this.sourceChecksum().isPresent() && this.sourceChecksum().get().equals(currentChecksum)){
+                return State.CURRENT;
+            }
+
+            return State.UPDATE;
+        }
+
+        public enum State{
+            CREATE, UPDATE, DELETE, DELETED, CURRENT;
         }
     }
 }
