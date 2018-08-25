@@ -240,6 +240,21 @@ public class JiveRemoteTest {
     }
 
     @Test
+    public void testUpdateHttpExceptionOnBadResponse() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody("asldknasd")));
+
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.extraProps().get().put("jiveContentId", "1234");
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
+
+        assertThatThrownBy(() -> jiveRemote.update(context, metadata)).isInstanceOf(HttpException.class);
+    }
+
+    @Test
     public void testUpdateFetchesParentPlaceFromRemote() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setBody(Resources.load("src/test/resources/parent_group-paged.json")),
@@ -500,6 +515,43 @@ public class JiveRemoteTest {
         content.list = Collections.EMPTY_LIST;
         JiveRemote remote = new JiveRemote();
         remote.updateMetadata(metadata, content);
+    }
+
+    @Test
+    public void testJiveFindParentPlaceThrowsHttpExceptionOnBadResponse() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody("asldalskd")));
+
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("DOC-1072237.md"));
+        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        metadata.extraProps().get().put("jiveContentId", "1234");
+        metadata.extraProps().get().put("jiveParentUri", "https://jive.com/places/parent_group");
+        Context context = new Context();
+        context.convertedPath(metadata, folder.newFile().toPath());
+
+        assertThatThrownBy(() -> jiveRemote.findParentPlace(context, metadata)).isInstanceOf(HttpException.class);
+    }
+
+    @Test
+    public void testJiveObjectIdThrowsIllegalArgumentOnBadPattern(){
+        assertThatThrownBy(() -> JiveRemote.jiveObjectId(new URI("asldkasd"))).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void testJiveParentPlaceNameThrowsIllegalArgumentOnBadPattern(){
+        assertThatThrownBy(() -> JiveRemote.jiveParentPlaceName("asldkasd")).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void testJiveUpdateMetadataHandlesMissingMalformedPagedParent(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        assertThat(JiveRemote.updateMetadata(metadata, (JiveRemote.PagedJivePlace) null)).isEqualTo(metadata);
+        JiveRemote.PagedJivePlace parentPlace = new JiveRemote.PagedJivePlace();
+        parentPlace.list = null;
+        assertThat(JiveRemote.updateMetadata(metadata, parentPlace)).isEqualTo(metadata);
+        parentPlace.list = new ArrayList<>();
+        assertThat(JiveRemote.updateMetadata(metadata, parentPlace)).isEqualTo(metadata);
     }
 
 
