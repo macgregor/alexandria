@@ -63,6 +63,7 @@
                             <excludes>
                                 <excludes>**/Application$ManifestVersionProvider.class</excludes>
                                 <excludes>com/github/macgregor/alexandria/exceptions/**/*</excludes>
+                                <excludes>**/HelpMojo.class</excludes>
                             </excludes>
                         </configuration>
                     </execution>
