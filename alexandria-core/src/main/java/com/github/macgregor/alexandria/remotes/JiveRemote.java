@@ -166,10 +166,14 @@ public class JiveRemote extends RestRemote implements Remote{
         metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
     }
 
-    protected boolean needsContentId(Config.DocumentMetadata metadata){
-        return metadata.remoteUri().isPresent() &&
-                metadata.extraProps().isPresent() &&
-                !metadata.extraProps().get().containsKey("jiveContentId");
+    protected static boolean needsContentId(Config.DocumentMetadata metadata){
+        if(metadata.remoteUri().isPresent()){
+            if(metadata.extraProps().isPresent()){
+                return !metadata.extraProps().get().containsKey("jiveContentId");
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -210,7 +214,7 @@ public class JiveRemote extends RestRemote implements Remote{
         }
     }
 
-    public boolean needsParentPlaceUri(Config.DocumentMetadata metadata){
+    public static boolean needsParentPlaceUri(Config.DocumentMetadata metadata){
         return metadata.extraProps().isPresent() &&
                 metadata.extraProps().get().containsKey("jiveParentUri") &&
                 !metadata.extraProps().get().containsKey("jiveParentApiUri");
@@ -305,7 +309,7 @@ public class JiveRemote extends RestRemote implements Remote{
         if(place.resources != null && place.resources.containsKey("html")){
             metadata.extraProps().get().put("jiveParentUri", place.resources.get("html").ref);
         }
-        if(place.resources != null && place.resources.containsKey("html")){
+        if(place.resources != null && place.resources.containsKey("self")){
             metadata.extraProps().get().put("jiveParentApiUri", place.resources.get("self").ref);
         }
 

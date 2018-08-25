@@ -23,10 +23,27 @@ public class BatchProcessTest {
     }
 
     @Test
+    public void testBatchProcessHandlesTaskThrowingUncheckedException(){
+        BatchProcess<String> batchProcess = new BatchProcess<>(context);
+        assertThatThrownBy(() ->
+                batchProcess.execute(context -> Collections.singleton("foo"), (context, item) -> {
+                    throw new RuntimeException();
+                })).isInstanceOf(BatchProcessException.class);
+    }
+
+    @Test
     public void testBatchProcessHandlesBatchCollectionThrowingAlexandriaException(){
         BatchProcess<String> batchProcess = new BatchProcess<>(context);
         assertThatThrownBy(() ->
                 batchProcess.execute(context -> {throw new AlexandriaException();}, (context, item) -> {}))
+                .isInstanceOf(BatchProcessException.class);
+    }
+
+    @Test
+    public void testBatchProcessHandlesBatchCollectionThrowingUncheckedException(){
+        BatchProcess<String> batchProcess = new BatchProcess<>(context);
+        assertThatThrownBy(() ->
+                batchProcess.execute(context -> {throw new RuntimeException();}, (context, item) -> {}))
                 .isInstanceOf(BatchProcessException.class);
     }
 

@@ -25,7 +25,7 @@ public class Resources {
      */
     public static class PathFinder{
 
-        private List<Path> startingDirs;
+        private Collection<Path> startingDirs;
         private List<String> include;
         private List<String> exclude;
         private boolean recursive;
@@ -49,19 +49,30 @@ public class Resources {
          * @return
          * @throws IOException Any path doesnt exist or is not a directory.
          */
-        public PathFinder startingIn(List<String> dirs) throws IOException {
+        public PathFinder startingIn(Collection<String> dirs) throws IOException {
             List<Path> paths = new ArrayList<>();
             for(String dir : dirs){
                 Path dirPath = Paths.get(dir);
-                if(!Files.exists(dirPath)){
-                    throw new IOException(String.format("Directory %s doesnt exist.", dir));
-                }
-                if(!Files.isDirectory(dirPath)){
-                    throw new IOException(String.format("%s is not a directory.", dir));
-                }
                 paths.add(dirPath);
             }
-            this.startingDirs = paths;
+            return startingInPaths(paths);
+        }
+
+        public PathFinder startingInPath(Path dir) throws IOException {
+            return startingInPaths(Collections.singletonList(dir));
+        }
+
+        public PathFinder startingInPaths(Collection<Path> dirs) throws IOException{
+            this.startingDirs = new ArrayList<>();
+            for(Path dir : dirs){
+                if(!Files.exists(dir)){
+                    throw new IOException(String.format("Directory %s doesnt exist.", dir));
+                }
+                if(!Files.isDirectory(dir)){
+                    throw new IOException(String.format("%s is not a directory.", dir));
+                }
+                startingDirs.add(dir);
+            }
             return this;
         }
 

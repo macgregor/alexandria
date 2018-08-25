@@ -42,10 +42,13 @@ public class Config {
         private Optional<String> password = Optional.empty();
 
         @JsonProperty
-        private Optional<Boolean> supportsNativeMarkdown = Optional.of(false);
+        private Boolean supportsNativeMarkdown = false;
 
         @JsonProperty
-        private Optional<String> datetimeFormat = Optional.of(ALEXANDRIA_DATETIME_PATTERN);
+        private String datetimeFormat = ALEXANDRIA_DATETIME_PATTERN;
+
+        @JsonProperty
+        private Integer requestTimeout = 60;
     }
 
     @Data
@@ -67,6 +70,9 @@ public class Config {
 
         @JsonProperty
         private Optional<Long> sourceChecksum = Optional.empty();
+
+        @JsonProperty
+        private Optional<Long> convertedChecksum = Optional.empty();
 
         @JsonProperty
         private Optional<ZonedDateTime> createdOn = Optional.empty();

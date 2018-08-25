@@ -248,8 +248,8 @@ public class ConfigSaveTest {
         remoteConfig.baseUrl(Optional.of("http://www.google.com"));
         remoteConfig.username(Optional.of("matt"));
         remoteConfig.password(Optional.of("password"));
-        remoteConfig.supportsNativeMarkdown(Optional.of(true));
-        remoteConfig.datetimeFormat(Optional.of("yyyy-MM-dd'override'HH:mm:ss.SSSZ"));
+        remoteConfig.supportsNativeMarkdown(true);
+        remoteConfig.datetimeFormat("yyyy-MM-dd'override'HH:mm:ss.SSSZ");
         config.remote(remoteConfig);
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();

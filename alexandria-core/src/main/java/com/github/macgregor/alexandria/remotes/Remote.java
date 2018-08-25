@@ -28,7 +28,7 @@ public interface Remote {
 
     /**
      * Called to create a new document on the remote. If the remote doesnt support native markdown, the metadata
-     * should contain link to converted html file in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#convertedPath}
+     * should contain link to converted html file in {@link com.github.macgregor.alexandria.Context#convertedPaths}
      * by the time this method is called. The implementation is responsible for updating the metadata with:
      *  - {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
      *  - {@link com.github.macgregor.alexandria.Config.DocumentMetadata#createdOn}
@@ -42,7 +42,7 @@ public interface Remote {
 
     /**
      * Called to update an existing document on the remote. If the remote doesnt support native markdown, the metadata
-     * should contain link to converted html file in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#convertedPath}
+     * should contain link to converted html file in {@link com.github.macgregor.alexandria.Context#convertedPaths}
      * by the time this method is called. The implementation is responsible for updating the metadata with:
      *  - {@link com.github.macgregor.alexandria.Config.DocumentMetadata#lastUpdated}
      *  - any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}

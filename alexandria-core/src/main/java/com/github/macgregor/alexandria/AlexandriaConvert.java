@@ -28,7 +28,7 @@ public class AlexandriaConvert {
     public void convert() throws AlexandriaException {
         log.debug("Converting files to html.");
 
-        if(supportsNativeMarkdown(context)){
+        if(context.config().remote().supportsNativeMarkdown()){
             log.debug("Remote supports native markdown, no need to convert anything.");
             return;
         }
@@ -45,14 +45,9 @@ public class AlexandriaConvert {
         });
     }
 
-    protected static boolean supportsNativeMarkdown(Context context){
-        return context.config().remote().supportsNativeMarkdown().isPresent() &&
-                context.config().remote().supportsNativeMarkdown().get();
-    }
-
     protected static Path convertedPath(Context context, Config.DocumentMetadata metadata){
         Path sourceDir = metadata.sourcePath().toAbsolutePath().getParent();
-        String convertedDir = context.outputPath().orElse(sourceDir.toString());
+        String convertedDir = context.outputPath().orElse(sourceDir).toString();
         String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
         return Paths.get(convertedDir, convertedFileName);
     }

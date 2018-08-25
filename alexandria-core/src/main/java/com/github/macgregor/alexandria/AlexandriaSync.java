@@ -29,7 +29,7 @@ public class AlexandriaSync {
             // since context isnt stored between runs we lose the path to the converted html file between commands
             // e.g. between alexandria:convert and alexandria:sync goals. This is inefficient, may want to checksum
             // html files and store the value in config
-            if(!context.convertedPath(metadata).isPresent() && !AlexandriaConvert.supportsNativeMarkdown(context)){
+            if(!context.convertedPath(metadata).isPresent() && !context.config().remote().supportsNativeMarkdown()){
                 AlexandriaConvert.convert(context, metadata);
                 log.debug(String.format("Reconverted %s", metadata.sourcePath().toFile().getName()));
             }

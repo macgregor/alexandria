@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -18,17 +20,21 @@ public class AlexandriaIndex {
     @NonNull private Context context;
 
     public void update() throws AlexandriaException {
-        log.debug("Updating metadata index.");
+        findUnindexedFiles();
+        markFilesForDeletion();
+    }
+
+    public void findUnindexedFiles() throws AlexandriaException{
+        log.debug("Looking for unindexed files.");
 
         BatchProcess<Path> batchProcess = new BatchProcess<>(context);
         batchProcess.execute(context -> {
             Collection<Path> alreadyIndexed = documentsAlreadyIndexed(context);
             Collection<Path> matchedDocuments = documentsMatched(context);
             Collection<Path> unindexed = documentsNotIndexed(matchedDocuments, alreadyIndexed);
-            Collection<Path> missing = documentsIndexedButMissing(matchedDocuments, alreadyIndexed);
 
-            log.info(String.format("Matched %d files (%d indexed, %d already indexed, %d missing)",
-                    matchedDocuments.size(), unindexed.size(), alreadyIndexed.size(), missing.size()));
+            log.info(String.format("Found %d un-indexed files (%d matched, %d already indexed)",
+                    unindexed.size(), matchedDocuments.size(), alreadyIndexed.size()));
             return unindexed;
         }, (context, path) -> {
             log.debug("Creating metadata for unindexed file " + path.toString());
@@ -39,11 +45,36 @@ public class AlexandriaIndex {
         });
     }
 
+    public void markFilesForDeletion() throws AlexandriaException{
+        log.debug("Marking files for deletion.");
+
+        BatchProcess<Config.DocumentMetadata> batchProcess = new BatchProcess<>(context);
+        batchProcess.execute(context -> {
+            Collection<Path> alreadyIndexed = documentsAlreadyIndexed(context);
+            Collection<Path> matchedDocuments = documentsMatched(context);
+            Collection<Path> missing = documentsIndexedButMissing(matchedDocuments, alreadyIndexed);
+
+            log.info(String.format("Marking %d files for deletion (%d matched, %d already indexed)",
+                    missing.size(), matchedDocuments.size(), alreadyIndexed.size()));
+
+            return context.config().metadata().get()
+                    .stream()
+                    .filter(m -> missing.contains(context.projectBase().relativize(m.sourcePath())))
+                    .collect(Collectors.toList());
+        }, (context, metadata) -> {
+            log.debug(String.format("Marking %s for deletion.", metadata.sourcePath().toFile().getName()));
+            if(!metadata.extraProps().isPresent()){
+                metadata.extraProps(Optional.of(new HashMap<>()));
+            }
+            metadata.extraProps().get().put("delete", "true");
+        });
+    }
+
     protected static Collection<Path> documentsMatched(Context context) throws AlexandriaException {
         try {
             return Resources.relativeTo(context.projectBase(),
                     new Resources.PathFinder()
-                            .startingIn(context.searchPath())
+                            .startingInPaths(context.searchPath())
                             .including(context.include())
                             .excluding(context.exclude())
                             .paths());
