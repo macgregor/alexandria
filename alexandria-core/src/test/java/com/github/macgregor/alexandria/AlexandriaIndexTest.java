@@ -9,8 +9,10 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -27,8 +29,6 @@ public class AlexandriaIndexTest {
     @Rule
     public TemporaryFolder hierarchy = new TemporaryFolder();
 
-    private File f1;
-    private File f2;
     private File l1Readme;
     private File l2Dir;
     private File l2Readme;
@@ -41,8 +41,6 @@ public class AlexandriaIndexTest {
 
     @Before
     public void setup() throws IOException {
-        f1 = folder.newFile("readme.md");
-        f2 = folder.newFile("doc.md");
 
         l1Readme = hierarchy.newFile("readme.md");
         l2Dir = hierarchy.newFolder("l2");
@@ -65,41 +63,46 @@ public class AlexandriaIndexTest {
 
     @Test
     public void testIndexFresh() throws IOException, BatchProcessException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        context.config().metadata(Optional.of(new ArrayList<>()));
+        AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
         alexandriaIndex.findUnindexedFiles();
-        assertThat(config.metadata()).isPresent();
-        assertThat(config.metadata().get()
-                .stream()
-                .map(m -> m.sourcePath().toFile().getName())
-                .collect(Collectors.toList()))
-                .containsExactlyInAnyOrder("readme.md", "doc.md");
+        assertThat(context.config().metadata()).isPresent();
+        assertThat(context.config().metadata().get()).hasSize(1);
+        assertThat(context.config().metadata().get().get(0)).isEqualTo(metadata);
     }
 
     @Test
     public void testIndexUpdate() throws IOException, BatchProcessException {
-        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
-        readmeMetadata.sourcePath(f1.toPath());
-        readmeMetadata.title("Custom Title");
-        config.metadata().get().add(readmeMetadata);
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata alreadyIndexed = context.config().metadata().get().get(0);
+        alreadyIndexed.title("Custom Title");
+        Config.DocumentMetadata newDocument = TestData.minimalDocumentMetadata(folder, "new.md");
+        AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
 
         alexandriaIndex.findUnindexedFiles();
-        assertThat(config.metadata()).isPresent();
-        assertThat(config.metadata().get()
+        assertThat(context.config().metadata().get()
                 .stream()
                 .map(m -> m.sourcePath().toFile().getName())
                 .collect(Collectors.toList()))
-                .containsExactlyInAnyOrder("readme.md", "doc.md");
-        assertThat(config.metadata().get().get(0).title()).isEqualTo("Custom Title");
+                .containsExactlyInAnyOrder(alreadyIndexed.sourcePath().toFile().getName(), newDocument.sourcePath().toFile().getName());
+        assertThat(alreadyIndexed.title()).isEqualTo("Custom Title");
     }
 
     @Test
     public void testIndexSetsTitle() throws IOException, BatchProcessException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata alreadyIndexed = context.config().metadata().get().get(0);
+        context.config().metadata(Optional.of(new ArrayList<>()));
+        AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
         alexandriaIndex.findUnindexedFiles();
-        assertThat(config.metadata()).isPresent();
-        assertThat(config.metadata().get()
+        assertThat(context.config().metadata()).isPresent();
+        assertThat(context.config().metadata().get()
                 .stream()
                 .map(m -> m.title())
                 .collect(Collectors.toList()))
-                .containsExactlyInAnyOrder("readme.md", "doc.md");
+                .containsExactlyInAnyOrder(alreadyIndexed.title());
     }
 
     @Test
@@ -148,13 +151,10 @@ public class AlexandriaIndexTest {
     }
 
     @Test
-    public void testIndexWrapsExceptionsInBatchProcessException(){
-        Config config = new Config();
-        Context context = new Context();
-        context.config(config);
-
-        AlexandriaIndex alexandriaIndex = new AlexandriaIndex();
-        alexandriaIndex.context(context);
+    public void testIndexWrapsExceptionsInBatchProcessException() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        context.projectBase(Paths.get(""));
+        AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
         assertThatThrownBy(() -> alexandriaIndex.findUnindexedFiles())
                 .isInstanceOf(BatchProcessException.class);
     }
@@ -167,19 +167,21 @@ public class AlexandriaIndexTest {
     }
 
     @Test
-    public void testIndexMarksMissingFilesForDeletion() throws IOException {
-        Path deletedPath = Paths.get(folder.getRoot().toString(), "deleted");
-        Config.DocumentMetadata deletedDocument = new Config.DocumentMetadata();
-        deletedDocument.sourcePath(deletedPath);
-        config.metadata(Optional.of(Arrays.asList(deletedDocument)));
+    public void testIndexMarksMissingFilesForDeletion() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata deletedDocument = TestData.documentForDelete(context, folder);
+        AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
         alexandriaIndex.markFilesForDeletion();
-        assertThat(config.metadata()).isPresent();
-        assertThat(config.metadata().get()
-                .stream()
-                .filter(d -> d.sourcePath().equals(deletedPath))
-                .findFirst()
-                .get()
-                .extraProps()
-                .get()).containsKey("delete");
+        assertThat(deletedDocument.extraProps().get().containsKey("delete"));
+    }
+
+    @Test
+    public void testIndexCreatesExtraPropsIfNecessary() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata deletedDocument = TestData.documentForDelete(context, folder);
+        deletedDocument.extraProps(Optional.empty());
+        AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
+        alexandriaIndex.markFilesForDeletion();
+        assertThat(deletedDocument.extraProps().get().containsKey("delete"));
     }
 }

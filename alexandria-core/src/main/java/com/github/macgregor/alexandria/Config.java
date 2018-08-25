@@ -93,5 +93,13 @@ public class Config {
         @JsonProperty
         @EqualsAndHashCode.Exclude
         private Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
+
+        public boolean hasExtraProperty(String key){
+            return extraProps.isPresent() && extraProps.get().containsKey(key);
+        }
+
+        public String sourceFileName(){
+            return sourcePath.toFile().getName();
+        }
     }
 }

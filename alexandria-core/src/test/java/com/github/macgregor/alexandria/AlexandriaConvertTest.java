@@ -2,6 +2,7 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -20,87 +21,63 @@ public class AlexandriaConvertTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testConvertDoesntConvertWhenRemoteSupportsMarkdown() throws IOException, BatchProcessException {
-        File f1 = folder.newFile("readme.md");
+    public void testConvertDoesntConvertWhenRemoteSupportsMarkdown() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        context.config().remote().supportsNativeMarkdown(true);
 
-        Config config = new Config();
-        Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.supportsNativeMarkdown(true);
-        config.remote(remoteConfig);
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.convert();
+        AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
+        alexandriaConvert.convert();
         assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).doesNotExist();
     }
 
     @Test
-    public void testConvertSetsConvertedPathPreferringConfigOverride() throws IOException, BatchProcessException {
-        File f1 = folder.newFile("readme.md");
+    public void testConvertSetsConvertedPathPreferringConfigOverride() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+
         File subdir = folder.newFolder("out");
-
-        Config config = new Config();
-        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
-        readmeMetadata.sourcePath(f1.toPath());
-        config.metadata().get().add(readmeMetadata);
-
-        Context context = new Context();
         context.outputPath(Optional.of(subdir.toPath()));
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
 
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.convert();
-        assertThat(context.convertedPath(readmeMetadata).get()).isEqualTo(Paths.get(subdir.getPath(), "readme.html"));
-        assertThat(Paths.get(subdir.getPath(), "readme.html")).exists();
+        AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
+        alexandriaConvert.convert();
+        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(subdir.getPath(), "minimal.html"));
+        assertThat(Paths.get(subdir.getPath(), "minimal.html")).exists();
     }
 
     @Test
-    public void testConvertSetsConvertedPathUsesSourceDirAsOutput() throws IOException, BatchProcessException {
-        File f1 = folder.newFile("readme.md");
-
-        Config config = new Config();
-        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
-        readmeMetadata.sourcePath(f1.toPath());
-        config.metadata().get().add(readmeMetadata);
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.convert();
-        assertThat(context.convertedPath(readmeMetadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), "readme.html"));
-        assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).exists();
+    public void testConvertSetsConvertedPathUsesSourceDirAsOutput() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
+        alexandriaConvert.convert();
+        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), "minimal.html"));
+        assertThat(Paths.get(folder.getRoot().toString(), "minimal.html")).exists();
     }
 
     @Test
-    public void testConvertWrapsConvertErrorsPerDocument() {
-        Config config = new Config();
-        Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
-        config.metadata().get().add(readmeMetadata);
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
+    public void testConvertWrapsConvertErrorsPerDocument() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        FileUtils.forceDelete(context.config().metadata().get().get(0).sourcePath().toFile());
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
         assertThatThrownBy(() -> alexandria.convert()).isInstanceOf(BatchProcessException.class);
     }
 
     @Test
-    public void testConvertWrapsIOExceptionAsAlexandriaException(){
-        Context context = new Context();
-        context.config(new Config());
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+    public void testConvertWrapsIOExceptionAsAlexandriaException() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         metadata.sourcePath(Paths.get("foo"));
         assertThatThrownBy(() -> AlexandriaConvert.convert(context, metadata)).isInstanceOf(AlexandriaException.class);
+    }
+
+    @Test
+    public void testConvertCalculatesChecksumOfConvertedFile() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
+        alexandriaConvert.convert();
+        assertThat(metadata.convertedChecksum()).isPresent();
+        assertThat(metadata.convertedChecksum().get()).isEqualTo(FileUtils.checksumCRC32(context.convertedPath(metadata).get().toFile()));
     }
 }
