@@ -70,12 +70,4 @@ public class AlexandriaConvert {
         }
         context.convertedPath(metadata, convertedPath);
     }
-
-    public Context getContext() {
-        return context;
-    }
-
-    public void setContext(Context context) {
-        this.context = context;
-    }
 }

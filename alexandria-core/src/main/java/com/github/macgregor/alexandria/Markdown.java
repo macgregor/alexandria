@@ -6,8 +6,7 @@ import com.vladsch.flexmark.ext.tables.TablesExtension;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.options.MutableDataSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -17,8 +16,8 @@ import java.util.Arrays;
 /**
  * Configure Flexmark markdown library
  */
+@Slf4j
 public class Markdown {
-    private static Logger log = LoggerFactory.getLogger(Markdown.class);
 
     private static Parser parser;
     private static HtmlRenderer renderer;

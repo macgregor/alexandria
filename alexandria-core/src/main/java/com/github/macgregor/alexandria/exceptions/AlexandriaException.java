@@ -3,16 +3,17 @@ package com.github.macgregor.alexandria.exceptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Jackson;
+import lombok.*;
+import lombok.experimental.Accessors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.util.Optional;
 
+@NoArgsConstructor @AllArgsConstructor
+@Getter @Setter @Accessors(fluent = true)
 public class AlexandriaException extends IOException {
     private Optional<Config.DocumentMetadata> metadata;
-
-    public AlexandriaException() {
-    }
 
     public AlexandriaException(String message) {
         super(message);
@@ -24,14 +25,6 @@ public class AlexandriaException extends IOException {
 
     public AlexandriaException(Throwable cause) {
         super(cause);
-    }
-
-    public Optional<Config.DocumentMetadata> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Optional<Config.DocumentMetadata> metadata) {
-        this.metadata = metadata;
     }
 
     public static class Builder {
@@ -63,7 +56,7 @@ public class AlexandriaException extends IOException {
             } else if(cause.isPresent()){
                 exception = new AlexandriaException(cause.get());
             }
-            exception.setMetadata(metadata);
+            exception.metadata(metadata);
             return exception;
         }
     }

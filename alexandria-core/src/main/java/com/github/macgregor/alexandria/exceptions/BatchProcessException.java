@@ -1,33 +1,20 @@
 package com.github.macgregor.alexandria.exceptions;
 
+import lombok.*;
+import lombok.experimental.Accessors;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
+@ToString
+@NoArgsConstructor @AllArgsConstructor
+@Getter @Setter @Accessors(fluent = true)
 public class BatchProcessException extends AlexandriaException {
-    private Collection<AlexandriaException> exceptions;
-
-    public BatchProcessException() {
-    }
+    private Collection<AlexandriaException> exceptions = new ArrayList<>();
 
     public BatchProcessException(String message) {
         super(message);
-    }
-
-    public Collection<AlexandriaException> getExceptions() {
-        return exceptions;
-    }
-
-    @Override
-    public String toString() {
-
-
-        return "BatchProcessException{" +
-                "exceptions=" + exceptions +
-                '}';
-    }
-
-    public void setExceptions(Collection<AlexandriaException> exceptions) {
-        this.exceptions = exceptions;
     }
 
     public static class Builder {
@@ -49,7 +36,7 @@ public class BatchProcessException extends AlexandriaException {
             if(message.isPresent()){
                 exception = new BatchProcessException(message.get());
             }
-            exception.setExceptions(exceptions);
+            exception.exceptions(exceptions);
             return exception;
         }
     }

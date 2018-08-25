@@ -95,8 +95,8 @@ public class JiveRemote implements Remote{
         } catch (IOException e) {
             log.warn("Cannot parse response content", e);
             HttpException exception = new HttpException("Cannot parse response content", e);
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
+            exception.request(Optional.of(request));
+            exception.response(Optional.ofNullable(response));
             throw exception;
         }
     }
@@ -260,8 +260,8 @@ public class JiveRemote implements Remote{
         } catch (IOException e) {
             log.warn("Cannot parse response content", e);
             HttpException exception = new HttpException("Cannot parse response content", e);
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
+            exception.request(Optional.of(request));
+            exception.response(Optional.ofNullable(response));
             throw exception;
         }
     }
@@ -299,8 +299,8 @@ public class JiveRemote implements Remote{
         } catch (IOException e) {
             log.warn("Cannot parse response content", e);
             HttpException exception = new HttpException("Cannot parse response content", e);
-            exception.setRequest(Optional.of(request));
-            exception.setResponse(Optional.ofNullable(response));
+            exception.request(Optional.of(request));
+            exception.response(Optional.ofNullable(response));
             throw exception;
         }
     }
