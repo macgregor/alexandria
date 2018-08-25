@@ -37,7 +37,7 @@ public class ApplicationTest {
         doReturn(alexandria).when(alexandria).index();
         doReturn(alexandria).when(alexandria).convert();
         doReturn(alexandria).when(alexandria).syncWithRemote();
-        doReturn(alexandria).when(application).getAlexandria();
+        doReturn(alexandria).when(application).alexandria();
         return alexandria;
     }
 }

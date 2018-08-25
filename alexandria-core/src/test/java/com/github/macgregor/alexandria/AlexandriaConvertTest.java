@@ -48,7 +48,7 @@ public class AlexandriaConvertTest {
         config.metadata().get().add(readmeMetadata);
 
         Context context = new Context();
-        context.output(Optional.of(subdir.getPath()));
+        context.outputPath(Optional.of(subdir.getPath()));
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
 

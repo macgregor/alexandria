@@ -42,34 +42,34 @@ public class AlexandriaMojoTest {
 
         alexandria.context(context);
         doReturn(alexandria).when(alexandria).load(anyString());
-        testAlexandriaMojo.setAlexandria(alexandria);
-        testAlexandriaMojo.setProject(childProject);
-        testAlexandriaMojo.setMavenSession(session);
+        testAlexandriaMojo.alexandria(alexandria);
+        testAlexandriaMojo.project(childProject);
+        testAlexandriaMojo.mavenSession(session);
         testAlexandriaMojo.setLog(log);
-        testAlexandriaMojo.setOutputPath("foo");
+        testAlexandriaMojo.outputPath("foo");
     }
 
     @Test
     public void testRootDirFromParentContext(){
-        testAlexandriaMojo.setProject(parentProject);
+        testAlexandriaMojo.project(parentProject);
         assertThat(testAlexandriaMojo.rootDir()).isEqualTo(parentProject.getBasedir().toString());
     }
 
     @Test
     public void testRootDirFromChildContext(){
-        testAlexandriaMojo.setProject(childProject);
+        testAlexandriaMojo.project(childProject);
         assertThat(testAlexandriaMojo.rootDir()).isEqualTo(parentProject.getBasedir().toString());
     }
 
     @Test
     public void testIsExecutionRootFromChild(){
-        testAlexandriaMojo.setProject(childProject);
+        testAlexandriaMojo.project(childProject);
         assertThat(testAlexandriaMojo.isExecutionRoot()).isFalse();
     }
 
     @Test
     public void testIsExecutionRootFromParent(){
-        testAlexandriaMojo.setProject(parentProject);
+        testAlexandriaMojo.project(parentProject);
         assertThat(testAlexandriaMojo.isExecutionRoot()).isTrue();
     }
 
@@ -100,7 +100,7 @@ public class AlexandriaMojoTest {
     @Test
     public void testLogOutputPathAtDebug(){
         testAlexandriaMojo.logContext();
-        verify(context, times(1)).output();
+        verify(context, times(1)).outputPath();
         verify(log, times(6)).debug(anyString());
         verify(log, times(0)).info(anyString());
     }
@@ -123,72 +123,72 @@ public class AlexandriaMojoTest {
 
     @Test
     public void testInitDoesntOverrideInputDir() throws IOException {
-        testAlexandriaMojo.setInputs(Collections.singletonList("foo"));
+        testAlexandriaMojo.inputs(Collections.singletonList("foo"));
         testAlexandriaMojo.init();
-        assertThat(testAlexandriaMojo.getInputs()).containsExactlyInAnyOrder("foo");
+        assertThat(testAlexandriaMojo.inputs()).containsExactlyInAnyOrder("foo");
         assertThat(context.searchPath()).containsExactlyInAnyOrder("foo");
     }
 
     @Test
     public void testInitInputDirDefaultsToRootDir() throws IOException {
         testAlexandriaMojo.init();
-        assertThat(testAlexandriaMojo.getInputs()).containsExactlyInAnyOrder(parentProject.getBasedir().toString());
+        assertThat(testAlexandriaMojo.inputs()).containsExactlyInAnyOrder(parentProject.getBasedir().toString());
         assertThat(context.searchPath()).containsExactlyInAnyOrder(parentProject.getBasedir().toString());
     }
 
     @Test
     public void testInitDoesntOverrideConfigPath() throws IOException {
-        testAlexandriaMojo.setConfigPath("foo");
+        testAlexandriaMojo.configPath("foo");
         testAlexandriaMojo.init();
-        assertThat(testAlexandriaMojo.getConfigPath()).isEqualTo("foo");
+        assertThat(testAlexandriaMojo.configPath()).isEqualTo("foo");
         verify(alexandria, times(1)).load("foo");
     }
 
     @Test
     public void testInitConfigPathDefaultsToRootDirDotAlexandria() throws IOException {
         testAlexandriaMojo.init();
-        assertThat(testAlexandriaMojo.getConfigPath()).isEqualTo(new File(parentProject.getBasedir(), ".alexandria").toString());
+        assertThat(testAlexandriaMojo.configPath()).isEqualTo(new File(parentProject.getBasedir(), ".alexandria").toString());
         verify(alexandria, times(1)).load(new File(parentProject.getBasedir(), ".alexandria").toString());
     }
 
     @Test
     public void testInitSetsContextSearchPath() throws IOException {
-        testAlexandriaMojo.setInputs(Collections.singletonList("foo"));
+        testAlexandriaMojo.inputs(Collections.singletonList("foo"));
         testAlexandriaMojo.init();
         assertThat(context.searchPath()).containsExactlyInAnyOrder("foo");
     }
 
     @Test
     public void testInitSetsOutputPath() throws IOException {
-        testAlexandriaMojo.setOutputPath("foo");
+        testAlexandriaMojo.outputPath("foo");
         testAlexandriaMojo.init();
-        assertThat(context.output().get()).isEqualTo("foo");
+        assertThat(context.outputPath().get()).isEqualTo("foo");
     }
 
     @Test
     public void testInitDoesntSetIncludeWhenEmpty() throws IOException {
-        testAlexandriaMojo.setIncludes(Collections.emptyList());
+        testAlexandriaMojo.includes(Collections.emptyList());
         testAlexandriaMojo.init();
         verify(context, times(0)).include(anyList());
     }
 
     @Test
     public void testInitSetsInclude() throws IOException {
-        testAlexandriaMojo.setIncludes(Collections.singletonList("foo"));
+        testAlexandriaMojo.includes(Collections.singletonList("foo"));
         testAlexandriaMojo.init();
         assertThat(context.include()).containsExactlyInAnyOrder("foo");
     }
 
     @Test
     public void testInitDoesntSetExcludeWhenEmpty() throws IOException {
-        testAlexandriaMojo.setExcludes(Collections.emptyList());
+        testAlexandriaMojo.excludes(Collections.emptyList());
         testAlexandriaMojo.init();
         verify(context, times(0)).exclude(anyList());
     }
 
     @Test
     public void testInitSetsExclude() throws IOException {
-        testAlexandriaMojo.setExcludes(Collections.singletonList("foo"));
+        testAlexandriaMojo.excludes(Collections.singletonList("foo"));
         testAlexandriaMojo.init();
         assertThat(context.exclude()).containsExactlyInAnyOrder("foo");
     }

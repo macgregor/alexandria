@@ -11,7 +11,7 @@ public class IndexCommand extends AlexandriaCommand {
         configureLogging();
         init();
         logContext();
-        getAlexandria().index();
+        alexandria().index();
         return null;
     }
 }

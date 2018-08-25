@@ -2,22 +2,20 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.remotes.Remote;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
+@Slf4j
+@ToString
+@Getter @Setter @Accessors(fluent = true)
+@NoArgsConstructor @AllArgsConstructor
 public class AlexandriaSync {
-    private static Logger log = LoggerFactory.getLogger(AlexandriaSync.class);
 
-    private Context context;
-
-    public AlexandriaSync(){}
-
-    public AlexandriaSync(Context context){
-        this.context = context;
-    }
+    @NonNull private Context context;
 
     public void syncWithRemote() throws AlexandriaException {
         log.debug("Syncing files to html.");

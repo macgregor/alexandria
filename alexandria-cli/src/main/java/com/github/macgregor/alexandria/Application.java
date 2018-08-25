@@ -28,7 +28,7 @@ public class Application extends AlexandriaCommand {
         configureLogging();
         init();
         logContext();
-        getAlexandria().index()
+        alexandria().index()
                 .convert()
                 .syncWithRemote();
         return null;

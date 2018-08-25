@@ -39,51 +39,51 @@ public class SyncMojoTest {
         doReturn(alexandria).when(alexandria).index();
         doReturn(alexandria).when(alexandria).convert();
         doReturn(alexandria).when(alexandria).syncWithRemote();
-        syncMojo.setAlexandria(alexandria);
-        syncMojo.setProject(childProject);
-        syncMojo.setMavenSession(session);
+        syncMojo.alexandria(alexandria);
+        syncMojo.project(childProject);
+        syncMojo.mavenSession(session);
         syncMojo.setLog(log);
-        syncMojo.setOutputPath("foo");
+        syncMojo.outputPath("foo");
     }
 
     @Test
     public void testSyncDoesntRunOnChildProject() throws MojoFailureException, MojoExecutionException, IOException {
-        syncMojo.setProject(childProject);
+        syncMojo.project(childProject);
         syncMojo.execute();
         verify(syncMojo, times(0)).init();
         verify(syncMojo, times(0)).logContext();
-        verify(syncMojo, times(0)).getAlexandria();
+        verify(syncMojo, times(0)).alexandria();
     }
 
     @Test
     public void testSyncRunsOnRootProject() throws MojoFailureException, MojoExecutionException, IOException {
-        syncMojo.setProject(parentProject);
+        syncMojo.project(parentProject);
         syncMojo.execute();
         verify(syncMojo, times(1)).init();
         verify(syncMojo, times(1)).logContext();
-        verify(syncMojo, atLeastOnce()).getAlexandria();
+        verify(syncMojo, atLeastOnce()).alexandria();
     }
 
     @Test
     public void testSyncCallsConvert() throws MojoFailureException, MojoExecutionException, IOException, BatchProcessException {
-        syncMojo.setProject(parentProject);
+        syncMojo.project(parentProject);
         syncMojo.execute();
         verify(syncMojo, times(1)).init();
         verify(syncMojo, times(1)).logContext();
-        verify(syncMojo, atLeastOnce()).getAlexandria();
+        verify(syncMojo, atLeastOnce()).alexandria();
         verify(alexandria, times(1)).syncWithRemote();
     }
 
     @Test
     public void testSyncWrapsIOExceptions() throws IOException {
-        syncMojo.setProject(parentProject);
+        syncMojo.project(parentProject);
         doThrow(IOException.class).when(syncMojo).init();
         assertThatThrownBy(() -> syncMojo.execute()).isInstanceOf(MojoFailureException.class);
     }
 
     @Test
     public void testSyncWrapsBatchProcessException() throws IOException {
-        syncMojo.setProject(parentProject);
+        syncMojo.project(parentProject);
         doThrow(BatchProcessException.class).when(alexandria).syncWithRemote();
         assertThatThrownBy(() -> syncMojo.execute()).isInstanceOf(MojoFailureException.class);
     }

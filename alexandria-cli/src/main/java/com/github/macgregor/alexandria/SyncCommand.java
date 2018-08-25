@@ -11,7 +11,7 @@ public class SyncCommand extends AlexandriaCommand {
         configureLogging();
         init();
         logContext();
-        getAlexandria().syncWithRemote();
+        alexandria().syncWithRemote();
         return null;
     }
 }

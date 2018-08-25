@@ -87,28 +87,28 @@ public class AlexandriaCommandTest {
     @Test
     public void testAlexandriaInitSetsContextInput() throws IOException {
         TestCommand testCommand = new TestCommand();
-        testCommand.setInput(Arrays.asList("foo"));
+        testCommand.input(Arrays.asList("foo"));
         assertThat(testCommand.init().context().searchPath()).containsExactlyInAnyOrder("foo");
     }
 
     @Test
     public void testAlexandriaInitSetsContextOutput() throws IOException {
         TestCommand testCommand = new TestCommand();
-        testCommand.setOutput("foo");
-        assertThat(testCommand.init().context().output()).isEqualTo(Optional.of("foo"));
+        testCommand.outputPath("foo");
+        assertThat(testCommand.init().context().outputPath()).isEqualTo(Optional.of("foo"));
     }
 
     @Test
     public void testAlexandriaInitSetsContextInclude() throws IOException {
         TestCommand testCommand = new TestCommand();
-        testCommand.setInclude(Arrays.asList("foo"));
+        testCommand.include(Arrays.asList("foo"));
         assertThat(testCommand.init().context().include()).containsExactlyInAnyOrder("foo");
     }
 
     @Test
     public void testAlexandriaInitSetsContextExclude() throws IOException {
         TestCommand testCommand = new TestCommand();
-        testCommand.setExclude(Arrays.asList("foo"));
+        testCommand.exclude(Arrays.asList("foo"));
         assertThat(testCommand.init().context().exclude()).containsExactlyInAnyOrder("foo");
     }
 
@@ -133,7 +133,7 @@ public class AlexandriaCommandTest {
     @Test
     public void testLogContextLogsOutput(){
         Context context = spyContext();
-        verify(context, times(1)).output();
+        verify(context, times(1)).outputPath();
     }
 
     @Test
@@ -153,7 +153,7 @@ public class AlexandriaCommandTest {
         Alexandria alexandria = spy(new Alexandria());
         Context context = spy(new Context());
         alexandria.context(context);
-        testCommand.setAlexandria(alexandria);
+        testCommand.alexandria(alexandria);
         testCommand.logContext();
         return context;
     }

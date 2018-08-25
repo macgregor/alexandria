@@ -39,51 +39,51 @@ public class IndexMojoTest {
         doReturn(alexandria).when(alexandria).index();
         doReturn(alexandria).when(alexandria).convert();
         doReturn(alexandria).when(alexandria).syncWithRemote();
-        indexMojo.setAlexandria(alexandria);
-        indexMojo.setProject(childProject);
-        indexMojo.setMavenSession(session);
+        indexMojo.alexandria(alexandria);
+        indexMojo.project(childProject);
+        indexMojo.mavenSession(session);
         indexMojo.setLog(log);
-        indexMojo.setOutputPath("foo");
+        indexMojo.outputPath("foo");
     }
 
     @Test
     public void testIndexDoesntRunOnChildProject() throws MojoFailureException, MojoExecutionException, IOException {
-        indexMojo.setProject(childProject);
+        indexMojo.project(childProject);
         indexMojo.execute();
         verify(indexMojo, times(0)).init();
         verify(indexMojo, times(0)).logContext();
-        verify(indexMojo, times(0)).getAlexandria();
+        verify(indexMojo, times(0)).alexandria();
     }
 
     @Test
     public void testIndexRunsOnRootProject() throws MojoFailureException, MojoExecutionException, IOException {
-        indexMojo.setProject(parentProject);
+        indexMojo.project(parentProject);
         indexMojo.execute();
         verify(indexMojo, times(1)).init();
         verify(indexMojo, times(1)).logContext();
-        verify(indexMojo, atLeastOnce()).getAlexandria();
+        verify(indexMojo, atLeastOnce()).alexandria();
     }
 
     @Test
     public void testIndexCallsConvert() throws MojoFailureException, MojoExecutionException, IOException, BatchProcessException {
-        indexMojo.setProject(parentProject);
+        indexMojo.project(parentProject);
         indexMojo.execute();
         verify(indexMojo, times(1)).init();
         verify(indexMojo, times(1)).logContext();
-        verify(indexMojo, atLeastOnce()).getAlexandria();
+        verify(indexMojo, atLeastOnce()).alexandria();
         verify(alexandria, times(1)).index();
     }
 
     @Test
     public void testIndexWrapsIOExceptions() throws IOException {
-        indexMojo.setProject(parentProject);
+        indexMojo.project(parentProject);
         doThrow(IOException.class).when(indexMojo).init();
         assertThatThrownBy(() -> indexMojo.execute()).isInstanceOf(MojoFailureException.class);
     }
 
     @Test
     public void testIndexWrapsBatchProcessException() throws IOException {
-        indexMojo.setProject(parentProject);
+        indexMojo.project(parentProject);
         doThrow(BatchProcessException.class).when(alexandria).index();
         assertThatThrownBy(() -> indexMojo.execute()).isInstanceOf(MojoFailureException.class);
     }

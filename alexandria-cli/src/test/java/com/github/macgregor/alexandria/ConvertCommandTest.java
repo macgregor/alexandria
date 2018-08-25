@@ -15,7 +15,7 @@ public class ConvertCommandTest {
         doReturn(alexandria).when(alexandria).index();
         doReturn(alexandria).when(alexandria).convert();
         doReturn(alexandria).when(alexandria).syncWithRemote();
-        doReturn(alexandria).when(testCommand).getAlexandria();
+        doReturn(alexandria).when(testCommand).alexandria();
         testCommand.call();
         verify(alexandria, times(1)).convert();
     }

@@ -1,7 +1,10 @@
 package com.github.macgregor.alexandria;
 
 import ch.qos.logback.classic.Level;
-import org.slf4j.Logger;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
@@ -13,9 +16,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
+@Slf4j
+@Getter @Setter @Accessors(fluent = true)
 public abstract class AlexandriaCommand implements Callable<Void> {
-
-    private Logger log = LoggerFactory.getLogger(this.getClass());
 
     @CommandLine.Option(names = { "-v", "--verbose" }, description = {
             "Specify multiple -v options to increase verbosity.",
@@ -26,7 +29,7 @@ public abstract class AlexandriaCommand implements Callable<Void> {
     private String configPath = Paths.get(System.getProperty("user.dir"), ".alexandria").toString();
 
     @CommandLine.Option(names = { "-o", "--output" }, description = "Output directory for converted files. If not specified, will convert file in place.")
-    private String output;
+    private String outputPath;
 
     @CommandLine.Option(names = {"-p", "--input"}, arity = "1..*", description = "One or more directories to search for files in. Defaults to current directory.")
     private List<String> input = Arrays.asList(System.getProperty("user.dir"));
@@ -64,7 +67,7 @@ public abstract class AlexandriaCommand implements Callable<Void> {
         alexandria = new Alexandria();
         alexandria.load(configPath);
         alexandria.context().searchPath(input);
-        alexandria.context().output(Optional.ofNullable(output));
+        alexandria.context().outputPath(Optional.ofNullable(outputPath));
         if (include.size() > 0) {
             alexandria.context().include(include);
         }
@@ -78,72 +81,8 @@ public abstract class AlexandriaCommand implements Callable<Void> {
         log.info("Alexandria - config file: " + alexandria.context().configPath());
         log.info("Alexandria - project base dir: " + alexandria.context().projectBase());
         log.info("Alexandria - input directories: " + alexandria.context().searchPath());
-        log.info("Alexandria - output directory: " + alexandria.context().output());
+        log.info("Alexandria - outputPath directory: " + alexandria.context().outputPath());
         log.info("Alexandria - include files: " + alexandria.context().include());
         log.info("Alexandria - exclude files: " + alexandria.context().exclude());
-    }
-
-    public Logger getLog() {
-        return log;
-    }
-
-    public void setLog(Logger log) {
-        this.log = log;
-    }
-
-    public String getConfigPath() {
-        return configPath;
-    }
-
-    public void setConfigPath(String configPath) {
-        this.configPath = configPath;
-    }
-
-    public String getOutput() {
-        return output;
-    }
-
-    public void setOutput(String output) {
-        this.output = output;
-    }
-
-    public List<String> getInput() {
-        return input;
-    }
-
-    public void setInput(List<String> input) {
-        this.input = input;
-    }
-
-    public List<String> getInclude() {
-        return include;
-    }
-
-    public void setInclude(List<String> include) {
-        this.include = include;
-    }
-
-    public List<String> getExclude() {
-        return exclude;
-    }
-
-    public void setExclude(List<String> exclude) {
-        this.exclude = exclude;
-    }
-
-    public boolean[] getVerbosity() {
-        return verbosity;
-    }
-
-    public void setVerbosity(boolean[] verbosity) {
-        this.verbosity = verbosity;
-    }
-
-    public Alexandria getAlexandria() {
-        return alexandria;
-    }
-
-    public void setAlexandria(Alexandria alexandria) {
-        this.alexandria = alexandria;
     }
 }
