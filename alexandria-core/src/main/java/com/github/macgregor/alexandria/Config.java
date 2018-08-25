@@ -63,41 +63,35 @@ public class Config {
         @NonNull private String title;
 
         @JsonProperty
+        @EqualsAndHashCode.Exclude
         private Optional<URI> remoteUri = Optional.empty();
 
         @JsonProperty
+        @EqualsAndHashCode.Exclude
         private Optional<List<String>> tags = Optional.of(new ArrayList<>());
 
         @JsonProperty
+        @EqualsAndHashCode.Exclude
         private Optional<Long> sourceChecksum = Optional.empty();
 
         @JsonProperty
+        @EqualsAndHashCode.Exclude
         private Optional<Long> convertedChecksum = Optional.empty();
 
         @JsonProperty
+        @EqualsAndHashCode.Exclude
         private Optional<ZonedDateTime> createdOn = Optional.empty();
 
         @JsonProperty
+        @EqualsAndHashCode.Exclude
         private Optional<ZonedDateTime> lastUpdated = Optional.empty();
 
         @JsonProperty
+        @EqualsAndHashCode.Exclude
         private Optional<ZonedDateTime> deletedOn = Optional.empty();
 
         @JsonProperty
+        @EqualsAndHashCode.Exclude
         private Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            DocumentMetadata metadata = (DocumentMetadata) o;
-            return Objects.equals(sourcePath, metadata.sourcePath) &&
-                    Objects.equals(title, metadata.title);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(sourcePath, title);
-        }
     }
 }
