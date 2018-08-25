@@ -43,9 +43,17 @@ public class Alexandria {
         return this;
     }
 
-    public Alexandria save() throws IOException {
+    public static Alexandria loadContext(String filePath) throws IOException {
+        return new Alexandria().load(filePath);
+    }
+
+    public static void save(Context context) throws IOException {
         Jackson.yamlMapper().writeValue(context.configPath().toFile(), context.config());
         log.debug(String.format("Saved configuration to %s", context.configPath().toString()));
+    }
+
+    public Alexandria save() throws IOException {
+        Alexandria.save(context);
         return this;
     }
 

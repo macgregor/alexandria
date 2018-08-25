@@ -42,6 +42,7 @@ public class AlexandriaConvert {
         }, (context, exceptions) -> {
             log.info(String.format("%d out of %d files converted successfully.",
                     context.documentCount()-exceptions.size(), context.documentCount()));
+            Alexandria.save(context);
             return BatchProcess.EXCEPTIONS_UNHANDLED;
         });
     }

@@ -23,7 +23,10 @@ public class BatchProcess<T> {
     private Collection<AlexandriaException> exceptions = new ArrayList<>();
 
     public void execute(Batch<T> batch, Task<T> task) throws BatchProcessException {
-        execute(batch, task, (context, exceptions) -> EXCEPTIONS_UNHANDLED);
+        execute(batch, task, (context, exceptions) -> {
+            Alexandria.save(context);
+            return EXCEPTIONS_UNHANDLED;
+        });
     }
 
     public void execute(Batch<T> batch, Task<T> task, AfterBatch<T> after) throws BatchProcessException {
@@ -51,8 +54,18 @@ public class BatchProcess<T> {
             exceptions.add(buildAlexandriaException(e, Optional.empty(), Optional.of("Unexpected exception thrown processing batch.")));
         }
 
-        boolean exceptionsHandled = after.execute(context, exceptions);
-        if(exceptions.size() > 0 && ! exceptionsHandled){
+
+        boolean exceptionsHandled = EXCEPTIONS_UNHANDLED;
+        try {
+            exceptionsHandled = after.execute(context, exceptions);;
+        } catch(BatchProcessException e){
+            exceptions.addAll(e.exceptions());
+        } catch(AlexandriaException e){
+            exceptions.add(e);
+        } catch(Exception e){
+            exceptions.add(buildAlexandriaException(e, Optional.empty(), Optional.of("Unexpected exception thrown processing after batch.")));
+        }
+        if(exceptions.size() > 0 && exceptionsHandled == EXCEPTIONS_UNHANDLED){
             throw new BatchProcessException.Builder()
                     .withMessage("Alexandria batch error.")
                     .causedBy(exceptions)
@@ -84,6 +97,6 @@ public class BatchProcess<T> {
 
     @FunctionalInterface
     public interface AfterBatch<T> {
-        boolean execute(Context context, Collection<AlexandriaException> exceptions) throws BatchProcessException;
+        boolean execute(Context context, Collection<AlexandriaException> exceptions) throws Exception;
     }
 }
