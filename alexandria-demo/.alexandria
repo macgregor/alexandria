@@ -1,36 +1,119 @@
 ---
 remote:
+  baseUrl: "https://jive.com/api/core/v3"
+  username: "username"
+  password: "password"
   supportsNativeMarkdown: false
   datetimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-  class: "com.github.macgregor.alexandria.remotes.NoopRemote"
+  requestTimeout: 60
+  class: "com.github.macgregor.alexandria.remotes.JiveRemote"
 metadata:
 - sourcePath: "docs/images.md"
   title: "images.md"
+  remoteUri: "https://jive.com/docs/DOC-1140818"
   sourceChecksum: 1751689934
+  convertedChecksum: 2834756773
+  createdOn: "2018-08-22T02:27:48.644+0000"
+  lastUpdated: "2018-08-22T02:27:51.789+0000"
+  extraProps:
+    jiveParentUri: "https://jive.com/groups/alexandria-test-group"
+    jiveParentPlaceId: "1448512"
+    jiveParentApiUri: "https://jive.com/api/core/v3/places/1448512"
+    jiveContentId: "1448517"
 - sourcePath: "docs/tables.md"
   title: "tables.md"
+  remoteUri: "https://jive.com/docs/DOC-1140816-tablesmd"
+  tags:
+  - "foo"
+  - "bar"
   sourceChecksum: 4054608692
+  convertedChecksum: 1278620046
+  createdOn: "2018-08-21T02:12:35.585+0000"
+  lastUpdated: "2018-08-21T02:12:36.319+0000"
+  extraProps:
+    jiveContentId: "1448514"
 - sourcePath: "docs/empahsis.md"
   title: "empahsis.md"
-  sourceChecksum: 2517968447
+  remoteUri: "https://jive.com/docs/DOC-1140809-empahsismd"
+  sourceChecksum: 2225603803
+  convertedChecksum: 3643693922
+  createdOn: "2018-08-21T02:12:39.511+0000"
+  lastUpdated: "2018-08-22T02:53:39.892+0000"
+  extraProps:
+    jiveContentId: "1448515"
 - sourcePath: "docs/codeblocks.md"
   title: "codeblocks.md"
-  sourceChecksum: 517594253
+  remoteUri: "https://jive.com/docs/DOC-1140806-codeblocksmd"
+  sourceChecksum: 935957770
+  convertedChecksum: 2516001619
+  createdOn: "2018-08-21T01:29:58.927+0000"
+  lastUpdated: "2018-08-22T02:53:45.666+0000"
+  extraProps:
+    jiveContentId: "1448506"
 - sourcePath: "docs/horizontal_rule.md"
   title: "horizontal_rule.md"
+  remoteUri: "https://jive.com/docs/DOC-1140812-horizontalrulemd"
   sourceChecksum: 3247894671
+  convertedChecksum: 4126560342
+  createdOn: "2018-08-21T01:30:01.472+0000"
+  lastUpdated: "2018-08-21T01:30:01.559+0000"
+  extraProps:
+    jiveContentId: "1448502"
 - sourcePath: "docs/headers.md"
   title: "headers.md"
+  remoteUri: "https://jive.com/docs/DOC-1140813-headersmd"
   sourceChecksum: 1343231395
+  convertedChecksum: 1257981753
+  createdOn: "2018-08-21T01:30:02.439+0000"
+  lastUpdated: "2018-08-21T01:30:02.498+0000"
+  extraProps:
+    jiveContentId: "1448503"
 - sourcePath: "docs/inline_html.md"
   title: "inline_html.md"
+  remoteUri: "https://jive.com/docs/DOC-1140807-inlinehtmlmd"
   sourceChecksum: 3042996089
+  convertedChecksum: 3895067944
+  createdOn: "2018-08-21T01:30:03.443+0000"
+  lastUpdated: "2018-08-21T01:30:03.567+0000"
+  extraProps:
+    jiveContentId: "1448507"
 - sourcePath: "docs/lists.md"
   title: "lists.md"
+  remoteUri: "https://jive.com/docs/DOC-1140808-listsmd"
   sourceChecksum: 1503736789
+  convertedChecksum: 3192433798
+  createdOn: "2018-08-21T01:30:04.563+0000"
+  lastUpdated: "2018-08-21T01:30:04.726+0000"
+  extraProps:
+    jiveContentId: "1448508"
 - sourcePath: "docs/links.md"
   title: "links.md"
+  remoteUri: "https://jive.com/docs/DOC-1140814-linksmd"
   sourceChecksum: 2954229193
+  convertedChecksum: 4128692928
+  createdOn: "2018-08-21T01:30:05.692+0000"
+  lastUpdated: "2018-08-21T01:30:05.789+0000"
+  extraProps:
+    jiveContentId: "1448509"
 - sourcePath: "docs/blockquotes.md"
   title: "blockquotes.md"
-  sourceChecksum: 2993210002
+  remoteUri: "https://jive.com/docs/DOC-1140815-blockquotesmd"
+  sourceChecksum: 3692013487
+  convertedChecksum: 3994993037
+  createdOn: "2018-08-21T01:30:06.921+0000"
+  lastUpdated: "2018-08-22T02:29:39.059+0000"
+  extraProps:
+    jiveContentId: "1448510"
+- sourcePath: "docs/new_document.md"
+  title: "new_document.md"
+  remoteUri: "https://jive.com/docs/DOC-1140819"
+  sourceChecksum: 222957957
+  convertedChecksum: 2755782296
+  createdOn: "2018-08-22T02:53:51.264+0000"
+  lastUpdated: "2018-08-22T02:53:51.402+0000"
+  deletedOn: "2018-08-25T22:03:49.473+0000"
+  extraProps:
+    jiveParentUri: "https://jive.com/groups/alexandria-test-group"
+    jiveParentPlaceId: "1448512"
+    jiveParentApiUri: "https://jive.com/api/core/v3/places/1448512"
+    jiveContentId: "1448518"
