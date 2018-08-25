@@ -39,7 +39,7 @@ public class AlexandriaIndex {
         });
     }
 
-    protected Collection<Path> documentsMatched(Context context) throws AlexandriaException {
+    protected static Collection<Path> documentsMatched(Context context) throws AlexandriaException {
         try {
             return Resources.relativeTo(context.projectBase(),
                     new Resources.PathFinder()
@@ -55,7 +55,7 @@ public class AlexandriaIndex {
         }
     }
 
-    protected Collection<Path> documentsAlreadyIndexed(Context context){
+    protected static Collection<Path> documentsAlreadyIndexed(Context context){
         return Resources.relativeTo(context.projectBase(),
                 context.config()
                         .metadata().get()
@@ -64,13 +64,13 @@ public class AlexandriaIndex {
                         .collect(Collectors.toList()));
     }
 
-    protected Collection<Path> documentsNotIndexed(Collection<Path> documentsMatched, Collection<Path> documentsAlreadyIndexed){
+    protected static Collection<Path> documentsNotIndexed(Collection<Path> documentsMatched, Collection<Path> documentsAlreadyIndexed){
         return documentsMatched.stream()
                 .filter(p -> !documentsAlreadyIndexed.contains(p))
                 .collect(Collectors.toList());
     }
 
-    protected Collection<Path> documentsIndexedButMissing(Collection<Path> documentsMatched, Collection<Path> documentsAlreadyIndexed){
+    protected static Collection<Path> documentsIndexedButMissing(Collection<Path> documentsMatched, Collection<Path> documentsAlreadyIndexed){
         return documentsAlreadyIndexed.stream()
                 .filter(p -> !documentsMatched.contains(p))
                 .collect(Collectors.toList());

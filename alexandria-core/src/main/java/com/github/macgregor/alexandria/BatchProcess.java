@@ -35,7 +35,13 @@ public class BatchProcess<T> {
                 }
             }
         } catch(BatchProcessException e){
-            exceptions.addAll(e.getExceptions());
+            if(e.exceptions().isEmpty()){
+                AlexandriaException alexandriaException = new AlexandriaException(e.getMessage(), e.getCause());
+                alexandriaException.setStackTrace(e.getStackTrace());
+                alexandriaException.metadata(e.metadata());
+                exceptions.add(alexandriaException);
+            }
+            exceptions.addAll(e.exceptions());
         } catch(AlexandriaException e){
             exceptions.add(e);
         } catch(Exception e){

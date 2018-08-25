@@ -1,17 +1,20 @@
 package com.github.macgregor.alexandria.exceptions;
 
 import com.github.macgregor.alexandria.Config;
+import lombok.*;
+import lombok.experimental.Accessors;
 import okhttp3.Request;
 import okhttp3.Response;
 
 import java.util.Optional;
 
+@ToString
+@NoArgsConstructor @AllArgsConstructor
+@Getter @Setter @Accessors(fluent = true)
 public class HttpException extends AlexandriaException {
     private Optional<Config.DocumentMetadata> metadata = Optional.empty();
     private Optional<Request> request = Optional.empty();
     private Optional<Response> response = Optional.empty();
-
-    public HttpException() {}
 
     public HttpException(String message) {
         super(message);
@@ -23,30 +26,6 @@ public class HttpException extends AlexandriaException {
 
     public HttpException(Throwable cause) {
         super(cause);
-    }
-
-    public Optional<Config.DocumentMetadata> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Optional<Config.DocumentMetadata> metadata) {
-        this.metadata = metadata;
-    }
-
-    public Optional<Request> getRequest() {
-        return request;
-    }
-
-    public void setRequest(Optional<Request> request) {
-        this.request = request;
-    }
-
-    public Optional<Response> getResponse() {
-        return response;
-    }
-
-    public void setResponse(Optional<Response> response) {
-        this.response = response;
     }
 
     public static class Builder {
@@ -90,9 +69,9 @@ public class HttpException extends AlexandriaException {
             } else if(cause.isPresent()){
                 exception = new HttpException(cause.get());
             }
-            exception.setMetadata(metadata);
-            exception.setRequest(request);
-            exception.setResponse(response);
+            exception.metadata(metadata);
+            exception.request(request);
+            exception.response(response);
             return exception;
         }
     }

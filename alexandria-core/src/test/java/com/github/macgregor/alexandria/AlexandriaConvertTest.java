@@ -1,5 +1,6 @@
 package com.github.macgregor.alexandria;
 
+import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -92,5 +93,23 @@ public class AlexandriaConvertTest {
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
         assertThatThrownBy(() -> alexandria.convert()).isInstanceOf(BatchProcessException.class);
+    }
+
+    @Test
+    public void testSupportNativeMarkdownFalseWhenNoRemoteHasntSetField(){
+        Context context = new Context();
+        context.config(new Config());
+        context.config().remote(new Config.RemoteConfig());
+        context.config().remote().supportsNativeMarkdown(Optional.empty());
+        assertThat(AlexandriaConvert.supportsNativeMarkdown(context)).isFalse();
+    }
+
+    @Test
+    public void testConvertWrapsIOExceptionAsAlexandriaException(){
+        Context context = new Context();
+        context.config(new Config());
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        assertThatThrownBy(() -> AlexandriaConvert.convert(context, metadata)).isInstanceOf(AlexandriaException.class);
     }
 }

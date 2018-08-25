@@ -1,5 +1,6 @@
 package com.github.macgregor.alexandria;
 
+import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -179,5 +181,12 @@ public class AlexandriaIndexTest {
         alexandria.context(context);
         assertThatThrownBy(() -> alexandria.index())
                 .isInstanceOf(BatchProcessException.class);
+    }
+
+    @Test
+    public void testIndexDocumentsMatchWrapsException(){
+        Context context = new Context();
+        context.searchPath(Collections.singletonList("foo"));
+        assertThatThrownBy(() -> AlexandriaIndex.documentsMatched(context)).isInstanceOf(AlexandriaException.class);
     }
 }
