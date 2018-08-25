@@ -4,11 +4,13 @@ import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 @Slf4j
 @ToString
@@ -39,14 +41,13 @@ public class AlexandriaConvert {
             AlexandriaConvert.convert(context, metadata);
         }, (context, exceptions) -> {
             log.info(String.format("%d out of %d files converted successfully.",
-                    context.config().metadata().get().size()-exceptions.size(),
-                    context.config().metadata().get().size()));
-            return false;
+                    context.documentCount()-exceptions.size(), context.documentCount()));
+            return BatchProcess.EXCEPTIONS_UNHANDLED;
         });
     }
 
     protected static Path convertedPath(Context context, Config.DocumentMetadata metadata){
-        Path sourceDir = metadata.sourcePath().toAbsolutePath().getParent();
+        Path sourceDir = context.resolveRelativePath(metadata.sourcePath()).getParent();
         String convertedDir = context.outputPath().orElse(sourceDir).toString();
         String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
         return Paths.get(convertedDir, convertedFileName);
@@ -56,6 +57,7 @@ public class AlexandriaConvert {
         Path convertedPath = convertedPath(context, metadata);
         try {
             Markdown.toHtml(metadata.sourcePath(), convertedPath);
+            metadata.convertedChecksum(Optional.of(FileUtils.checksumCRC32(convertedPath.toFile())));
         } catch (IOException e) {
             throw new AlexandriaException.Builder()
                     .withMessage(String.format("Unexcepted error converting %s to html", metadata.sourcePath()))

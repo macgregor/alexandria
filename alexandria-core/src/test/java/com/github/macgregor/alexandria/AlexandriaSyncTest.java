@@ -2,21 +2,23 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import com.github.macgregor.alexandria.remotes.NoopRemote;
+import com.github.macgregor.alexandria.remotes.Remote;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Optional;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 
 public class AlexandriaSyncTest {
 
@@ -72,158 +74,172 @@ public class AlexandriaSyncTest {
 
     @Test
     public void testSyncCalculatesChecksum() throws BatchProcessException, IOException {
-        File f = folder.newFile();
-        Resources.save(f.getPath(), "hello");
-        Config config = new Config();
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(f.toPath());
-        config.metadata(Optional.of(Arrays.asList(metadata)));
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        metadata.sourceChecksum(Optional.empty());
+        AlexandriaSync alexandriaSync = new AlexandriaSync(context);
+        alexandriaSync.syncWithRemote();
         assertThat(metadata.sourceChecksum()).isPresent();
     }
 
     @Test
     public void testSyncCreatesDocument() throws BatchProcessException, IOException {
-        Config config = new Config();
-        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(folder.newFile().toPath());
-        config.metadata(Optional.of(Arrays.asList(metadata)));
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        Remote remote = mock(NoopRemote.class);
+        AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
+        alexandriaSync.syncWithRemote();
+        verify(remote, times(1)).create(context, metadata);
     }
 
     @Test
-    public void testSyncUpdatesDocumentNoChecksum() throws BatchProcessException, IOException, URISyntaxException {
-        Config config = new Config();
-        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(folder.newFile().toPath());
-        metadata.remoteUri(Optional.of(new URI("http://www.google.com")));
-        config.metadata(Optional.of(Arrays.asList(metadata)));
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
-
-        //todo: need a way to confirm update was actually called
+    public void testSyncDeletesDocument() throws BatchProcessException, IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.config().metadata(Optional.of(new ArrayList<>()));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
+        Remote remote = mock(NoopRemote.class);
+        AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
+        alexandriaSync.syncWithRemote();
+        verify(remote, times(1)).delete(context, metadata);
     }
 
     @Test
-    public void testSyncUpdatesDocumentWithSameChecksum() throws BatchProcessException, IOException, URISyntaxException {
-        Config config = new Config();
-        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(folder.newFile().toPath());
-        metadata.remoteUri(Optional.of(new URI("http://www.google.com")));
+    public void testSyncUpdatesDocument() throws BatchProcessException, IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        metadata.remoteUri(Optional.of(new URI("foo")));
+        metadata.sourceChecksum(Optional.of(-1L));
+        Remote remote = mock(NoopRemote.class);
+        AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
+        alexandriaSync.syncWithRemote();
+        verify(remote, times(1)).update(context, metadata);
+    }
+
+    @Test
+    public void testSyncIgnoresAlreadyDeleted() throws BatchProcessException, IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.config().metadata(Optional.of(new ArrayList<>()));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
+        metadata.extraProps(Optional.empty());
+        metadata.deletedOn(Optional.of(ZonedDateTime.now()));
+        Remote remote = mock(NoopRemote.class);
+        AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
+        alexandriaSync.syncWithRemote();
+        verify(remote, times(0)).delete(context, metadata);
+        verify(remote, times(0)).update(context, metadata);
+        verify(remote, times(0)).create(context, metadata);
+    }
+
+    @Test
+    public void testSyncIgnoresCurrent() throws BatchProcessException, IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.config().metadata(Optional.of(new ArrayList<>()));
+        Config.DocumentMetadata metadata = TestData.completeDocumentMetadata(context, folder, "foo.md");
+        metadata.extraProps(Optional.empty());
+        metadata.deletedOn(Optional.empty());
+        Remote remote = mock(NoopRemote.class);
+        AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
+        alexandriaSync.syncWithRemote();
+        verify(remote, times(0)).delete(context, metadata);
+        verify(remote, times(0)).update(context, metadata);
+        verify(remote, times(0)).create(context, metadata);
+    }
+
+    @Test
+    public void testSyncDeterminesStateDeleted() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata deleted = TestData.documentForDelete(context, folder);
+        deleted.deletedOn(Optional.of(ZonedDateTime.now()));
+        assertThat(AlexandriaSync.determineState(context, deleted)).isEqualTo(AlexandriaSync.State.DELETED);
+    }
+
+    @Test
+    public void testSyncDeterminesStateCurrent() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        metadata.remoteUri(Optional.of(new URI("foo")));
         metadata.sourceChecksum(Optional.of(FileUtils.checksumCRC32(metadata.sourcePath().toFile())));
-        config.metadata(Optional.of(Arrays.asList(metadata)));
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
-        //todo: need a way to confirm update was not called
+        assertThat(AlexandriaSync.determineState(context, metadata)).isEqualTo(AlexandriaSync.State.CURRENT);
     }
 
     @Test
-    public void testSyncUpdatesDocumentWithDifferentChecksum() throws BatchProcessException, IOException, URISyntaxException {
-        Config config = new Config();
-        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(folder.newFile().toPath());
-        metadata.remoteUri(Optional.of(new URI("http://www.google.com")));
-        metadata.sourceChecksum(Optional.of(1234L));
-        config.metadata(Optional.of(Arrays.asList(metadata)));
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
-        //todo: need a way to confirm update was not called
+    public void testSyncDeterminesStateCreate() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        metadata.remoteUri(Optional.empty());
+        assertThat(AlexandriaSync.determineState(context, metadata)).isEqualTo(AlexandriaSync.State.CREATE);
     }
 
     @Test
-    public void testSyncRecreatesConvertedPathData() throws BatchProcessException, IOException {
-        File f1 = folder.newFile("hello.md");
-        File f2 = folder.newFile("hello.html");
-        Resources.save(f1.getPath(), "hello");
-        Resources.save(f2.getPath(), "hello");
-
-        Config config = new Config();
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(f1.toPath());
-        config.metadata(Optional.of(Arrays.asList(metadata)));
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
-        assertThat(context.convertedPath(metadata).get()).isEqualTo(f2.toPath());
+    public void testSyncDeterminesStateDelete() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata deleted = TestData.documentForDelete(context, folder);
+        deleted.extraProps(Optional.of(Collections.singletonMap("delete", "true")));
+        assertThat(AlexandriaSync.determineState(context, deleted)).isEqualTo(AlexandriaSync.State.DELETE);
     }
 
     @Test
-    public void testSyncReconvertsHtml() throws BatchProcessException, IOException {
-        File f1 = folder.newFile("hello.md");
-        File f2 = folder.newFile("hello.html");
-        Resources.save(f1.getPath(), "hello");
-
-        Config config = new Config();
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(f1.toPath());
-        config.metadata(Optional.of(Arrays.asList(metadata)));
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
-        assertThat(context.convertedPath(metadata).get()).isEqualTo(f2.toPath());
-        assertThat(context.convertedPath(metadata).get()).exists();
+    public void testSyncDeterminesStateUpdate() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        metadata.remoteUri(Optional.of(new URI("foo")));
+        metadata.sourceChecksum(Optional.of(-1L));
+        assertThat(AlexandriaSync.determineState(context, metadata)).isEqualTo(AlexandriaSync.State.UPDATE);
     }
 
     @Test
-    public void testSyncDoesntConvertNativeMarkdownRemotes() throws BatchProcessException, IOException {
-        File f1 = folder.newFile("hello.md");
-        Resources.save(f1.getPath(), "hello");
+    public void testSyncNeedsConversionFalseWhenRemoteSuportsMarkdown() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        context.config().remote().supportsNativeMarkdown(true);
+        assertThat(AlexandriaSync.needsConversion(context, metadata)).isFalse();
+    }
 
-        Config config = new Config();
-        config.remote().supportsNativeMarkdown(true);
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(f1.toPath());
-        config.metadata(Optional.of(Arrays.asList(metadata)));
+    @Test
+    public void testSyncNeedsConversionTrueWhenConvertedCacheHitButFileMissing() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        context.convertedPath(metadata, AlexandriaConvert.convertedPath(context, metadata));
+        assertThat(AlexandriaSync.needsConversion(context, metadata)).isTrue();
+    }
 
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
-        assertThat(context.convertedPath(metadata)).isEmpty();
+    @Test
+    public void testSyncNeedsConversionFalseWhenConvertedCacheHitAndFileExists() throws IOException, URISyntaxException {
+        Context context = TestData.completeContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        assertThat(AlexandriaSync.needsConversion(context, metadata)).isFalse();
+    }
+
+    @Test
+    public void testSyncNeedsConversionTrueWhenConvertedCacheHitAndFileExistsButWrongChecksum() throws IOException, URISyntaxException {
+        Context context = TestData.completeContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        metadata.convertedChecksum(Optional.of(-1l));
+        assertThat(AlexandriaSync.needsConversion(context, metadata)).isTrue();
+    }
+
+    @Test
+    public void testSyncNeedsConversionTrueWhenConvertedCacheMissAndFileMissing() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        context.convertedPaths(new HashMap<>());
+        assertThat(AlexandriaSync.needsConversion(context, metadata)).isTrue();
+    }
+
+    @Test
+    public void testSyncNeedsConversionFalseWhenConvertedCacheMissAndFileExists() throws IOException, URISyntaxException {
+        Context context = TestData.completeContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        context.convertedPaths(new HashMap<>());
+        assertThat(AlexandriaSync.needsConversion(context, metadata)).isFalse();
+    }
+
+    @Test
+    public void testSyncNeedsConversionTrueWhenConvertedCacheMissAndFileExistsWithWrongChecksum() throws IOException, URISyntaxException {
+        Context context = TestData.completeContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        context.convertedPaths(new HashMap<>());
+        metadata.convertedChecksum(Optional.of(-1l));
+        assertThat(AlexandriaSync.needsConversion(context, metadata)).isTrue();
     }
 }

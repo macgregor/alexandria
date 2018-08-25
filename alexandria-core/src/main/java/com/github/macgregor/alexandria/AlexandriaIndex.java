@@ -59,7 +59,7 @@ public class AlexandriaIndex {
 
             return context.config().metadata().get()
                     .stream()
-                    .filter(m -> missing.contains(context.projectBase().relativize(m.sourcePath())))
+                    .filter(m -> missing.contains(m.sourcePath()))
                     .collect(Collectors.toList());
         }, (context, metadata) -> {
             log.debug(String.format("Marking %s for deletion.", metadata.sourcePath().toFile().getName()));

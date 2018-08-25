@@ -7,7 +7,11 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
+
+import static com.github.macgregor.alexandria.AlexandriaSync.State.DELETED;
 
 @Slf4j
 @ToString
@@ -16,62 +20,116 @@ import java.util.Optional;
 public class AlexandriaSync {
 
     @NonNull private Context context;
+    @NonNull private Remote remote;
+
+    public AlexandriaSync(Context context) throws AlexandriaException {
+        this.context = context;
+        this.remote = configureRemote(context);
+    }
 
     public void syncWithRemote() throws AlexandriaException {
         log.debug("Syncing files to html.");
-        Remote remote = configureRemote(context);
 
         BatchProcess<Config.DocumentMetadata> batchProcess = new BatchProcess<>(context);
         batchProcess.execute(context -> context.config().metadata().get(), (context, metadata) -> {
-            log.debug(String.format("Syncing %s with remote.", metadata.sourcePath().toFile().getName()));
+            log.debug(String.format("Syncing %s with remote.", metadata.sourceFileName()));
             remote.validateDocumentMetadata(metadata);
 
-            // since context isnt stored between runs we lose the path to the converted html file between commands
-            // e.g. between alexandria:convert and alexandria:sync goals. This is inefficient, may want to checksum
-            // html files and store the value in config
-            if(!context.convertedPath(metadata).isPresent() && !context.config().remote().supportsNativeMarkdown()){
-                AlexandriaConvert.convert(context, metadata);
-                log.debug(String.format("Reconverted %s", metadata.sourcePath().toFile().getName()));
-            }
-
-            long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
-            log.debug(String.format("Old checksum: %d; New checksum: %d", metadata.sourceChecksum().orElse(null), currentChecksum));
-            if (!metadata.remoteUri().isPresent()) {
-                remote.create(context, metadata);
-                log.info(String.format("Created new document at %s", metadata.remoteUri().orElse(null)));
-            } else {
-                if (!metadata.sourceChecksum().isPresent() || !metadata.sourceChecksum().get().equals(currentChecksum)) {
+            State state = determineState(context, metadata);
+            switch(state){
+                case DELETE:
+                    remote.delete(context, metadata);
+                    log.info(String.format("%s (remote: %s) deleted from remote. Local file will remain.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
+                    break;
+                case CREATE:
+                    convertAsNeeded(context, metadata);
+                    remote.create(context, metadata);
+                    log.info(String.format("%s (remote: %s) created on remote", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
+                    break;
+                case UPDATE:
+                    convertAsNeeded(context, metadata);
                     remote.update(context, metadata);
-                    log.info(String.format("Updated document %s at %s",
-                            metadata.sourcePath().toFile().getName(), metadata.remoteUri().orElse(null)));
-                } else{
-                    log.info(String.format("%s is already up to date (checksum: %d, last updated: %s)",
-                            metadata.sourcePath().toFile().getName(), currentChecksum, metadata.lastUpdated().orElse(null)));
-                }
+                    log.info(String.format("%s (remote: %s) updated on remote.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
+                    break;
+                case DELETED:
+                case CURRENT:
+                    log.info(String.format("%s (remote: %s) already current with remote: %s", metadata.sourceFileName(), metadata.remoteUri().orElse(null), state));
+                    break;
             }
+            long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
             metadata.sourceChecksum(Optional.of(currentChecksum));
         }, (context, exceptions) -> {
             log.info(String.format("Synced %d out of %d documents with remote %s",
-                    context.config().metadata().get().size() - exceptions.size(),
-                    context.config().metadata().get().size(),
+                    context.documentCount() - exceptions.size(), context.documentCount(),
                     context.config().remote().baseUrl().orElse(null)));
-            return false;
+            return BatchProcess.EXCEPTIONS_UNHANDLED;
         });
     }
 
     protected Remote configureRemote(Context context) throws AlexandriaException {
         try {
             Class remoteClass = Class.forName(context.config().remote().clazz());
-            Remote remote = (Remote)remoteClass.newInstance();
+            Remote remote = (Remote) remoteClass.newInstance();
             remote.configure(context.config().remote());
             remote.validateRemoteConfig();
             return remote;
-        } catch (Exception e) {
-            log.warn(String.format("Unable to instantiate remote of type %s", context.config().remote().clazz()), e);
+        } catch(Exception e){
             throw new AlexandriaException.Builder()
-                    .withMessage(String.format("Unable to instantiate remote of type %s", context.config().remote().clazz()))
+                    .withMessage("Unable to instantiate remote class " + context.config().remote().clazz())
                     .causedBy(e)
                     .build();
         }
+    }
+
+    protected static State determineState(Context context, Config.DocumentMetadata metadata) throws IOException {
+        if(metadata.deletedOn().isPresent()){
+            return DELETED;
+        }
+
+        if (!metadata.remoteUri().isPresent()) {
+            return State.CREATE;
+        }
+
+        if(metadata.extraProps().isPresent() && metadata.extraProps().get().containsKey("delete")){
+            return State.DELETE;
+        }
+
+        long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
+        if(metadata.sourceChecksum().isPresent() && metadata.sourceChecksum().get().equals(currentChecksum)){
+            return State.CURRENT;
+        }
+
+        return State.UPDATE;
+    }
+
+    protected static boolean needsConversion(Context context, Config.DocumentMetadata metadata) throws IOException {
+        if(context.config().remote().supportsNativeMarkdown()){
+            return false;
+        }
+
+        //look for converted file in the context cache or recalculate the path if its not there
+        Path convertedPathGuess = context.convertedPath(metadata)
+                .orElse(AlexandriaConvert.convertedPath(context, metadata));
+
+        //if the file exists, check if it matches the stored checksum
+        if(convertedPathGuess.toFile().exists()){
+            long currentChecksum = FileUtils.checksumCRC32(convertedPathGuess.toFile());
+            if(metadata.convertedChecksum().isPresent() && metadata.convertedChecksum().get().equals(currentChecksum)){
+                return false;
+            }
+        }
+
+        //remote needs conversion and the file doesnt exist
+        return true;
+    }
+
+    protected static void convertAsNeeded(Context context, Config.DocumentMetadata metadata) throws IOException {
+        if(needsConversion(context, metadata)) {
+            AlexandriaConvert.convert(context, metadata);
+        }
+    }
+
+    public enum State{
+        CREATE, UPDATE, DELETE, DELETED, CURRENT;
     }
 }

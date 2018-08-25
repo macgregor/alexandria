@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -24,7 +25,7 @@ public class TestData {
         context.exclude(Collections.singletonList(EXCLUDE));
         context.include(Collections.singletonList(INCLUDE));
         context.searchPath(Collections.singletonList(base));
-        context.config(completeConfig(context, temporaryFolder));
+        completeConfig(context, temporaryFolder);
         return context;
     }
 
@@ -37,27 +38,31 @@ public class TestData {
 
         context.outputPath(Optional.empty());
         context.exclude(Collections.emptyList());
-        context.config(minimalConfig(context, temporaryFolder));
+        minimalConfig(context, temporaryFolder);
         return context;
     }
 
     public static Config completeConfig(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
         Config config = new Config();
+        context.config(config);
         config.defaultTags(Optional.of(Collections.singletonList("default")));
         config.remote(completeRemoteConfig());
-        config.metadata(Optional.of(Arrays.asList(
-                documentForCreate(context, temporaryFolder),
-                documentForDelete(context, temporaryFolder),
-                documentForUpdate(context, temporaryFolder),
-                minimalDocumentMetadata(temporaryFolder, "doc.ignore"))));
+        config.metadata(Optional.of(new ArrayList<>()));
+        documentForCreate(context, temporaryFolder);
+        documentForDelete(context, temporaryFolder);
+        documentForUpdate(context, temporaryFolder);
+        minimalDocumentMetadata(context, temporaryFolder, "doc.ignore");
+
         return config;
     }
 
     public static Config minimalConfig(Context context, TemporaryFolder temporaryFolder) throws IOException {
         Config config = new Config();
+        context.config(config);
         config.defaultTags(Optional.empty());
         config.remote(minimalRemoteConfig());
-        config.metadata(Optional.ofNullable(Collections.singletonList(minimalDocumentMetadata(temporaryFolder, "minimal.md"))));
+        config.metadata(Optional.of(new ArrayList<>()));
+        minimalDocumentMetadata(context, temporaryFolder, "minimal.md");
         return config;
     }
 
@@ -66,6 +71,8 @@ public class TestData {
         metadata.deletedOn(Optional.empty());
         metadata.sourceChecksum(Optional.empty());
         metadata.extraProps().get().remove("delete");
+
+        context.config().metadata().get().add(metadata);
         return metadata;
     }
 
@@ -74,12 +81,14 @@ public class TestData {
         metadata.deletedOn(Optional.empty());
         metadata.sourceChecksum(Optional.of(-1L));
         metadata.extraProps().get().remove("delete");
+
+        context.config().metadata().get().add(metadata);
         return metadata;
     }
 
     public static Config.DocumentMetadata documentForDelete(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
-        Config.DocumentMetadata metadata = minimalDocumentMetadata(temporaryFolder, "delete.md");
-        FileUtils.deleteQuietly(metadata.sourcePath().toFile());
+        Config.DocumentMetadata metadata = minimalDocumentMetadata(context, temporaryFolder, "delete.md");
+        FileUtils.forceDelete(new File(temporaryFolder.getRoot().toString(), metadata.sourcePath().toString()));
         metadata.remoteUri(Optional.of(new URI("https://jive.com/api/core/v3/contents/DOC-1234")));
         Map<String, String> extraProps = new HashMap<>();
         extraProps.put("delete", "true");
@@ -104,6 +113,12 @@ public class TestData {
         metadata.lastUpdated(Optional.empty());
         metadata.convertedChecksum(Optional.empty());
 
+        return metadata;
+    }
+
+    public static Config.DocumentMetadata minimalDocumentMetadata(Context context, TemporaryFolder temporaryFolder, String name) throws IOException {
+        Config.DocumentMetadata metadata = minimalDocumentMetadata(temporaryFolder, name);
+        context.config().metadata().get().add(metadata);
         return metadata;
     }
 
@@ -132,6 +147,8 @@ public class TestData {
         metadata.extraProps(Optional.of(extraProps));
 
         context.convertedPath(metadata, converted);
+
+        context.config().metadata().get().add(metadata);
 
         return metadata;
     }

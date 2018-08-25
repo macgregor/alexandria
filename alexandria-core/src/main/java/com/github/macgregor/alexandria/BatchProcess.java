@@ -16,11 +16,14 @@ import java.util.Optional;
 @NoArgsConstructor @RequiredArgsConstructor @AllArgsConstructor
 public class BatchProcess<T> {
 
+    public static final Boolean EXCEPTIONS_HANDLED = true;
+    public static final Boolean EXCEPTIONS_UNHANDLED = false;
+
     @NonNull private Context context;
     private Collection<AlexandriaException> exceptions = new ArrayList<>();
 
     public void execute(Batch<T> batch, Task<T> task) throws BatchProcessException {
-        execute(batch, task, (context, exceptions) -> false);
+        execute(batch, task, (context, exceptions) -> EXCEPTIONS_UNHANDLED);
     }
 
     public void execute(Batch<T> batch, Task<T> task, AfterBatch<T> after) throws BatchProcessException {

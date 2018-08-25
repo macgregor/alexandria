@@ -23,8 +23,16 @@ public class Context {
     private Optional<Path> outputPath = Optional.empty();
     private List<String> include = new ArrayList<>(Arrays.asList("*.md"));
     private List<String> exclude = new ArrayList<>();
-    @NonNull private Config config;
+    @NonNull private Config config = new Config();
     private Map<Config.DocumentMetadata, Path> convertedPaths = new HashMap<>();
+
+    public Path resolveRelativePath(Path relativePath){
+        return projectBase.resolve(relativePath);
+    }
+
+    public int documentCount(){
+        return config.metadata().isPresent() ? 0 : config.metadata().get().size();
+    }
 
     public Optional<Path> convertedPath(Config.DocumentMetadata metadata){
         return convertedPaths.containsKey(metadata) ? Optional.of(convertedPaths.get(metadata)) : Optional.empty();
