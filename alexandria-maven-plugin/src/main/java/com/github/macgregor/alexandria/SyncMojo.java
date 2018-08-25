@@ -16,7 +16,7 @@ public class SyncMojo extends AlexandriaMojo {
             try {
                 init();
                 logContext();
-                getAlexandria().syncWithRemote();
+                alexandria().syncWithRemote();
             } catch (IOException e) {
                 throw new MojoFailureException("Failed to sync documents with remote.", e);
             }

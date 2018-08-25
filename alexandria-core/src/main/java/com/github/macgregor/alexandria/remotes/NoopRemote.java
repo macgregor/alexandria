@@ -2,15 +2,14 @@ package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
+@Slf4j
+@NoArgsConstructor
 public class NoopRemote implements Remote {
-    private static Logger log = LoggerFactory.getLogger(NoopRemote.class);
-
-    public NoopRemote(){}
 
     @Override
     public void configure(Config.RemoteConfig config) {

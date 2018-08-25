@@ -2,8 +2,9 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -13,20 +14,14 @@ import java.nio.file.Path;
  * syncing documents with the remote. Each of these can be executed independently but form a
  * lifeycle: index -> convert -> syncWithRemote.
  */
+@Slf4j
+@ToString
+@Getter @Setter
+@Accessors(fluent = true)
+@NoArgsConstructor @AllArgsConstructor
 public class Alexandria {
-    private static Logger log = LoggerFactory.getLogger(Alexandria.class);
 
-    private Context context;
-
-    public Alexandria(){}
-
-    public Context context() {
-        return context;
-    }
-
-    public void context(Context context) {
-        this.context = context;
-    }
+    @NonNull private Context context;
 
     public Alexandria load(String filePath) throws IOException {
         Context context = new Context();

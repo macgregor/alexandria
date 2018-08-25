@@ -2,24 +2,22 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
+@Slf4j
+@ToString
+@Getter @Setter @Accessors(fluent = true)
+@NoArgsConstructor @RequiredArgsConstructor @AllArgsConstructor
 public class BatchProcess<T> {
-    private static Logger log = LoggerFactory.getLogger(BatchProcess.class);
 
-    private Context context;
+    @NonNull private Context context;
     private Collection<AlexandriaException> exceptions = new ArrayList<>();
-
-    public BatchProcess(){}
-
-    public BatchProcess(Context context){
-        this.context = context;
-    }
 
     public void execute(Batch<T> batch, Task<T> task) throws BatchProcessException {
         execute(batch, task, (context, exceptions) -> false);
@@ -63,22 +61,6 @@ public class BatchProcess<T> {
             exceptionBuilder.metadataContext((Config.DocumentMetadata) t.get());
         }
         return exceptionBuilder.build();
-    }
-
-    public Context getContext() {
-        return context;
-    }
-
-    public void setContext(Context context) {
-        this.context = context;
-    }
-
-    public Collection<AlexandriaException> getExceptions() {
-        return exceptions;
-    }
-
-    public void setExceptions(Collection<AlexandriaException> exceptions) {
-        this.exceptions = exceptions;
     }
 
     @FunctionalInterface

@@ -1,24 +1,21 @@
 package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+@Slf4j
+@ToString
+@Getter @Setter @Accessors(fluent = true)
+@NoArgsConstructor @AllArgsConstructor
 public class AlexandriaIndex {
-    private static Logger log = LoggerFactory.getLogger(AlexandriaIndex.class);
-
-    private Context context;
-
-    public AlexandriaIndex(){}
-
-    public AlexandriaIndex(Context context){
-        this.context = context;
-    }
+    @NonNull private Context context;
 
     public void update() throws AlexandriaException {
         log.debug("Updating metadata index.");
@@ -77,13 +74,5 @@ public class AlexandriaIndex {
         return documentsAlreadyIndexed.stream()
                 .filter(p -> !documentsMatched.contains(p))
                 .collect(Collectors.toList());
-    }
-
-    public Context getContext() {
-        return context;
-    }
-
-    public void setContext(Context context) {
-        this.context = context;
     }
 }

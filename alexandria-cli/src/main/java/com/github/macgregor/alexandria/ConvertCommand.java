@@ -11,7 +11,7 @@ public class ConvertCommand extends AlexandriaCommand {
         configureLogging();
         init();
         logContext();
-        getAlexandria().convert();
+        alexandria().convert();
         return null;
     }
 }

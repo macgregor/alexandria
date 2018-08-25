@@ -1,24 +1,22 @@
 package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Slf4j
+@ToString
+@Getter @Setter @Accessors(fluent = true)
+@NoArgsConstructor @AllArgsConstructor
 public class AlexandriaConvert {
-    private static Logger log = LoggerFactory.getLogger(AlexandriaConvert.class);
 
-    private Context context;
-
-    public AlexandriaConvert(){}
-
-    public AlexandriaConvert(Context context){
-        this.context = context;
-    }
+    @NonNull private Context context;
 
     /**
      * Convert HTML files from the files in the metadata index. Converted files will be saved to the configured {@link Context#outputPath}, if set.
@@ -54,7 +52,7 @@ public class AlexandriaConvert {
 
     protected static Path convertedPath(Context context, Config.DocumentMetadata metadata){
         Path sourceDir = metadata.sourcePath().toAbsolutePath().getParent();
-        String convertedDir = context.output().orElse(sourceDir.toString());
+        String convertedDir = context.outputPath().orElse(sourceDir.toString());
         String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
         return Paths.get(convertedDir, convertedFileName);
     }

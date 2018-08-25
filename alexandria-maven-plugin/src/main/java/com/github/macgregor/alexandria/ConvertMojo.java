@@ -16,7 +16,7 @@ public class ConvertMojo extends AlexandriaMojo {
             try {
                 init();
                 logContext();
-                getAlexandria().convert();
+                alexandria().convert();
             } catch (IOException e) {
                 throw new MojoFailureException("Failed to convert documents.", e);
             }

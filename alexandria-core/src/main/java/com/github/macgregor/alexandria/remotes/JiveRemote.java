@@ -5,10 +5,11 @@ import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.Resources;
 import com.github.macgregor.alexandria.exceptions.HttpException;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -19,29 +20,26 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
+@ToString
+@Getter @Setter
+@Accessors(fluent = true)
+@NoArgsConstructor @AllArgsConstructor
 public class JiveRemote implements Remote{
-    private static Logger log = LoggerFactory.getLogger(JiveRemote.class);
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     public static final String STANDARD_FIELD_PROJECTION = "id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent";
 
-    protected OkHttpClient client;
-    protected Config.RemoteConfig config;
-
-    public JiveRemote(){}
-
-    public JiveRemote(OkHttpClient client, Config.RemoteConfig config){
-        this.client = client;
-        this.config = config;
-    }
+    @NonNull protected OkHttpClient client;
+    @NonNull protected Config.RemoteConfig config;
 
     public JiveRemote(Config.RemoteConfig config){
-        this(new OkHttpClient.Builder()
+        client = new OkHttpClient.Builder()
                 .connectTimeout(60, TimeUnit.SECONDS)
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
-                .build(),
-                config);
+                .build();
+        this.config = config;
     }
 
     @Override
