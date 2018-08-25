@@ -22,16 +22,12 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @ToString
-@Getter @Setter
-@Accessors(fluent = true)
-@NoArgsConstructor @AllArgsConstructor
-public class JiveRemote implements Remote{
+@Getter @Setter @Accessors(fluent = true)
+@NoArgsConstructor
+public class JiveRemote extends RestRemote implements Remote{
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     public static final String STANDARD_FIELD_PROJECTION = "id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent";
-
-    @NonNull protected OkHttpClient client;
-    @NonNull protected Config.RemoteConfig config;
 
     public JiveRemote(Config.RemoteConfig config){
         client = new OkHttpClient.Builder()
@@ -170,59 +166,7 @@ public class JiveRemote implements Remote{
         metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
     }
 
-    protected Response doRequest(Request request) throws HttpException {
-        log.trace(request.toString());
-        Call call = client.newCall(request);
-
-        Response response = null;
-        try {
-            response = call.execute();
-            log.trace(response.toString());
-        } catch(IOException e){
-            throw new HttpException.Builder()
-                    .withMessage(String.format("Unable to make request %s", request.url().toString()))
-                    .causedBy(e)
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
-        }
-
-        if(response.isSuccessful()){
-            return response;
-        } else if(response.code() == 400){
-            throw new HttpException.Builder()
-                    .withMessage("Bad request.")
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
-        } else if(response.code() == 403){
-            throw new HttpException.Builder()
-                    .withMessage("Unauthorized to access document.")
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
-        } else if(response.code() == 404){
-            throw new HttpException.Builder()
-                    .withMessage("Document doesnt exist.")
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
-        } else if(response.code() == 409){
-            throw new HttpException.Builder()
-                    .withMessage("Document conflicts with existing document.")
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
-        } else {
-            throw new HttpException.Builder()
-                    .withMessage(String.format("Unexpected status code %d.", response.code()))
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
-        }
-    }
-
-    public boolean needsContentId(Config.DocumentMetadata metadata){
+    protected boolean needsContentId(Config.DocumentMetadata metadata){
         return metadata.remoteUri().isPresent() &&
                 metadata.extraProps().isPresent() &&
                 !metadata.extraProps().get().containsKey("jiveContentId");
@@ -310,7 +254,7 @@ public class JiveRemote implements Remote{
         return builder;
     }
 
-    protected Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJiveContent content) {
+    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJiveContent content) {
         if(content != null && content.list != null && content.list.size() > 0){
             return updateMetadata(metadata, content.list.get(0));
         }
@@ -318,7 +262,7 @@ public class JiveRemote implements Remote{
         return metadata;
     }
 
-    protected Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JiveContent content) {
+    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JiveContent content) {
         metadata.createdOn(Optional.ofNullable(content.published));
         metadata.lastUpdated(Optional.ofNullable(content.updated));
 
@@ -346,7 +290,7 @@ public class JiveRemote implements Remote{
         return metadata;
     }
 
-    protected Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJivePlace places) {
+    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJivePlace places) {
         if(places != null && places.list != null && places.list.size() > 0){
             return updateMetadata(metadata, places.list.get(0));
         }
@@ -354,7 +298,7 @@ public class JiveRemote implements Remote{
         return metadata;
     }
 
-    protected Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JivePlace place) {
+    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JivePlace place) {
         if(StringUtils.isNotBlank(place.placeID)){
             metadata.extraProps().get().put("jiveParentPlaceId", place.placeID);
         }
@@ -369,7 +313,7 @@ public class JiveRemote implements Remote{
         return metadata;
     }
 
-    protected String jiveObjectId(URI remoteDoc){
+    protected static String jiveObjectId(URI remoteDoc){
         Pattern p = Pattern.compile(".*DOC-(\\d+)-*.*");
         Matcher m = p.matcher(remoteDoc.getPath());
         if(m.matches()) {
@@ -379,7 +323,7 @@ public class JiveRemote implements Remote{
         }
     }
 
-    protected String jiveParentPlaceName(String parentPlaceUrl){
+    protected static String jiveParentPlaceName(String parentPlaceUrl){
         Pattern p = Pattern.compile(".*/(.*)");
         Matcher m = p.matcher(parentPlaceUrl);
         if(m.matches()) {
