@@ -4,7 +4,6 @@ import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import com.github.macgregor.alexandria.remotes.NoopRemote;
 import com.github.macgregor.alexandria.remotes.Remote;
-import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -14,7 +13,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -143,48 +144,6 @@ public class AlexandriaSyncTest {
         verify(remote, times(0)).delete(context, metadata);
         verify(remote, times(0)).update(context, metadata);
         verify(remote, times(0)).create(context, metadata);
-    }
-
-    @Test
-    public void testSyncDeterminesStateDeleted() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata deleted = TestData.documentForDelete(context, folder);
-        deleted.deletedOn(Optional.of(ZonedDateTime.now()));
-        assertThat(AlexandriaSync.determineState(context, deleted)).isEqualTo(AlexandriaSync.State.DELETED);
-    }
-
-    @Test
-    public void testSyncDeterminesStateCurrent() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        metadata.remoteUri(Optional.of(new URI("foo")));
-        metadata.sourceChecksum(Optional.of(FileUtils.checksumCRC32(metadata.sourcePath().toFile())));
-        assertThat(AlexandriaSync.determineState(context, metadata)).isEqualTo(AlexandriaSync.State.CURRENT);
-    }
-
-    @Test
-    public void testSyncDeterminesStateCreate() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        metadata.remoteUri(Optional.empty());
-        assertThat(AlexandriaSync.determineState(context, metadata)).isEqualTo(AlexandriaSync.State.CREATE);
-    }
-
-    @Test
-    public void testSyncDeterminesStateDelete() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata deleted = TestData.documentForDelete(context, folder);
-        deleted.extraProps(Optional.of(Collections.singletonMap("delete", "true")));
-        assertThat(AlexandriaSync.determineState(context, deleted)).isEqualTo(AlexandriaSync.State.DELETE);
-    }
-
-    @Test
-    public void testSyncDeterminesStateUpdate() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        metadata.remoteUri(Optional.of(new URI("foo")));
-        metadata.sourceChecksum(Optional.of(-1L));
-        assertThat(AlexandriaSync.determineState(context, metadata)).isEqualTo(AlexandriaSync.State.UPDATE);
     }
 
     @Test

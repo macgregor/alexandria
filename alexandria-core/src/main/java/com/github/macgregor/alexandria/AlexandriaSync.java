@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import static com.github.macgregor.alexandria.AlexandriaSync.State.DELETED;
-
 @Slf4j
 @ToString
 @Getter @Setter @Accessors(fluent = true)
@@ -35,7 +33,8 @@ public class AlexandriaSync {
             log.debug(String.format("Syncing %s with remote.", metadata.sourceFileName()));
             remote.validateDocumentMetadata(metadata);
 
-            State state = determineState(context, metadata);
+            long currentChecksum;
+            Config.DocumentMetadata.State state = metadata.determineState(context);
             switch(state){
                 case DELETE:
                     remote.delete(context, metadata);
@@ -44,11 +43,15 @@ public class AlexandriaSync {
                 case CREATE:
                     convertAsNeeded(context, metadata);
                     remote.create(context, metadata);
+                    currentChecksum = FileUtils.checksumCRC32(context.resolveRelativePath(metadata.sourcePath()).toFile());
+                    metadata.sourceChecksum(Optional.of(currentChecksum));
                     log.info(String.format("%s (remote: %s) created on remote", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
                     break;
                 case UPDATE:
                     convertAsNeeded(context, metadata);
                     remote.update(context, metadata);
+                    currentChecksum = FileUtils.checksumCRC32(context.resolveRelativePath(metadata.sourcePath()).toFile());
+                    metadata.sourceChecksum(Optional.of(currentChecksum));
                     log.info(String.format("%s (remote: %s) updated on remote.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
                     break;
                 case DELETED:
@@ -56,8 +59,6 @@ public class AlexandriaSync {
                     log.info(String.format("%s (remote: %s) already current with remote: %s", metadata.sourceFileName(), metadata.remoteUri().orElse(null), state));
                     break;
             }
-            long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
-            metadata.sourceChecksum(Optional.of(currentChecksum));
             Alexandria.save(context);
         }, (context, exceptions) -> {
             log.info(String.format("Synced %d out of %d documents with remote %s",
@@ -80,27 +81,6 @@ public class AlexandriaSync {
                     .causedBy(e)
                     .build();
         }
-    }
-
-    protected static State determineState(Context context, Config.DocumentMetadata metadata) throws IOException {
-        if(metadata.deletedOn().isPresent()){
-            return DELETED;
-        }
-
-        if (!metadata.remoteUri().isPresent()) {
-            return State.CREATE;
-        }
-
-        if(metadata.extraProps().isPresent() && metadata.extraProps().get().containsKey("delete")){
-            return State.DELETE;
-        }
-
-        long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
-        if(metadata.sourceChecksum().isPresent() && metadata.sourceChecksum().get().equals(currentChecksum)){
-            return State.CURRENT;
-        }
-
-        return State.UPDATE;
     }
 
     protected static boolean needsConversion(Context context, Config.DocumentMetadata metadata) throws IOException {
@@ -128,9 +108,5 @@ public class AlexandriaSync {
         if(needsConversion(context, metadata)) {
             AlexandriaConvert.convert(context, metadata);
         }
-    }
-
-    public enum State{
-        CREATE, UPDATE, DELETE, DELETED, CURRENT;
     }
 }

@@ -159,11 +159,34 @@ public class JiveRemote extends RestRemote implements Remote{
 
         Request request = authenticated(new Request.Builder())
                 .url(route)
+                .get()
+                .build();
+
+        Response response;
+        try{
+            response = doRequest(request);
+        } catch(HttpException e){
+            if(e.response().isPresent() && e.response().get().code() == 404){
+                log.debug("Looking for document to delete returned a 404, assuming its already deleted.");
+                metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
+                if(metadata.hasExtraProperty("delete")){
+                    metadata.extraProps().get().remove("delete");
+                }
+                return;
+            }
+            throw e;
+        }
+
+        request = authenticated(new Request.Builder())
+                .url(route)
                 .delete()
                 .build();
 
-        Response response = doRequest(request);
+        response = doRequest(request);
         metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
+        if(metadata.hasExtraProperty("delete")){
+            metadata.extraProps().get().remove("delete");
+        }
     }
 
     protected static boolean needsContentId(Config.DocumentMetadata metadata){

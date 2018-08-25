@@ -297,16 +297,33 @@ public class JiveRemoteTest {
     public void testDeleteSetsDeletedDateTime() throws URISyntaxException, IOException {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")),
                 new MockResponse().setResponseCode(204)));
 
         Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
         jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
+        assertThat(metadata.hasExtraProperty("delete")).isFalse();
+    }
+
+    @Test
+    public void testDeleteAssumes404WhenSearchingForDocMeansDeleted() throws URISyntaxException, IOException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
+                new MockResponse().setResponseCode(404)));
+
+        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
+        jiveRemote.delete(new Context(), metadata);
+        assertThat(metadata.deletedOn()).isPresent();
+        assertThat(metadata.hasExtraProperty("delete")).isFalse();
     }
 
     @Test
     public void testDeleteDoesntLookupContentIdIfPresent() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(Arrays.asList(new MockResponse().setResponseCode(204)));
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")),
+                new MockResponse().setResponseCode(204)));
 
         Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
         metadata.extraProps().get().put("jiveContentId", "1234");
@@ -338,7 +355,10 @@ public class JiveRemoteTest {
 
     @Test
     public void testDelete404() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")),
+                new MockResponse().setResponseCode(404)));
 
         Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
 
@@ -675,6 +695,7 @@ public class JiveRemoteTest {
         config.baseUrl(Optional.of(baseUrl.toString()));
         config.username(Optional.of("user"));
         config.password(Optional.of("password"));
+        config.requestTimeout(1);
         JiveRemote jiveRemote = new JiveRemote(config);
 
         return jiveRemote;

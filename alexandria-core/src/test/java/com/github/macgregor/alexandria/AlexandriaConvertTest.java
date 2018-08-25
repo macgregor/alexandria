@@ -9,7 +9,9 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,7 +59,7 @@ public class AlexandriaConvertTest {
     @Test
     public void testConvertWrapsConvertErrorsPerDocument() throws IOException {
         Context context = TestData.minimalContext(folder);
-        FileUtils.forceDelete(context.config().metadata().get().get(0).sourcePath().toFile());
+        FileUtils.forceDelete(context.resolveRelativePath(context.config().metadata().get().get(0).sourcePath()).toFile());
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
         assertThatThrownBy(() -> alexandria.convert()).isInstanceOf(BatchProcessException.class);
@@ -79,5 +81,14 @@ public class AlexandriaConvertTest {
         alexandriaConvert.convert();
         assertThat(metadata.convertedChecksum()).isPresent();
         assertThat(metadata.convertedChecksum().get()).isEqualTo(FileUtils.checksumCRC32(context.convertedPath(metadata).get().toFile()));
+    }
+
+    @Test
+    public void testConvertIgnoresDeletedMetadata() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.config().metadata(Optional.of(new ArrayList<>()));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
+        AlexandriaConvert convert = new AlexandriaConvert(context);
+        convert.convert();
     }
 }
