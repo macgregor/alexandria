@@ -1,10 +1,7 @@
 package com.github.macgregor.alexandria.remotes;
 
-import com.github.macgregor.alexandria.Config;
+import com.github.macgregor.alexandria.*;
 import com.github.macgregor.alexandria.Config.RemoteConfig;
-import com.github.macgregor.alexandria.Context;
-import com.github.macgregor.alexandria.Jackson;
-import com.github.macgregor.alexandria.Resources;
 import com.github.macgregor.alexandria.exceptions.HttpException;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
@@ -44,9 +41,7 @@ public class JiveRemoteTest {
     public void testSyncMetadata400() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(new Context(), folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.findDocument(new Context(), metadata))
@@ -57,9 +52,7 @@ public class JiveRemoteTest {
     public void testSyncMetadata500() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(500));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(new Context(), folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.findDocument(new Context(), metadata))
@@ -70,9 +63,7 @@ public class JiveRemoteTest {
     public void testSyncMetadataUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(new Context(), folder);
         jiveRemote.findDocument(new Context(), metadata);
 
         assertThat(metadata.lastUpdated().get())
@@ -88,9 +79,7 @@ public class JiveRemoteTest {
     public void testSyncMetadataUnparsableResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(new Context(), folder);
 
         assertThatThrownBy(() -> jiveRemote.findDocument(new Context(), metadata))
                 .isInstanceOf(HttpException.class)
@@ -101,11 +90,8 @@ public class JiveRemoteTest {
     public void testCreateUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
         jiveRemote.create(context, metadata);
 
         assertThat(metadata.lastUpdated().get())
@@ -121,11 +107,8 @@ public class JiveRemoteTest {
     public void testCreate400() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.create(context, metadata))
@@ -136,11 +119,8 @@ public class JiveRemoteTest {
     public void testCreate409() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.create(context, metadata))
@@ -151,11 +131,8 @@ public class JiveRemoteTest {
     public void testCreate403() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.create(context, metadata))
@@ -166,11 +143,8 @@ public class JiveRemoteTest {
     public void tesCreateUnparsableResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
 
         assertThatThrownBy(() -> jiveRemote.create(context, metadata))
                 .isInstanceOf(HttpException.class)
@@ -183,12 +157,9 @@ public class JiveRemoteTest {
                 new MockResponse().setBody(Resources.load("src/test/resources/parent_group-paged.json")),
                 new MockResponse().setBody(Resources.load("src/test/resources/parent_group.json"))));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.extraProps().get().put("jiveParentUri", "https://jive.com/places/parent_group");
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
+        metadata.extraProps().get().put("jiveParentUri", "https://jive.com/places/parent_group");
         jiveRemote.create(context, metadata);
 
         assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
@@ -201,11 +172,8 @@ public class JiveRemoteTest {
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
         jiveRemote.update(context, metadata);
 
         assertThat(metadata.lastUpdated().get())
@@ -222,12 +190,9 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.extraProps().get().put("jiveContentId", "1234");
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
+        metadata.extraProps().get().put("jiveContentId", "1234");
         jiveRemote.update(context, metadata);
 
         assertThat(metadata.lastUpdated().get())
@@ -244,12 +209,9 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setBody("asldknasd")));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
-        metadata.extraProps().get().put("jiveContentId", "1234");
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
+        metadata.extraProps().get().put("jiveContentId", "1234");
 
         assertThatThrownBy(() -> jiveRemote.update(context, metadata)).isInstanceOf(HttpException.class);
     }
@@ -260,13 +222,10 @@ public class JiveRemoteTest {
                 new MockResponse().setBody(Resources.load("src/test/resources/parent_group-paged.json")),
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Context context = new Context();
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
         metadata.extraProps().get().put("jiveContentId", "1234");
         metadata.extraProps().get().put("jiveParentUri", "https://jive.com/places/parent_group");
-        Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
         jiveRemote.update(context, metadata);
 
 
@@ -278,11 +237,8 @@ public class JiveRemoteTest {
     public void testUpdate400() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.update(context, metadata))
@@ -293,11 +249,8 @@ public class JiveRemoteTest {
     public void testUpdate409() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.update(context, metadata))
@@ -308,11 +261,8 @@ public class JiveRemoteTest {
     public void testUpdate403() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.update(context, metadata))
@@ -323,11 +273,8 @@ public class JiveRemoteTest {
     public void testUpdate404() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
         Context context = new Context();
-        context.convertedPath(metadata, folder.newFile().toPath());
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.update(context, metadata))
@@ -338,11 +285,10 @@ public class JiveRemoteTest {
     public void tesUpdateUnparsableResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Context context = new Context();
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
 
-        assertThatThrownBy(() -> jiveRemote.update(new Context(), metadata))
+        assertThatThrownBy(() -> jiveRemote.update(context, metadata))
                 .isInstanceOf(HttpException.class)
                 .hasMessageContaining("Cannot parse response content");
     }
@@ -353,9 +299,7 @@ public class JiveRemoteTest {
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
                 new MockResponse().setResponseCode(204)));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
         jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
     }
@@ -364,9 +308,7 @@ public class JiveRemoteTest {
     public void testDeleteDoesntLookupContentIdIfPresent() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(Arrays.asList(new MockResponse().setResponseCode(204)));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
         metadata.extraProps().get().put("jiveContentId", "1234");
         jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
@@ -376,9 +318,7 @@ public class JiveRemoteTest {
     public void testDelete400() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
@@ -389,9 +329,7 @@ public class JiveRemoteTest {
     public void testDelete403() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
@@ -402,9 +340,7 @@ public class JiveRemoteTest {
     public void testDelete404() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
 
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("DOC-1072237.md"));
-        metadata.remoteUri(Optional.of(new URI("https://jive.com/docs/DOC-1072237")));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
@@ -413,9 +349,8 @@ public class JiveRemoteTest {
 
     @Test
     public void testJiveRemoteValidateConfigRequiresBaseUrl(){
-        RemoteConfig config = new RemoteConfig();
-        config.username(Optional.of("user"));
-        config.password(Optional.of("password"));
+        RemoteConfig config = TestData.completeRemoteConfig();
+        config.baseUrl(Optional.empty());
         JiveRemote remote = new JiveRemote(config);
         assertThatThrownBy(() -> remote.validateRemoteConfig())
                 .isInstanceOf(IllegalStateException.class)
@@ -424,9 +359,8 @@ public class JiveRemoteTest {
 
     @Test
     public void testJiveRemoteValidateConfigRequiresUsername(){
-        RemoteConfig config = new RemoteConfig();
-        config.baseUrl(Optional.of("http://www.google.com"));
-        config.password(Optional.of("password"));
+        RemoteConfig config = TestData.completeRemoteConfig();
+        config.username(Optional.empty());
         JiveRemote remote = new JiveRemote(config);
         assertThatThrownBy(() -> remote.validateRemoteConfig())
                 .isInstanceOf(IllegalStateException.class)
@@ -435,9 +369,8 @@ public class JiveRemoteTest {
 
     @Test
     public void testJiveRemoteValidateConfigRequiresPassword(){
-        RemoteConfig config = new RemoteConfig();
-        config.baseUrl(Optional.of("http://www.google.com"));
-        config.username(Optional.of("user"));
+        RemoteConfig config = TestData.completeRemoteConfig();
+        config.password(Optional.empty());
         JiveRemote remote = new JiveRemote(config);
         assertThatThrownBy(() -> remote.validateRemoteConfig())
                 .isInstanceOf(IllegalStateException.class)
@@ -671,9 +604,58 @@ public class JiveRemoteTest {
     }
 
     @Test
-    public void testJiveBuildsDocumentPostBody(){
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+    public void testJiveBuildsDocumentPostBody() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
+        context.config().metadata(Optional.of(Collections.singletonList(metadata)));
 
+        String postBody = JiveRemote.documentPostBody(context, metadata);
+        JiveRemote.JiveContent jiveContent = Jackson.jsonMapper().readValue(postBody, JiveRemote.JiveContent.class);
+
+        assertThat(jiveContent.parentPlace).isNull();
+        assertThat(jiveContent.subject).isEqualTo(metadata.title());
+        assertThat(jiveContent.content.text).isEqualTo(Resources.load(context.convertedPath(metadata).get().toString()));
+        assertThat(jiveContent.type).isEqualTo("document");
+        assertThat(jiveContent.typeCode).isEqualTo(102);
+    }
+
+    @Test
+    public void testJiveBuildsDocumentPostBodyWithJiveContentId() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
+        context.config().metadata(Optional.of(Collections.singletonList(metadata)));
+        metadata.extraProps().get().put("jiveContentId", "1234");
+
+        String postBody = JiveRemote.documentPostBody(context, metadata);
+        JiveRemote.JiveContent jiveContent = Jackson.jsonMapper().readValue(postBody, JiveRemote.JiveContent.class);
+
+        assertThat(jiveContent.contentID).isEqualTo("1234");
+    }
+
+    @Test
+    public void testJiveBuildsDocumentPostBodyWithJiveParentApiUri() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
+        context.config().metadata(Optional.of(Collections.singletonList(metadata)));
+        metadata.extraProps().get().put("jiveParentApiUri", "wwww.google.com");
+
+        String postBody = JiveRemote.documentPostBody(context, metadata);
+        JiveRemote.JiveContent jiveContent = Jackson.jsonMapper().readValue(postBody, JiveRemote.JiveContent.class);
+
+        assertThat(jiveContent.parent).isEqualTo("wwww.google.com");
+    }
+
+    @Test
+    public void testJiveBuildsDocumentPostBodyWithTags() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
+        context.config().metadata(Optional.of(Collections.singletonList(metadata)));
+        metadata.tags(Optional.of(Collections.singletonList("foo")));
+
+        String postBody = JiveRemote.documentPostBody(context, metadata);
+        JiveRemote.JiveContent jiveContent = Jackson.jsonMapper().readValue(postBody, JiveRemote.JiveContent.class);
+
+        assertThat(jiveContent.tags).containsExactlyInAnyOrder("foo");
     }
 
 

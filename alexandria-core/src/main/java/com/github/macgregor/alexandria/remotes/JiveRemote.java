@@ -343,9 +343,9 @@ public class JiveRemote extends RestRemote implements Remote{
      * @param metadata
      * @return
      */
-    protected String documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
+    protected static String documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
         JiveContent jiveDocument = new JiveContent();
-        jiveDocument.parentPlace = null;
+        jiveDocument.parentPlace = null; //parent place is only in responses
         jiveDocument.subject = metadata.title();
         jiveDocument.content.text = Resources.load(context.convertedPath(metadata).get().toString());
         jiveDocument.type = "document";
@@ -410,7 +410,7 @@ public class JiveRemote extends RestRemote implements Remote{
         public Via via = new Via();
         public Map<String, Link> resources = new HashMap<>();
         public String parent;
-        public ParentPlace parentPlace = new ParentPlace();
+        public ParentPlace parentPlace;
 
         public JiveContent(){}
 

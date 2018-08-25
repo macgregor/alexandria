@@ -225,6 +225,6 @@ public class ResourcesTest {
 
     @Test(expected = FileNotFoundException.class)
     public void testPathChecksForExistence() throws FileNotFoundException {
-        Path p = Resources.path("readme.md", true);
+        Path p = Resources.path("not_there", true);
     }
 }
