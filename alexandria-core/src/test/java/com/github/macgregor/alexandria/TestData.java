@@ -20,6 +20,7 @@ public class TestData {
     public static Context completeContext(TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
         Path base = temporaryFolder.getRoot().toPath().toAbsolutePath();
         Context context = new Context();
+        context.configPath(Paths.get(base.toString(), ".alexandria"));
         context.projectBase(base);
         context.outputPath(Optional.of(temporaryFolder.getRoot().toPath()));
         context.exclude(Collections.singletonList(EXCLUDE));
@@ -32,6 +33,7 @@ public class TestData {
     public static Context minimalContext(TemporaryFolder temporaryFolder) throws IOException {
         Path base = temporaryFolder.getRoot().toPath().toAbsolutePath();
         Context context = new Context();
+        context.configPath(Paths.get(base.toString(), ".alexandria"));
         context.projectBase(base);
         context.searchPath(Collections.singletonList(base));
         context.include(Collections.singletonList(INCLUDE));

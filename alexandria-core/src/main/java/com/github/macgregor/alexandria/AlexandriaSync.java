@@ -58,6 +58,7 @@ public class AlexandriaSync {
             }
             long currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
             metadata.sourceChecksum(Optional.of(currentChecksum));
+            Alexandria.save(context);
         }, (context, exceptions) -> {
             log.info(String.format("Synced %d out of %d documents with remote %s",
                     context.documentCount() - exceptions.size(), context.documentCount(),
