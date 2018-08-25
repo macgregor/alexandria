@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -126,14 +127,14 @@ public class AlexandriaMojoTest {
         testAlexandriaMojo.inputs(Collections.singletonList("foo"));
         testAlexandriaMojo.init();
         assertThat(testAlexandriaMojo.inputs()).containsExactlyInAnyOrder("foo");
-        assertThat(context.searchPath()).containsExactlyInAnyOrder("foo");
+        assertThat(context.searchPath()).containsExactlyInAnyOrder(Paths.get("foo"));
     }
 
     @Test
     public void testInitInputDirDefaultsToRootDir() throws IOException {
         testAlexandriaMojo.init();
         assertThat(testAlexandriaMojo.inputs()).containsExactlyInAnyOrder(parentProject.getBasedir().toString());
-        assertThat(context.searchPath()).containsExactlyInAnyOrder(parentProject.getBasedir().toString());
+        assertThat(context.searchPath()).containsExactlyInAnyOrder(parentProject.getBasedir().toPath());
     }
 
     @Test
@@ -155,14 +156,14 @@ public class AlexandriaMojoTest {
     public void testInitSetsContextSearchPath() throws IOException {
         testAlexandriaMojo.inputs(Collections.singletonList("foo"));
         testAlexandriaMojo.init();
-        assertThat(context.searchPath()).containsExactlyInAnyOrder("foo");
+        assertThat(context.searchPath()).containsExactlyInAnyOrder(Paths.get("foo"));
     }
 
     @Test
     public void testInitSetsOutputPath() throws IOException {
         testAlexandriaMojo.outputPath("foo");
         testAlexandriaMojo.init();
-        assertThat(context.outputPath().get()).isEqualTo("foo");
+        assertThat(context.outputPath().get()).isEqualTo(Paths.get("foo"));
     }
 
     @Test

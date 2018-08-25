@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Getter @Setter @Accessors(fluent = true)
 public abstract class AlexandriaMojo extends AbstractMojo {
@@ -49,8 +50,8 @@ public abstract class AlexandriaMojo extends AbstractMojo {
             configPath = Paths.get(rootDir(), ".alexandria").toString();
         }
         alexandria.load(configPath);
-        alexandria.context().searchPath(inputs);
-        alexandria.context().outputPath(Optional.of(outputPath));
+        alexandria.context().searchPath(inputs.stream().map(Paths::get).collect(Collectors.toList()));
+        alexandria.context().outputPath(Optional.of(Paths.get(outputPath)));
         if(includes.size() > 0) {
             alexandria.context().include(includes);
         }

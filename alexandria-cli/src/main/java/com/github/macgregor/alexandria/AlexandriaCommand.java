@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter @Setter @Accessors(fluent = true)
@@ -66,8 +67,8 @@ public abstract class AlexandriaCommand implements Callable<Void> {
     public Alexandria init() throws IOException {
         alexandria = new Alexandria();
         alexandria.load(configPath);
-        alexandria.context().searchPath(input);
-        alexandria.context().outputPath(Optional.ofNullable(outputPath));
+        alexandria.context().searchPath(input.stream().map(Paths::get).collect(Collectors.toList()));
+        alexandria.context().outputPath(outputPath == null ? Optional.empty() : Optional.of(Paths.get(outputPath)));
         if (include.size() > 0) {
             alexandria.context().include(include);
         }

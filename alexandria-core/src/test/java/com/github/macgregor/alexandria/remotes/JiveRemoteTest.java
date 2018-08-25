@@ -554,6 +554,128 @@ public class JiveRemoteTest {
         assertThat(JiveRemote.updateMetadata(metadata, parentPlace)).isEqualTo(metadata);
     }
 
+    @Test
+    public void testJiveUpdateMetadataFromParentPlacePlaceId(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        JiveRemote.JivePlace place = new JiveRemote.JivePlace();
+        place.placeID = null;
+        assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
+        place.placeID = "";
+        assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
+        place.placeID = "   ";
+        assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
+        place.placeID = "foo";
+        JiveRemote.updateMetadata(metadata, place);
+        assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("foo");
+    }
+
+    @Test
+    public void testJiveUpdateMetadataFromParentPlaceParentUri(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        JiveRemote.JivePlace place = new JiveRemote.JivePlace();
+        place.resources = null;
+        assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
+        place.resources = new HashMap<String, JiveRemote.Link>();
+        assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
+        JiveRemote.Link link = new JiveRemote.Link();
+        link.ref = "foo";
+        link.allowed = Collections.singletonList("GET");
+        place.resources.put("html", link);
+        JiveRemote.updateMetadata(metadata, place);
+        assertThat(metadata.extraProps().get().get("jiveParentUri")).isEqualTo("foo");
+    }
+
+    @Test
+    public void testJiveUpdateMetadataFromParentPlaceParentApiUri(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.sourcePath(Paths.get("foo"));
+        JiveRemote.JivePlace place = new JiveRemote.JivePlace();
+        place.resources = null;
+        assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
+        place.resources = new HashMap<String, JiveRemote.Link>();
+        assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
+        JiveRemote.Link link = new JiveRemote.Link();
+        link.ref = "foo";
+        link.allowed = Collections.singletonList("GET");
+        place.resources.put("self", link);
+        JiveRemote.updateMetadata(metadata, place);
+        assertThat(metadata.extraProps().get().get("jiveParentApiUri")).isEqualTo("foo");
+    }
+
+    @Test
+    public void testJiveUpdateMetadataHandlesMissingMalformedPagedContent(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        assertThat(JiveRemote.updateMetadata(metadata, (JiveRemote.PagedJiveContent) null)).isEqualTo(metadata);
+        JiveRemote.PagedJiveContent content = new JiveRemote.PagedJiveContent();
+        content.list = null;
+        assertThat(JiveRemote.updateMetadata(metadata, content)).isEqualTo(metadata);
+        content.list = new ArrayList<>();
+        assertThat(JiveRemote.updateMetadata(metadata, content)).isEqualTo(metadata);
+    }
+
+    @Test
+    public void testJiveDoesntNeedContentIdWhenNoRemoteUri(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.remoteUri(Optional.empty());
+        assertThat(JiveRemote.needsContentId(metadata)).isFalse();
+    }
+
+    @Test
+    public void testJiveNeedsContentIdWhenRemoteUriWithoutExtraProps() throws URISyntaxException {
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("foo")));
+        metadata.extraProps(Optional.empty());
+        assertThat(JiveRemote.needsContentId(metadata)).isTrue();
+    }
+
+    @Test
+    public void testJiveNeedsContentIdWhenRemoteUriWithoutJiveContentIdProperty() throws URISyntaxException {
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("foo")));
+        metadata.extraProps(Optional.of(Collections.emptyMap()));
+        assertThat(JiveRemote.needsContentId(metadata)).isTrue();
+    }
+
+    @Test
+    public void testJiveDoesntNeedContentIdWhenRemoteUriWithJiveContentIdProperty() throws URISyntaxException {
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.remoteUri(Optional.of(new URI("foo")));
+        metadata.extraProps(Optional.of(Collections.singletonMap("jiveContentId", "1234")));
+        assertThat(JiveRemote.needsContentId(metadata)).isFalse();
+    }
+
+    @Test
+    public void testJiveDoesntNeedParentPlaceUriWhenNoExtraProps(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.extraProps(Optional.empty());
+        assertThat(JiveRemote.needsParentPlaceUri(metadata)).isFalse();
+    }
+
+    @Test
+    public void testJiveNeedsParentPlaceUriWhenNoJiveParentApiUriIsPresent(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.extraProps(Optional.of(Collections.singletonMap("jiveParentUri", "foo")));
+        assertThat(JiveRemote.needsParentPlaceUri(metadata)).isTrue();
+    }
+
+    @Test
+    public void testJiveDoesntNeedParentPlaceUriWhenJiveParentApiUriIsPresent(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        Map<String, String> extraProps = new HashMap<>();
+        extraProps.put("jiveParentApiUri", "foo");
+        extraProps.put("jiveParentApiUri", "foo");
+        metadata.extraProps(Optional.of(extraProps));
+        assertThat(JiveRemote.needsParentPlaceUri(metadata)).isFalse();
+    }
+
+    @Test
+    public void testJiveBuildsDocumentPostBody(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+
+    }
+
 
     protected JiveRemote setup(MockResponse mockResponses) throws IOException {
         return setup(Collections.singletonList(mockResponses));

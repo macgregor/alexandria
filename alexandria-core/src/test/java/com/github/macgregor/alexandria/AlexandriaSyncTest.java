@@ -213,7 +213,7 @@ public class AlexandriaSyncTest {
         Resources.save(f1.getPath(), "hello");
 
         Config config = new Config();
-        config.remote().supportsNativeMarkdown(Optional.of(true));
+        config.remote().supportsNativeMarkdown(true);
         Context context = new Context();
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);

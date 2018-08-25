@@ -25,7 +25,7 @@ public class AlexandriaConvertTest {
 
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.supportsNativeMarkdown(Optional.of(true));
+        remoteConfig.supportsNativeMarkdown(true);
         config.remote(remoteConfig);
 
         Context context = new Context();
@@ -49,7 +49,7 @@ public class AlexandriaConvertTest {
         config.metadata().get().add(readmeMetadata);
 
         Context context = new Context();
-        context.outputPath(Optional.of(subdir.getPath()));
+        context.outputPath(Optional.of(subdir.toPath()));
         context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
         context.config(config);
 
@@ -93,15 +93,6 @@ public class AlexandriaConvertTest {
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
         assertThatThrownBy(() -> alexandria.convert()).isInstanceOf(BatchProcessException.class);
-    }
-
-    @Test
-    public void testSupportNativeMarkdownFalseWhenNoRemoteHasntSetField(){
-        Context context = new Context();
-        context.config(new Config());
-        context.config().remote(new Config.RemoteConfig());
-        context.config().remote().supportsNativeMarkdown(Optional.empty());
-        assertThat(AlexandriaConvert.supportsNativeMarkdown(context)).isFalse();
     }
 
     @Test

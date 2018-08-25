@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -88,14 +87,14 @@ public class AlexandriaCommandTest {
     public void testAlexandriaInitSetsContextInput() throws IOException {
         TestCommand testCommand = new TestCommand();
         testCommand.input(Arrays.asList("foo"));
-        assertThat(testCommand.init().context().searchPath()).containsExactlyInAnyOrder("foo");
+        assertThat(testCommand.init().context().searchPath()).containsExactlyInAnyOrder(Paths.get("foo"));
     }
 
     @Test
     public void testAlexandriaInitSetsContextOutput() throws IOException {
         TestCommand testCommand = new TestCommand();
         testCommand.outputPath("foo");
-        assertThat(testCommand.init().context().outputPath()).isEqualTo(Optional.of("foo"));
+        assertThat(testCommand.init().context().outputPath().get()).isEqualTo(Paths.get("foo"));
     }
 
     @Test

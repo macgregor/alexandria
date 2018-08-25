@@ -2,6 +2,7 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,21 +24,48 @@ public class AlexandriaIndexTest {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
-    @Test
-    public void testIndexFresh() throws IOException, BatchProcessException {
-        File f1 = folder.newFile("readme.md");
-        File f2 = folder.newFile("doc.md");
-        Config config = new Config();
+    @Rule
+    public TemporaryFolder hierarchy = new TemporaryFolder();
 
-        Context context = new Context();
-        context.searchPath(Arrays.asList(folder.getRoot().toString()));
+    private File f1;
+    private File f2;
+    private File l1Readme;
+    private File l2Dir;
+    private File l2Readme;
+    private File l3Dir;
+    private File l3Readme;
+
+    private Context context;
+    private Config config;
+    private AlexandriaIndex alexandriaIndex;
+
+    @Before
+    public void setup() throws IOException {
+        f1 = folder.newFile("readme.md");
+        f2 = folder.newFile("doc.md");
+
+        l1Readme = hierarchy.newFile("readme.md");
+        l2Dir = hierarchy.newFolder("l2");
+        l2Readme = new File(l2Dir, "readme.md");
+        l2Readme.createNewFile();
+        l3Dir = new File(l2Dir, "l3");
+        l3Dir.mkdir();
+        l3Readme = new File(l3Dir, "readme.md");
+        l3Readme.createNewFile();
+
+        config = new Config();
+        context = new Context();
+        context.searchPath(Arrays.asList(folder.getRoot().toPath()));
         context.configPath(folder.newFile().toPath());
         context.projectBase(folder.getRoot().toPath());
         context.config(config);
 
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.index();
+        alexandriaIndex = new AlexandriaIndex(context);
+    }
+
+    @Test
+    public void testIndexFresh() throws IOException, BatchProcessException {
+        alexandriaIndex.findUnindexedFiles();
         assertThat(config.metadata()).isPresent();
         assertThat(config.metadata().get()
                 .stream()
@@ -47,25 +76,12 @@ public class AlexandriaIndexTest {
 
     @Test
     public void testIndexUpdate() throws IOException, BatchProcessException {
-        File f1 = folder.newFile("readme.md");
-        File f2 = folder.newFile("doc.md");
-
-        Config config = new Config();
-
         Config.DocumentMetadata readmeMetadata = new Config.DocumentMetadata();
         readmeMetadata.sourcePath(f1.toPath());
         readmeMetadata.title("Custom Title");
         config.metadata().get().add(readmeMetadata);
 
-        Context context = new Context();
-        context.searchPath(Arrays.asList(folder.getRoot().toString()));
-        context.configPath(folder.newFile().toPath());
-        context.projectBase(folder.getRoot().toPath());
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.index();
+        alexandriaIndex.findUnindexedFiles();
         assertThat(config.metadata()).isPresent();
         assertThat(config.metadata().get()
                 .stream()
@@ -77,20 +93,7 @@ public class AlexandriaIndexTest {
 
     @Test
     public void testIndexSetsTitle() throws IOException, BatchProcessException {
-        File f1 = folder.newFile("readme.md");
-        File f2 = folder.newFile("doc.md");
-
-        Config config = new Config();
-
-        Context context = new Context();
-        context.searchPath(Arrays.asList(folder.getRoot().toString()));
-        context.configPath(folder.newFile().toPath());
-        context.projectBase(folder.getRoot().toPath());
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.index();
+        alexandriaIndex.findUnindexedFiles();
         assertThat(config.metadata()).isPresent();
         assertThat(config.metadata().get()
                 .stream()
@@ -101,32 +104,18 @@ public class AlexandriaIndexTest {
 
     @Test
     public void testIndexSetsSourcePathRelativeToProjectBase() throws IOException, BatchProcessException {
-        File l1Readme = folder.newFile("readme.md");
-        File l2Dir = folder.newFolder("l2");
-        File l2Readme = new File(l2Dir, "readme.md");
-        l2Readme.createNewFile();
-        File l3Dir = new File(l2Dir, "l3");
-        l3Dir.mkdir();
-        File l3Readme = new File(l3Dir, "readme.md");
-        l3Readme.createNewFile();
+        context.searchPath(Arrays.asList(hierarchy.getRoot().toPath()));
+        context.configPath(hierarchy.newFile().toPath());
+        context.projectBase(Paths.get(hierarchy.getRoot().toString()));
 
-        Config config = new Config();
-        Context context = new Context();
-        context.searchPath(Arrays.asList(folder.getRoot().toString()));
-        context.configPath(folder.newFile().toPath());
-        context.projectBase(Paths.get(folder.getRoot().toString()));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.index();
+        alexandriaIndex.findUnindexedFiles();
         assertThat(config.metadata()).isPresent();
         assertThat(config.metadata().get()).hasSize(3);
 
         Path[] expected = new Path[3];
-        expected[0] = Paths.get(folder.getRoot().toString()).relativize(l1Readme.toPath());
-        expected[1] = Paths.get(folder.getRoot().toString()).relativize(l2Readme.toPath());
-        expected[2] = Paths.get(folder.getRoot().toString()).relativize(l3Readme.toPath());
+        expected[0] = Paths.get(hierarchy.getRoot().toString()).relativize(l1Readme.toPath());
+        expected[1] = Paths.get(hierarchy.getRoot().toString()).relativize(l2Readme.toPath());
+        expected[2] = Paths.get(hierarchy.getRoot().toString()).relativize(l3Readme.toPath());
         assertThat(config.metadata().get().stream()
                 .map(m -> m.sourcePath())
                 .collect(Collectors.toList()))
@@ -135,37 +124,24 @@ public class AlexandriaIndexTest {
 
     @Test
     public void testIndexLoadsRelativeSourcePathsCorrectly() throws IOException, BatchProcessException {
-        File l1Readme = folder.newFile("readme.md");
-        File l2Dir = folder.newFolder("l2");
-        File l2Readme = new File(l2Dir, "readme.md");
-        l2Readme.createNewFile();
-        File l3Dir = new File(l2Dir, "l3");
-        l3Dir.mkdir();
-        File l3Readme = new File(l3Dir, "readme.md");
-        l3Readme.createNewFile();
+        context.searchPath(Arrays.asList(hierarchy.getRoot().toPath()));
+        context.configPath(hierarchy.newFile().toPath());
+        context.projectBase(Paths.get(hierarchy.getRoot().toString()));
 
-        Config config = new Config();
-        Context context = new Context();
-        context.searchPath(Arrays.asList(folder.getRoot().toString()));
-        context.configPath(folder.newFile().toPath());
-        context.projectBase(Paths.get(folder.getRoot().toString()));
-        context.config(config);
+        alexandriaIndex.findUnindexedFiles();
+        Context.save(context);
 
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.index();
-        alexandria.save();
-        Alexandria reloaded = alexandria.load(context.configPath().toString());
-        reloaded.context().searchPath(Arrays.asList(folder.getRoot().toString()));
-        alexandria.index();
-        assertThat(reloaded.context().config().metadata()).isPresent();
-        assertThat(reloaded.context().config().metadata().get()).hasSize(3);
+        Context reloaded = Context.load(context.configPath().toString());
+        reloaded.searchPath(Arrays.asList(hierarchy.getRoot().toPath()));
+        alexandriaIndex.findUnindexedFiles();
+        assertThat(reloaded.config().metadata()).isPresent();
+        assertThat(reloaded.config().metadata().get()).hasSize(3);
 
         Path[] expected = new Path[3];
-        expected[0] = Paths.get(folder.getRoot().toString()).relativize(l1Readme.toPath());
-        expected[1] = Paths.get(folder.getRoot().toString()).relativize(l2Readme.toPath());
-        expected[2] = Paths.get(folder.getRoot().toString()).relativize(l3Readme.toPath());
-        assertThat(reloaded.context().config().metadata().get().stream()
+        expected[0] = Paths.get(hierarchy.getRoot().toString()).relativize(l1Readme.toPath());
+        expected[1] = Paths.get(hierarchy.getRoot().toString()).relativize(l2Readme.toPath());
+        expected[2] = Paths.get(hierarchy.getRoot().toString()).relativize(l3Readme.toPath());
+        assertThat(reloaded.config().metadata().get().stream()
                 .map(m -> m.sourcePath())
                 .collect(Collectors.toList()))
                 .containsExactlyInAnyOrder(expected);
@@ -177,16 +153,33 @@ public class AlexandriaIndexTest {
         Context context = new Context();
         context.config(config);
 
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        assertThatThrownBy(() -> alexandria.index())
+        AlexandriaIndex alexandriaIndex = new AlexandriaIndex();
+        alexandriaIndex.context(context);
+        assertThatThrownBy(() -> alexandriaIndex.findUnindexedFiles())
                 .isInstanceOf(BatchProcessException.class);
     }
 
     @Test
     public void testIndexDocumentsMatchWrapsException(){
         Context context = new Context();
-        context.searchPath(Collections.singletonList("foo"));
+        context.searchPath(Collections.singletonList(Paths.get("foo")));
         assertThatThrownBy(() -> AlexandriaIndex.documentsMatched(context)).isInstanceOf(AlexandriaException.class);
+    }
+
+    @Test
+    public void testIndexMarksMissingFilesForDeletion() throws IOException {
+        Path deletedPath = Paths.get(folder.getRoot().toString(), "deleted");
+        Config.DocumentMetadata deletedDocument = new Config.DocumentMetadata();
+        deletedDocument.sourcePath(deletedPath);
+        config.metadata(Optional.of(Arrays.asList(deletedDocument)));
+        alexandriaIndex.markFilesForDeletion();
+        assertThat(config.metadata()).isPresent();
+        assertThat(config.metadata().get()
+                .stream()
+                .filter(d -> d.sourcePath().equals(deletedPath))
+                .findFirst()
+                .get()
+                .extraProps()
+                .get()).containsKey("delete");
     }
 }
