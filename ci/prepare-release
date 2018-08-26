@@ -91,7 +91,6 @@ then
     git commit -m "preparing release $RELEASE"
     mvn scm:tag &> /dev/null
     mvn versions:commit &> /dev/null
-    git push -u origin HEAD:master --tags
 else
     readarray message <<"    EOF"
         git add $(find . -name pom.xml)
