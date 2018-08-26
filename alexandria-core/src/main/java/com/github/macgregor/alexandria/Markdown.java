@@ -26,7 +26,7 @@ public class Markdown {
     /**
      * Configure common Flexmark options to be used by both the {@link Parser} and {@link HtmlRenderer} instances.
      *
-     * @return
+     * @return  flexmark options
      */
     public static MutableDataSet options(){
         if(options == null){
@@ -39,7 +39,7 @@ public class Markdown {
     /**
      * Retrieve the {@link Parser}, creating it if it doesnt exist
      *
-     * @return
+     * @return  flexmark parser
      */
     public static Parser parser(){
         if(parser == null){
@@ -51,7 +51,7 @@ public class Markdown {
     /**
      * Retrieve the {@link HtmlRenderer}, creating it if it doesnt exist
      *
-     * @return
+     * @return  flexmark html renderer
      */
     public  static HtmlRenderer renderer(){
         if(renderer == null){
@@ -62,13 +62,13 @@ public class Markdown {
 
     /**
      * Convert a source file into html
-     * <p>
+     *
      * Source and converted paths dont have to be absolute, but it yields best results and to less confusing errors
      * when they are absolute.
      *
      * @param source  Absolute path to the file to convert
      * @param converted  Absolute path to output the converted html file to
-     * @throws IOException
+     * @throws IOException  file system errors
      */
     public static void toHtml(Path source, Path converted) throws IOException {
         Node document = parser().parseReader(new FileReader(source.toFile()));

@@ -28,9 +28,9 @@ public abstract class RestRemote {
      * Execute a built {@link Request}, wrapping any errors in an {@link HttpException}.
      * TODO: update to take context and metadata for error context
      *
-     * @param request
-     * @return
-     * @throws HttpException if the response returned a non 20X status code, or general IO error making the call.
+     * @param request  request to execute
+     * @return  the response from the remote
+     * @throws HttpException  if the response returned a non 20X status code, or general IO error making the call.
      */
     protected Response doRequest(Request request) throws HttpException {
         log.trace(request.toString());

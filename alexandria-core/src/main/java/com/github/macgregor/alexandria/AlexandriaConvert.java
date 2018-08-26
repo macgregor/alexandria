@@ -14,12 +14,12 @@ import java.util.Optional;
 
 /**
  * Converts indexed documents from markdown to html.
- * <p>
+ *
  * Most of the work is dome by <a href="https://github.com/vsch/flexmark-java">Flexmark</a>, with most
  * of our work managing paths, files and errors.
- * <p>
+ *
  * If a remote supports native markdown, the documents will not be converted and this phase becomes essentially a noop.
- * <p>
+ *
  * @see Markdown
  */
 @Slf4j
@@ -32,11 +32,11 @@ public class AlexandriaConvert {
 
     /**
      * Convert all files in the metadata index into html.
-     * <p>
+     *
      * Converted files will be saved to the configured {@link Context#outputPath}, if set. Otherwise the files will be
      * converted in place in the same directory as the markdown file being converted. Files that have been deleted or
      * marked for deletion will be ignored.
-     * <p>
+     *
      * @see BatchProcess
      *
      * @throws AlexandriaException  Exception wrapping all exceptions thrown during document processing.
@@ -80,7 +80,7 @@ public class AlexandriaConvert {
 
     /**
      * Convert the document from markdown to html.
-     * <p>
+     *
      * @see Markdown
      *
      * @param context  Alexandria context containing information necessary to calculate the path

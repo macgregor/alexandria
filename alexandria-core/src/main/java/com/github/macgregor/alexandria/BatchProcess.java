@@ -12,18 +12,18 @@ import java.util.Optional;
 
 /**
  * Generic class to handle wrapping batch processing in robust error handling.
- * <p>
+ *
  * This is generally used for processing collections of {@link com.github.macgregor.alexandria.Config.DocumentMetadata}
  * where we want to ensure we process all documents in the collection without losing any exceptions and their execution
  * context. The exception handling is boiler plate that was being duplicated all over, this abstracts it.
- * <p>
+ *
  * A batch process has three parts:
  * <ol>
- *  <li><b>collect</b> - call the delegated {@link Batch#collect(Context)} method to collect the objects to process
- *  <li><b>execute</b> - for each object collected, call the delegated {@link Task#execute(Context, Object)}
- *  <li><b>after batch</b> - call the delegated {@link AfterBatch#execute(Context, Collection)}
+ *  <li><b>collect</b> - call the delegated {@link Batch#collect(Context)} method to collect the objects to process</li>
+ *  <li><b>execute</b> - for each object collected, call the delegated {@link Task#execute(Context, Object)}</li>
+ *  <li><b>after batch</b> - call the delegated {@link AfterBatch#execute(Context, Collection)}</li>
  * </ol>
- * <p>
+ *
  * For example, {@link AlexandriaConvert} is implemented roughly as:
  *
  * {@code
@@ -40,7 +40,7 @@ import java.util.Optional;
  *          return BatchProcess.EXCEPTIONS_UNHANDLED; //delegate exception handling to {@link BatchProcess}
  *      });
  * }
- * <p>
+ *
  * TODO:
  * Errors thrown during batch processing are currently a bit hard to read. It can be hard to tell exactly where an exception
  * was thrown. This needs to be improved.
@@ -62,7 +62,7 @@ public class BatchProcess<T> {
     /**
      * Execute the batch, providing a default {@link AfterBatch} that calls {@link Alexandria#save(Context)} before
      * throwing any errors that occurred.
-     * <p>
+     *
      * @see Batch#execute(Batch, Task, AfterBatch)
      *
      * @param batch  Batch collection delegate
@@ -78,7 +78,7 @@ public class BatchProcess<T> {
 
     /**
      * Execute the batch wrapping the delegated methods in robust exception handling.
-     * <p>
+     *
      * This method should guarantee all exceptions thrown, even runtime exceptions are wrapped and thrown as a checked
      * {@link BatchProcessException} at the end of processing. This allows as much of the batch to be processed as possible
      * before throwing an error. If a single object has a problem, why fail the whole thing?
@@ -136,8 +136,8 @@ public class BatchProcess<T> {
      *
      * @param cause  Cause being wrapped
      * @param t  Type of object being processed, if processing {@link com.github.macgregor.alexandria.Config.DocumentMetadata} we add it for debugging context
-     * @param message
-     * @return
+     * @param message  optional error message
+     * @return  new exception ready to be thrown
      */
     protected AlexandriaException buildAlexandriaException(Throwable cause, Optional<T> t, Optional<String> message){
         AlexandriaException.Builder exceptionBuilder = new AlexandriaException.Builder()
@@ -161,7 +161,7 @@ public class BatchProcess<T> {
         /**
          * Delegated method to collect objects for processing.
          * @param context  Alexandria context that may or may not be needed by caller.
-         * @return
+         * @return  collection of objects to process
          * @throws Exception  Critical error collecting documents
          */
         Collection<T> collect(Context context) throws Exception;

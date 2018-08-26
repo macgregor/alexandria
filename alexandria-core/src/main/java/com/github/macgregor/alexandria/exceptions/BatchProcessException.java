@@ -24,17 +24,15 @@ public class BatchProcessException extends AlexandriaException {
     }
 
     /**
-     * Builder class to help create {@link BatchProcessException) in a more fluent way.
+     * Builder class to help create {@link BatchProcessException} in a more fluent way.
      */
     public static class Builder {
         private Collection<AlexandriaException> exceptions;
         private Optional<String> message = Optional.empty();
 
         /**
-         * Message to include with the exception.
-         *
-         * @param message
-         * @return
+         * @param message  Message to include with the exception.
+         * @return  builder
          */
         public Builder withMessage(String message){
             this.message = Optional.ofNullable(message);
@@ -42,9 +40,8 @@ public class BatchProcessException extends AlexandriaException {
         }
 
         /**
-         * List of exceptions which triggered this.
-         * @param exceptions
-         * @return
+         * @param exceptions  List of exceptions which triggered this.
+         * @return  builder
          */
         public Builder causedBy(Collection<AlexandriaException> exceptions){
             this.exceptions = exceptions;
@@ -54,7 +51,7 @@ public class BatchProcessException extends AlexandriaException {
         /**
          * Create an {@link BatchProcessException} from the build configuration.
          *
-         * @return
+         * @return  new exception that can be thrown
          */
         public BatchProcessException build(){
             BatchProcessException exception = new BatchProcessException();

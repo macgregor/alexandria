@@ -11,10 +11,10 @@ import java.util.Collections;
 
 /**
  * Core class for saving, loading and processing documents.
- * <p/>
+ *
  * The basic usage is load the state, perform operation: index, convert, sync; generally in that order,
  * save state if necessary, though the operations should handle that for you. An extra save wont hurt.
- * <p/>
+ *
  * {@code
  * Alexandria alexandria = Alexandria.loadContext(".alexandria");
  * alexandria.index()
@@ -38,7 +38,7 @@ public class Alexandria {
 
     /**
      * Load {@link Config} from the given file path and initialize Alexandria's {@link Context}.
-     * <p>
+     *
      * Required context paths will be set to the directory of {@code filePath} and should be appropriately
      * overridden before performing any operations. If the path doesnt exist, a blank {@link Config}
      * will be created and saved to {@code filePath} when saving.
@@ -71,9 +71,9 @@ public class Alexandria {
     /**
      * Static accessor for {@link Alexandria#load(String)}.
      *
-     * @param filePath
-     * @return
-     * @throws IOException
+     * @param filePath  path to the config file where remote details and document metadata will be saved
+     * @return  Alexandria instance with an initialized context that will be provided to operations
+     * @throws IOException  problems converting strings to paths or general file loading problems
      */
     public static Alexandria loadContext(String filePath) throws IOException {
         return new Alexandria().load(filePath);
@@ -81,7 +81,7 @@ public class Alexandria {
 
     /**
      * Save the current context config (metadata and remote configuration) to disk.
-     * <p>
+     *
      * Not all information is saved, only the config field. See {@link Config} and {@link Context}.
      *
      * @param context  context containing configuration to save
@@ -95,8 +95,8 @@ public class Alexandria {
     /**
      * Convenience method for object access to {@link Alexandria#save(Context)}.
      *
-     * @return
-     * @throws IOException
+     * @return  Alexandria instance whose state was saved
+     * @throws IOException  problems saving the file
      */
     public Alexandria save() throws IOException {
         Alexandria.save(context);
@@ -105,14 +105,14 @@ public class Alexandria {
 
     /**
      * Update the metadata index based on matched files found on the {@link Context#searchPath}.
-     * <p>
+     *
      * Any files found that are not in the list of metadata will be created and added to the list to be
      * later converted and published. Files already in the index that are not found on the search path
      * are marked for deletion from the remote.
-     * <p>
+     *
      * @see AlexandriaConvert
      *
-     * @return
+     * @return  Alexandria instance that with an updated metadata index
      * @throws AlexandriaException  wrapper for any exceptions thrown processing the documents
      */
     public Alexandria index() throws AlexandriaException {
@@ -122,12 +122,12 @@ public class Alexandria {
 
     /**
      * Convert HTML files from the files in the metadata index.
-     * <p>
+     *
      * Converted files will be saved to {@link Context#outputPath}, if set. Otherwise the files will be converted in place
      * in the same directory as the markdown file being converted. Any exceptions thrown will be collected and thrown
      * after processing all documents.
      *
-     * @return
+     * @return  Alexandria instance with converted document file paths
      * @throws AlexandriaException  wrapper for any exceptions thrown processing the documents
      */
     public Alexandria convert() throws AlexandriaException {
@@ -137,25 +137,25 @@ public class Alexandria {
 
     /**
      * Sync all documents with the configured remote. Creating, updating or deleting as necessary.
-     * <p/>
+     *
      * <ul>
      *  <li><b>Create</b> - If the metadata has no {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
      * it is taken as a sign to create a new document. If the document already exists, be sure to manually set the remote
-     * uri in the config file to update the exiting document.
+     * uri in the config file to update the exiting document.</li>
      *  <li><b>Update</b> - A checksum of the source document (not the converted html file) is used to determine when to update the
      * remote document. If the checksum calculated at runtime is different than the checksum stored in the metadata index,
-     * the remote document is updated.
+     * the remote document is updated.</li>
      *  <li><b>Delete</b> - The index phase will mark metadata index entries that are not found on the search path for
      * deletion in the metadata's {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}. Once deleted,
      * the extra property flag is removed and the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#deletedOn}
-     * field is set which makes all phases essentially ignore it.
+     * field is set which makes all phases essentially ignore it.</li>
      * </ul>
-     * <p>
+     *
      * @see AlexandriaIndex
      * @see AlexandriaConvert
      * @see AlexandriaSync
      *
-     * @return
+     * @return  Alexandria instance with updated metadata after the sync
      * @throws AlexandriaException  wrapper for any exceptions thrown processing the documents
      */
     public Alexandria syncWithRemote() throws AlexandriaException {

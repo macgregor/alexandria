@@ -12,11 +12,11 @@ import java.util.*;
 
 /**
  * Runtime context containing arguments passed from the user agent (e.g. search path, files to include or exclude, etc).
- * <p>
+ *
  * This information is not persisted by Alexandria as it is considered specific to the runtime environment at execution
  * that is not necessarily suitable distribution to others. Absolute paths are a good example of things that would
  * break others if they were committed to git.
- * <p>
+ *
  * Any paths in the context should be absolute, while paths in {@link Config} are relative.
  */
 @Data
@@ -53,8 +53,8 @@ public class Context {
      * Resolve a relative path to an absolute one using the {@link #configPath} directory. Useful for resolving relative
      * {@link com.github.macgregor.alexandria.Config.DocumentMetadata#sourcePath}.
      *
-     * @param relativePath
-     * @return
+     * @param relativePath  relative path to convert to absolute
+     * @return  the absolute path
      */
     public Path resolveRelativePath(Path relativePath){
         return configPath.getParent().resolve(relativePath);

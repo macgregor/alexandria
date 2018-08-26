@@ -13,12 +13,12 @@ import java.util.*;
 
 /**
  * Alexandria configuration that should be persisted between runs.
- * <p>
+ *
  * Runtime specific configuration (i.e. {@link Context} fields) will not be saved as they are considered
  * specific to the runtime environment. The data here should be normalized such that it is valid across from any
  * runtime execution. In otherwords, if Alexandria is being used in a git repository, the config file shouldnt
  * contain any absolute paths or system specific data that will break if committed and used by another contributor.
- * <p>
+ *
  * @see Context
  * @see Alexandria#load(String)
  * @see Alexandria#save(Context)
@@ -81,7 +81,7 @@ public class Config {
 
     /**
      * Metadata used to index a document for tracking and syncing purposes.
-     * <p>
+     *
      * Alexandria uses this metadata to determine what state the document is in, e.g. does it need to be created on the remote,
      * has it already been deleted from the remote, etc. Remote implementations will also use it to track remote specific
      * metadata in {@link DocumentMetadata#extraProps}, for example a document id needed to interact with the document via rest.
@@ -95,7 +95,7 @@ public class Config {
     public static class DocumentMetadata{
         /**
          * File path to the indexed document relative to {@link Context#projectBase}.
-         * <p>
+         *
          * You can get an absolute path at runtime by calling {@link Context#resolveRelativePath(Path)}.
          * */
         @JsonProperty
@@ -107,11 +107,11 @@ public class Config {
 
         /**
          * Remote address of the document if it already exists on the remote. Default: none. (this will trigger a create)
-         * <p>
+         *
          * If not set, triggers a create when the sync phase is executed. The default state is to create the document. If
          * it already exists before using Alexandria, be sure to manually add the remote uri so that the remote document
          * is updated instead of duplicated.
-         * <p>
+         *
          * Remotes may or may not use this URI exactly to interact with the remote. For example, Jive has different
          * addresses for documents you interact with in a browser than documents you interact with through rest, so it
          * has to convert this human URI to a computer one. The URI the {@link com.github.macgregor.alexandria.remotes.JiveRemote}
@@ -169,7 +169,7 @@ public class Config {
         /**
          * Convenience method for getting the name of the document from {@link #sourcePath}.
          *
-         * @return
+         * @return  name of the source document
          */
         public String sourceFileName(){
             return sourcePath.toFile().getName();
@@ -180,7 +180,7 @@ public class Config {
          * TODO: move to {@link Context}
          *
          * @param context  Alexandria context needed to properly resolve the relative {@link #sourcePath}.
-         * @return
+         * @return  state that can be used to determine how to process the document
          * @throws IOException  when problems working with {@link #sourcePath} occur.
          */
         public State determineState(Context context) throws IOException {

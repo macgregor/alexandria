@@ -13,11 +13,11 @@ import java.util.Optional;
 
 /**
  * Sync indexed documents with the configured remote.
- * <p>
+ *
  * For each document, the state of the file is determined and the appropriate {@link Remote}
  * method is called. Some metadata will be updated by this class, but most is delegated to
  * the remote implementation as it is dependent on information from the rest response.
- * <p>
+ *
  * @see Remote
  * @see com.github.macgregor.alexandria.remotes.JiveRemote
  * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState(Context)
@@ -33,7 +33,7 @@ public class AlexandriaSync {
 
     /**
      * Instantiate from the context and configure a remote given the {@link Config#remote}.
-     * <p>
+     *
      * @see AlexandriaSync#configureRemote(Context)
      *
      * @param context  Alexandria context containing the remote config and indexed documents to sync
@@ -46,17 +46,17 @@ public class AlexandriaSync {
 
     /**
      * Execute the sync process.
-     * <p>
+     *
      * For each document, the state of the file is determined and the appropriate {@link Remote}
      * method is called.
      * <ul>
-     *     <li>DELETE: delete document from remote
-     *     <li>CREATE: convert if neeed, create document with remote, calculates and sets {@code sourceChecksum} on metadata
-     *     <li>UPDATE: convert if needed, create document with remote, calculates and sets {@code sourceChecksum} on metadata
-     *     <li>CURRENT: ignore
-     *     <li>DELETED: ignore
+     *     <li>DELETE: delete document from remote</li>
+     *     <li>CREATE: convert if neeed, create document with remote, calculates and sets {@code sourceChecksum} on metadata</li>
+     *     <li>UPDATE: convert if needed, create document with remote, calculates and sets {@code sourceChecksum} on metadata</li>
+     *     <li>CURRENT: ignore</li>
+     *     <li>DELETED: ignore</li>
      * </ul>
-     * <p>
+     *
      * {@link Alexandria#save(Context)} will be called after each document is handled to ensure an unexpected problem
      * in the batch wont make the local state differ from the remote state. For example, creating a document and not saving
      * the {@code remoteUri} would cause Alexandria to create a new document on the remote on the next run.
@@ -64,6 +64,8 @@ public class AlexandriaSync {
      * @see Remote
      * @see com.github.macgregor.alexandria.remotes.JiveRemote
      * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState(Context)
+     *
+     * @throws AlexandriaException  Exception wrapping all exceptions thrown while syncing documents
      */
     public void syncWithRemote() throws AlexandriaException {
         log.debug("Initiating sync with remote.");
@@ -110,12 +112,12 @@ public class AlexandriaSync {
 
     /**
      * Instantiate a {@link Remote} implementation based on the {@link Config#remote}.
-     * <p>
+     *
      * The class instantiation logic is very simple, but should be adequate for this simple use case. Essentially we just
      * pick the right class using the fully qualified class name in {@link com.github.macgregor.alexandria.Config.RemoteConfig#clazz}.
      * Implementation specific configuration and validation is delegated to the implementing class by calling
      * {@link Remote#configure(Config.RemoteConfig)} and {@link Remote#validateRemoteConfig()}.
-     * <p>
+     *
      * @see com.github.macgregor.alexandria.remotes.NoopRemote
      * @see com.github.macgregor.alexandria.remotes.JiveRemote
      *
@@ -140,12 +142,12 @@ public class AlexandriaSync {
 
     /**
      * Determine if the document needs to be converted to html. Doesnt actually do the conversion or update {@link Context}.
-     * <p>
+     *
      * If the remote supports native markdown, we dont need to convert. Otherwise we get the converted file path from
      * {@link Context#convertedPath(Config.DocumentMetadata)} or calculate what it should be if the path isnt present.
      * Once we have a path, we calculate the current checksum of the converted document and compare it to
      * {@link com.github.macgregor.alexandria.Config.DocumentMetadata#convertedChecksum} and only convert if it is different.
-     * <p>
+     *
      * @see AlexandriaConvert#convert(Context, Config.DocumentMetadata)
      *
      * TODO: move to {@link AlexandriaConvert}
@@ -178,14 +180,14 @@ public class AlexandriaSync {
 
     /**
      * Converts an indexed document to html if needed.
-     * <p>
+     *
      * When Alexandria is run with its full lifecycle (index, convert, sync) this should be a noop, but if a user is running
      * individual phases we could find ourselves in a position where the files havent been converted yet, or they have been
      * converted but the file path isnt in the {@link Context#convertedPaths} cache. Instead of throwing an error, we
      * simply reconvert the file on the fly and add it to the context.
-     * <p>
+     *
      * If the remote supports native markdown, this is a noop.
-     * <p>
+     *
      * @see AlexandriaConvert#convert(Context, Config.DocumentMetadata)
      *
      * TODO: move to {@link AlexandriaConvert}

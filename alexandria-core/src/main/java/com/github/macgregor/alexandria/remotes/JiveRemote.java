@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
  *     jiveParentApiUri: "https://jive.com/api/core/v3/places/1448512"
  *     jiveContentId: "1448517"
  * }
- * <p>
+ *
  * {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}:
  * <ul>
  *  <li><b>USER DEFINED</b> {@value #JIVE_PARENT_URI} - the uri used to access a parent place for the document. Setting this is how you link a
@@ -87,7 +87,7 @@ public class JiveRemote extends RestRemote implements Remote{
     /**
      * Create {@link JiveRemote} with a default {@link OkHttpClient}.
      *
-     * @param config
+     * @param config  remote configuration with at least {@link com.github.macgregor.alexandria.Config.RemoteConfig#clazz} set.
      */
     public JiveRemote(Config.RemoteConfig config){
         client = new OkHttpClient.Builder()
@@ -100,8 +100,6 @@ public class JiveRemote extends RestRemote implements Remote{
 
     /**
      * {@inheritDoc}
-     *
-     * @param config
      */
     @Override
     public void configure(Config.RemoteConfig config){
@@ -111,7 +109,7 @@ public class JiveRemote extends RestRemote implements Remote{
 
     /**
      * {@inheritDoc}
-     * <p>
+     *
      * Requires:
      * <ul>
      *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#baseUrl}
@@ -119,7 +117,7 @@ public class JiveRemote extends RestRemote implements Remote{
      *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#password}
      * </ul>
      *
-     * @throws IllegalStateException Username, password and/or baseUrl are not set.
+     * @throws IllegalStateException  Username, password and/or baseUrl are not set.
      */
     @Override
     public void validateRemoteConfig() throws IllegalStateException {
@@ -141,17 +139,13 @@ public class JiveRemote extends RestRemote implements Remote{
 
     /**
      * {@inheritDoc}
-     * <p>
+     *
      * We will always make a request to {@code POST baseUrl/contents}, but we may also need to make a request to
      * {@code GET baseUrl/places} if the document has a parent place.
-     * <p>
+     *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#createContent(String,%20String,%20String,%20String)">Jive REST API - Create Content</a>
      * @see #needsParentPlaceUri(Config.DocumentMetadata)
      * @see #findParentPlace(Context, Config.DocumentMetadata)
-     *
-     * @param context
-     * @param metadata
-     * @throws IOException
      */
     @Override
     public void create(Context context, Config.DocumentMetadata metadata) throws IOException {
@@ -184,17 +178,14 @@ public class JiveRemote extends RestRemote implements Remote{
 
     /**
      * {@inheritDoc}
-     * <p>
+     *
      * We will always make a request to {@code POST baseUrl/contents/$&#123;{@value #JIVE_CONTENT_ID}&#125;}, but
      * we may also need to make a request to {@code GET baseUrl/contents} to convert the browsers reachable document
      * endpoint to the rest api endpoint for the document.
-     * <p>
+     *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#updateContent(String,%20String,%20String,%20boolean,%20String,%20boolean)">Jive REST API - Update Content</a>
      * @see #needsContentId(Config.DocumentMetadata)
      * @see #findDocument(Context, Config.DocumentMetadata)
-     *
-     * @param metadata
-     * @throws IOException
      */
     @Override
     public void update(Context context, Config.DocumentMetadata metadata) throws IOException {
@@ -233,7 +224,7 @@ public class JiveRemote extends RestRemote implements Remote{
     }
     /**
      * {@inheritDoc}
-     * <p>
+     *
      * Potentially three requests can be made here, because the Jive api handles requests for deleted documents poorly.
      * Firstly, the usual {@code GET baseUrl/contents} if the metadata is missing the {@value #JIVE_CONTENT_ID}. After that
      * attempts to delete a document that is already deleted will yield a 403 unauthorized. So if for some reason
@@ -241,15 +232,11 @@ public class JiveRemote extends RestRemote implements Remote{
      * that by fetching the document directly via {@code GET baseUrl/contents/$&#123;{@value #JIVE_CONTENT_ID}&#125;},
      * checking for 403's and only executing {@code DELETE baseUrl/contents/$&#123;{@value #JIVE_CONTENT_ID}&#125;} if
      * the document exists. Then we know a 403 is actually an authorization error.
-     * <p>
+     *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#getContent(String,%20String,%20boolean,%20List%3CString%3E)">Jive REST API - Get Content</a>
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#deleteContent(String,%20Boolean)">Jive REST API - Delete Content</a>
      * @see #needsContentId(Config.DocumentMetadata)
      * @see #findDocument(Context, Config.DocumentMetadata)
-     *
-     * @param context
-     * @param metadata
-     * @throws IOException
      */
     @Override
     public void delete(Context context, Config.DocumentMetadata metadata) throws IOException {
@@ -300,8 +287,8 @@ public class JiveRemote extends RestRemote implements Remote{
     /**
      * Determine if the indexed document needs to fetch the {@value #JIVE_CONTENT_ID} from the remote.
      *
-     * @param metadata
-     * @return
+     * @param metadata  document to check
+     * @return  true if {@value JIVE_CONTENT_ID} needs to be retrieved from remote, false if its already set.
      */
     protected static boolean needsContentId(Config.DocumentMetadata metadata){
         if(metadata.remoteUri().isPresent()){
@@ -317,13 +304,13 @@ public class JiveRemote extends RestRemote implements Remote{
      * The uri a human uses to access a document ({@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri})
      * is not the uri we need to make rest requests. There is an sort of identifier in this uri, but we have to extract it
      * and then run a search for it to get the {@value JIVE_CONTENT_ID} which we can use to modify the document.
-     * <p>
+     *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#getContents(List%3CString%3E,%20String,%20int,%20int,%20String,%20boolean,%20boolean)">Jive REST API - Get Contents</a>
      * @see <a href="https://community.jivesoftware.com/docs/DOC-153931">Finding the Content ID and Place ID using Jive v3 API</a>
      *
      *
-     * @param metadata
-     * @throws IOException
+     * @param metadata  metadata to find on remote
+     * @throws IOException  there was a problem with the request
      */
     public void findDocument(Context context, Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.remoteUri().get().toString()));
@@ -359,8 +346,8 @@ public class JiveRemote extends RestRemote implements Remote{
     /**
      * Determine if an indexed document has a parent ({@value JIVE_PARENT_URI} but needs to have the parent place id looked up.
      *
-     * @param metadata
-     * @return
+     * @param metadata  document to check for parent information
+     * @return  true if document has a parent but no {@value JIVE_PARENT_API_URI}, false if no parent or {@value JIVE_PARENT_API_URI} already set
      */
     public static boolean needsParentPlaceUri(Config.DocumentMetadata metadata){
         return metadata.extraProps().isPresent() &&
@@ -371,13 +358,13 @@ public class JiveRemote extends RestRemote implements Remote{
     /**
      * Just like with documents, the parent uri a human interacts with is not the same as the one we need for rest requests.
      * This gives us the {@value JIVE_PARENT_API_URI} to use in the post body of create and update requests.
-     * <p>
+     *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/PlaceService.html#getPlaces(List%3CString%3E,%20String,%20int,%20int,%20String)">Jive REST API - Get Places</a>
      * @see <a href="https://community.jivesoftware.com/docs/DOC-153931">Finding the Content ID and Place ID using Jive v3 API</a>
      *
-     * @param context
-     * @param metadata
-     * @throws IOException
+     * @param context  current Alexandria context
+     * @param metadata  document that needs parent details
+     * @throws IOException  there was a problem with the request
      */
     public void findParentPlace(Context context, Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Jive parent place detected, attempting to retrieve from remote."));
@@ -414,8 +401,8 @@ public class JiveRemote extends RestRemote implements Remote{
     /**
      * Convenience method for adding username and password to request builder.
      *
-     * @param builder
-     * @return
+     * @param builder  request to add credentials to
+     * @return  the builder passed to it with credentials added
      */
     public Request.Builder authenticated(Request.Builder builder) {
         builder.addHeader("Authorization", Credentials.basic(config.username().get(), config.password().get()));
@@ -425,9 +412,9 @@ public class JiveRemote extends RestRemote implements Remote{
     /**
      * Update metadata from the {@link PagedJiveContent} from a {@link #findDocument(Context, Config.DocumentMetadata)} request.
      *
-     * @param metadata
-     * @param content
-     * @return
+     * @param metadata  document to update with request content
+     * @param content  parsed content from the request
+     * @return  the updated document metadata passed to it
      */
     protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJiveContent content) {
         if(content != null && content.list != null && content.list.size() > 0){
@@ -439,9 +426,9 @@ public class JiveRemote extends RestRemote implements Remote{
 
     /**
      * Update metadata from the {@link JiveContent} from a create, update or find request
-     * @param metadata
-     * @param content
-     * @return
+     * @param metadata  document to update with request content
+     * @param content  parsed content from the request
+     * @return  the updated document metadata passed to it
      */
     protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JiveContent content) {
         metadata.createdOn(Optional.ofNullable(content.published));
@@ -474,9 +461,9 @@ public class JiveRemote extends RestRemote implements Remote{
     /**
      * Update metadata from the {@link PagedJivePlace} from a {@link #findParentPlace(Context, Config.DocumentMetadata)} request.
      *
-     * @param metadata
-     * @param places
-     * @return
+     * @param metadata  document to update with request content
+     * @param places  parsed content from the request
+     * @return  the updated document metadata passed to it
      */
     protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJivePlace places) {
         if(places != null && places.list != null && places.list.size() > 0){
@@ -489,9 +476,9 @@ public class JiveRemote extends RestRemote implements Remote{
     /**
      * Update metadata from the {@link JivePlace}
      *
-     * @param metadata
-     * @param place
-     * @return
+     * @param metadata  document to update with request content
+     * @param place  parsed content from the request
+     * @return  the updated document metadata passed to it
      */
     protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JivePlace place) {
         if(StringUtils.isNotBlank(place.placeID)){
@@ -512,8 +499,8 @@ public class JiveRemote extends RestRemote implements Remote{
      * Extract the pseudo-identifier used in the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
      * for use in a search request to retrieve the actual {@value JIVE_CONTENT_ID}.
      *
-     * @param remoteDoc
-     * @return
+     * @param remoteDoc  {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
+     * @return  jive object id extracted from the uri
      */
     protected static String jiveObjectId(URI remoteDoc){
         Pattern p = Pattern.compile(".*DOC-(\\d+)-*.*");
@@ -529,8 +516,8 @@ public class JiveRemote extends RestRemote implements Remote{
      * Extract the parent place name from the user defined {@value JIVE_PARENT_URI} for use in a search request for the
      * actual {@value JIVE_PARENT_API_URI}.
      *
-     * @param parentPlaceUrl
-     * @return
+     * @param parentPlaceUrl  {@value #JIVE_PARENT_URI} value from {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
+     * @return  the extracted parent place name
      */
     protected static String jiveParentPlaceName(String parentPlaceUrl){
         Pattern p = Pattern.compile(".*/(.*)");
@@ -547,8 +534,8 @@ public class JiveRemote extends RestRemote implements Remote{
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/DocumentEntity.html">Jive REST API - Document Entity</a>
      *
-     * @param metadata
-     * @return
+     * @param metadata  document metadata to generate post body from
+     * @return  String representation of the json structure for the request
      */
     protected static String documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
         JiveContent jiveDocument = new JiveContent();
