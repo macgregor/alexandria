@@ -15,6 +15,7 @@ import java.util.Collections;
  * The basic usage is load the state, perform operation: index, convert, sync; generally in that order,
  * save state if necessary, though the operations should handle that for you. An extra save wont hurt.
  *
+ * <pre>
  * {@code
  * Alexandria alexandria = Alexandria.loadContext(".alexandria");
  * alexandria.index()
@@ -22,6 +23,7 @@ import java.util.Collections;
  *      .syncWithRemote();
  * alexandria.save();
  * }
+ * </pre>
  *
  * @see Context
  * @see Config

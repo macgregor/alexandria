@@ -127,6 +127,7 @@ This is where most of the complexity is.
 * [crazy long error about eclipse loggers](https://stackoverflow.com/questions/47920305/can-not-set-org-eclipse-aether-spi-log-logger-with-custom-maven-plugin) when trying to install alexandria-maven-plugin. Upgrade maven to at least 3.5.2
 
 ## Links
+* [Alexandria Javadocs](https://macgregor.github.io/alexandria/)
 * [Travis Build](https://travis-ci.com/macgregor/alexandria)
 * [Code Climate](https://codeclimate.com/github/macgregor/alexandria)
 * [Coveralls](https://coveralls.io/github/macgregor/alexandria)

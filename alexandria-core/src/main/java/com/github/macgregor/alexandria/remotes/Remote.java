@@ -41,6 +41,7 @@ public interface Remote {
      *  <li>any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
      * </ul>
      *
+     * @param context  current Alexandria context
      * @param metadata  document to create
      * @throws IOException  Errors with local files or any requests made to the remote.
      */
@@ -57,6 +58,7 @@ public interface Remote {
      *  <li>any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
      * </ul>
      *
+     * @param context  current Alexandria context
      * @param metadata  document to update
      * @throws IOException  Errors with local files or any requests made to the remote.
      */
@@ -71,6 +73,7 @@ public interface Remote {
      *  <li>any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
      * </ul>
      *
+     * @param context  current Alexandria context
      * @param metadata  document to delete
      * @throws IOException  Errors with local files or any requests made to the remote.
      */
