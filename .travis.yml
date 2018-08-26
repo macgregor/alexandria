@@ -28,6 +28,8 @@ before_install:
   - export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
   - git config --global user.email "builds@travis-ci.com"
   - git config --global user.name "Travis CI"
+  - git clone --branch=gh-pages https://${GH_TOKEN}@github.com/macgregor/alexandria.git $TRAVIS_BUILD_DIR/gh-pages
+  - git clone --branch=master https://${GH_TOKEN}@github.com/macgregor/alexandria.git $TRAVIS_BUILD_DIR/master
 
 stages:
   - build
@@ -73,8 +75,7 @@ jobs:
       script: skip
       before_deploy:
       - >
-        git clone --branch=gh-pages https://${GH_TOKEN}@github.com/macgregor/alexandria.git gh-pages
-        cd gh-pages
+        cd $TRAVIS_BUILD_DIR/gh-pages
         git rm -rf *
         cp -Rf $TRAVIS_BUILD_DIR/alexandria-core/target/apidocs/* ./
         git add -f .
@@ -87,8 +88,7 @@ jobs:
       name: "Setting development version"
       install:
       - >
-        mkdir master && cd master
-        git clone --branch=master https://${GH_TOKEN}@github.com/macgregor/alexandria.git master
+        cd $TRAVIS_BUILD_DIR/master
         bash $TRAVIS_BUILD_DIR/ci/prepare-development
       script: skip
       deploy:
