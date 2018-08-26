@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Static configuration of the Jackson parser
- * <p>
+ *
  * Used by {@link com.github.macgregor.alexandria.remotes.Remote} implementations for parsing json requests and responses
  * as well as the saving/loading of the Alexandria {@link Context}.
  */
@@ -29,7 +29,7 @@ public class Jackson {
     /**
      * Retrieve the yaml mapper, creating it if it doesnt exist.
      *
-     * @return
+     * @return  mapper configured for yaml
      */
     public static ObjectMapper yamlMapper(){
         if(yamlMapper == null){
@@ -41,7 +41,7 @@ public class Jackson {
     /**
      * Retrieve the json mapper, creating it if it doesnt exist.
      *
-     * @return
+     * @return  mapper configured for json
      */
     public static ObjectMapper jsonMapper(){
         if(jsonMapper == null){
@@ -111,8 +111,8 @@ public class Jackson {
     /**
      * Configure Jakson mapper with commong configurations; ignoring unknown properties, enable jdk8 feature, etc.
      *
-     * @param mapper
-     * @return
+     * @param mapper  mapper to be configured
+     * @return  mapper with configuration added
      */
     protected static ObjectMapper configureMapper(ObjectMapper mapper){
         Module jdk8Module = new Jdk8Module();
@@ -130,7 +130,7 @@ public class Jackson {
      * Configure Java 8 time module to allow use of newer, better date time features. Also add the {@link ZonedDateTime}
      * (de)serializers to the module.
      *
-     * @return
+     * @return  java time module configured to use zoned date times
      */
     protected static JavaTimeModule java8TimeModule(){
         ZonedDateTimeDeserializer dateTimeDeserializer = new ZonedDateTimeDeserializer(DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
@@ -145,7 +145,7 @@ public class Jackson {
     /**
      * Configure a new module for converting {@link Path} objects to/from JSON.
      *
-     * @return
+     * @return  configured module that converts paths
      */
     protected static SimpleModule pathModule(){
         SimpleModule module = new SimpleModule();

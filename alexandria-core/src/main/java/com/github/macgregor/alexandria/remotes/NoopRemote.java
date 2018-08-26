@@ -19,8 +19,6 @@ public class NoopRemote implements Remote {
 
     /**
      * {@inheritDoc}
-     *
-     * @param config
      */
     @Override
     public void configure(Config.RemoteConfig config) {
@@ -30,10 +28,6 @@ public class NoopRemote implements Remote {
 
     /**
      * {@inheritDoc}
-     *
-     * @param context
-     * @param metadata
-     * @throws IOException
      */
     @Override
     public void create(Context context, Config.DocumentMetadata metadata) throws IOException {
@@ -43,10 +37,6 @@ public class NoopRemote implements Remote {
 
     /**
      * {@inheritDoc}
-     *
-     * @param context
-     * @param metadata
-     * @throws IOException
      */
     @Override
     public void update(Context context, Config.DocumentMetadata metadata) throws IOException {
@@ -56,10 +46,6 @@ public class NoopRemote implements Remote {
 
     /**
      * {@inheritDoc}
-     *
-     * @param context
-     * @param metadata
-     * @throws IOException
      */
     @Override
     public void delete(Context context, Config.DocumentMetadata metadata) throws IOException {

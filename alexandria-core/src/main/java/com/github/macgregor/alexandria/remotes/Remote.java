@@ -16,15 +16,15 @@ public interface Remote {
     /**
      * Called after instantiating the Remote to validate the configuration has all information required to use the remote.
      *
-     * @throws IllegalStateException The remote configuration is invalid.
+     * @throws IllegalStateException  The remote configuration is invalid.
      */
     default void validateRemoteConfig() throws IllegalStateException{}
 
     /**
      * Called for each document to validate that all metadata required by the remote exists.
      *
-     * @param metadata
-     * @throws IllegalStateException The document metadata is invalid.
+     * @param metadata  document to validate
+     * @throws IllegalStateException  The document metadata is invalid.
      */
     default void validateDocumentMetadata(Config.DocumentMetadata metadata) throws IllegalStateException{}
 
@@ -41,8 +41,8 @@ public interface Remote {
      *  <li>any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
      * </ul>
      *
-     * @param metadata
-     * @throws IOException Errors with local files or any requests made to the remote.
+     * @param metadata  document to create
+     * @throws IOException  Errors with local files or any requests made to the remote.
      */
     void create(Context context, Config.DocumentMetadata metadata) throws IOException;
 
@@ -57,8 +57,8 @@ public interface Remote {
      *  <li>any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
      * </ul>
      *
-     * @param metadata
-     * @throws IOException Errors with local files or any requests made to the remote.
+     * @param metadata  document to update
+     * @throws IOException  Errors with local files or any requests made to the remote.
      */
     void update(Context context, Config.DocumentMetadata metadata) throws IOException;
 
@@ -71,8 +71,8 @@ public interface Remote {
      *  <li>any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
      * </ul>
      *
-     * @param metadata
-     * @throws IOException Errors with local files or any requests made to the remote.
+     * @param metadata  document to delete
+     * @throws IOException  Errors with local files or any requests made to the remote.
      */
     void delete(Context context, Config.DocumentMetadata metadata) throws IOException;
 }

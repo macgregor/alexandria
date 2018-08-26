@@ -35,7 +35,7 @@ public class HttpException extends AlexandriaException {
     }
 
     /**
-     * Builder class to help create {@link HttpException) in a more fluent way.
+     * Builder class to help create {@link HttpException} in a more fluent way.
      */
     public static class Builder {
         private Optional<Config.DocumentMetadata> metadata = Optional.empty();
@@ -45,10 +45,8 @@ public class HttpException extends AlexandriaException {
         private Optional<Throwable> cause = Optional.empty();
 
         /**
-         * Message to include with the exception.
-         *
-         * @param message
-         * @return
+         * @param message  Message to include with the exception.
+         * @return  builder
          */
         public Builder withMessage(String message){
             this.message = Optional.ofNullable(message);
@@ -56,10 +54,8 @@ public class HttpException extends AlexandriaException {
         }
 
         /**
-         * Exception that triggered this.
-         *
-         * @param cause
-         * @return
+         * @param cause  Exception that triggered this.
+         * @return  builder
          */
         public Builder causedBy(Throwable cause){
             this.cause = Optional.ofNullable(cause);
@@ -67,10 +63,8 @@ public class HttpException extends AlexandriaException {
         }
 
         /**
-         * The {@link Request} object at the time the error occurred.
-         *
-         * @param request
-         * @return
+         * @param request  The {@link Request} object at the time the error occurred.
+         * @return  builder
          */
         public Builder requestContext(Request request){
             this.request = Optional.ofNullable(request);
@@ -78,10 +72,8 @@ public class HttpException extends AlexandriaException {
         }
 
         /**
-         * The {@link Response} object at the time the error occurred.
-         *
-         * @param response
-         * @return
+         * @param response  The {@link Response} object at the time the error occurred.
+         * @return  builder
          */
         public Builder responseContext(Response response){
             this.response = Optional.ofNullable(response);
@@ -89,10 +81,8 @@ public class HttpException extends AlexandriaException {
         }
 
         /**
-         * The {@link com.github.macgregor.alexandria.Config.DocumentMetadata} being processed when the error occurred.
-         *
-         * @param metadata
-         * @return
+         * @param metadata  The {@link com.github.macgregor.alexandria.Config.DocumentMetadata} being processed when the error occurred.
+         * @return  builder
          */
         public Builder metadataContext(Config.DocumentMetadata metadata){
             this.metadata = Optional.ofNullable(metadata);
@@ -102,7 +92,7 @@ public class HttpException extends AlexandriaException {
         /**
          * Create an {@link HttpException} from the build configuration.
          *
-         * @return
+         * @return  new exception that can be thrown
          */
         public HttpException build(){
             HttpException exception = new HttpException();

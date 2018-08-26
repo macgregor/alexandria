@@ -14,13 +14,12 @@ import java.util.stream.Collectors;
 
 /**
  * Process files into metadata for tracking.
- * <p>
+ *
  * Currently has two main purposes:
- * <ul>
- *  <li>identifying un-indexed files and adding them to {@link Context#config}.
- *  <li>identifying missing files to mark documents for deletion later when syncing with the remote.
- * </ul>
- * <p>
+ * <ol>
+ *  <li>identifying un-indexed files and adding them to {@link Context#config}.</li>
+ *  <li>identifying missing files to mark documents for deletion later when syncing with the remote.</li>
+ * </ol>
  */
 @Slf4j
 @ToString
@@ -41,10 +40,10 @@ public class AlexandriaIndex {
 
     /**
      * Find files on the {@link Context#searchPath} that are not already indexed.
-     * <p>
+     *
      * Newly indexed files will only have their {@link com.github.macgregor.alexandria.Config.DocumentMetadata#sourcePath}
      * and {@link com.github.macgregor.alexandria.Config.DocumentMetadata#title} set.
-     * <p>
+     *
      * The index will be saved after all matches are processed before throwing any exceptions that may have occurred
      * during batch processing.
      *
@@ -73,12 +72,12 @@ public class AlexandriaIndex {
 
     /**
      * Find files in the {@link Config#metadata} index that are not found on the {@link Context#searchPath}.
-     * <p>
+     *
      * A field is set in the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps} called "delete"
      * which the sync process is aware of. Once deleted on the remote, this extra property is removed and the
      * {@link com.github.macgregor.alexandria.Config.DocumentMetadata#deletedOn} field is set. The metadata itself will
      * remain unless manually deleted.
-     * <p>
+     *
      * This means you should be careful deleting files you want to remain on the remote. In this situation you can
      * manually set the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#deletedOn} field or simply remove
      * both the file and metadata (if you just remove metadata it will reappear the next time indexing runs).
@@ -112,7 +111,7 @@ public class AlexandriaIndex {
 
     /**
      * Find all files on {@link Context#searchPath} that match the configured include and exclude patterns.
-     * <p>
+     *
      * @see com.github.macgregor.alexandria.Resources.PathFinder
      *
      * @param context  Alexandria context containing information necessary to match files
@@ -152,7 +151,7 @@ public class AlexandriaIndex {
 
     /**
      * Compare to sets of paths to determine which have not been indexed.
-     * <p>
+     *
      * Both sets of Paths should have the same bases or they wont equate properly.
      *
      * @param documentsMatched  Collection of matched documents.
@@ -167,7 +166,7 @@ public class AlexandriaIndex {
 
     /**
      * Compare to sets of paths to determine which are missing and need to be deleted.
-     * <p>
+     *
      * Both sets of Paths should have the same bases or they wont equate properly.
      *
      * @param documentsMatched  Collection of matched documents.

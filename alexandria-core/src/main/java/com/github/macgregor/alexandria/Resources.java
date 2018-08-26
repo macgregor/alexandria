@@ -15,14 +15,14 @@ import java.util.stream.Collectors;
 
 /**
  * Utility class for working with file system resources.
- * <p>
+ *
  * Find files/paths/directories that match patterns, saving and loading files, etc.
  */
 public class Resources {
 
     /**
      * Find files along a set of directories that based on include/exclude patterns.
-     * <p>
+     *
      * Makes use of {@link FileUtils#listFiles(File, IOFileFilter, IOFileFilter)} to do most of the work.
      */
     public static class PathFinder{
@@ -41,11 +41,11 @@ public class Resources {
 
         /**
          * Set starting directory to a single directory, converting it to a {@link Path}
-         * <p>
+         *
          * Path will be validated to be a directory that exists
          *
-         * @param dir
-         * @return
+         * @param dir  dir to use
+         * @return  builder
          * @throws IOException  The path doesnt exist or is not a directory.
          */
         public PathFinder startingIn(String dir) throws IOException {
@@ -54,11 +54,11 @@ public class Resources {
 
         /**
          * Set the starting directories, converting the provided string paths into {@link Path} objects.
-         * <p>
+         *
          * Each path will be validated to be a directory that exists
          *
-         * @param dirs
-         * @return
+         * @param dirs  dirs to use
+         * @return  builder
          * @throws IOException Any path doesnt exist or is not a directory.
          */
         public PathFinder startingIn(Collection<String> dirs) throws IOException {
@@ -72,11 +72,11 @@ public class Resources {
 
         /**
          * Sets the starting directory to a single directory.
-         * <p>
+         *
          * Path will be validated to be a directory that exists
          *
-         * @param dir
-         * @return
+         * @param dir  dir to use
+         * @return  builder
          * @throws IOException  The path doesnt exist or is not a directory.
          */
         public PathFinder startingInPath(Path dir) throws IOException {
@@ -85,12 +85,12 @@ public class Resources {
 
         /**
          * Set the starting directories
-         * <p>
+         *
          * Each path will be validated to be a directory that exists
          *
-         * @param dirs
-         * @return
-         * @throws IOException Any path doesnt exist or is not a directory.
+         * @param dirs  dirs to use
+         * @return  builder
+         * @throws IOException  Any path doesnt exist or is not a directory.
          */
         public PathFinder startingInPaths(Collection<Path> dirs) throws IOException{
             this.startingDirs = new ArrayList<>();
@@ -108,11 +108,11 @@ public class Resources {
 
         /**
          * Wild card include pattern.
-         * <p>
-         * @see {@link WildcardFileFilter}
+         *
+         * @see WildcardFileFilter
          *
          * @param include  Wildcard filename patterns, e.g. *.md
-         * @return
+         * @return  builder
          */
         public PathFinder including(List<String> include){
             this.include = include;
@@ -121,11 +121,11 @@ public class Resources {
 
         /**
          * Wild card include pattern.
-         * <p>
-         * @see {@link WildcardFileFilter}
          *
-         * @param include Wildcard filename pattern, e.g. *.md
-         * @return
+         * @see WildcardFileFilter
+         *
+         * @param include  Wildcard filename pattern, e.g. *.md
+         * @return  builder
          */
         public PathFinder including(String include){
             this.include = Collections.singletonList(include);
@@ -134,11 +134,11 @@ public class Resources {
 
         /**
          * Wild card include patterns.
-         * <p>
-         * @see {@link WildcardFileFilter}
          *
-         * @param exclude Wildcard filename patterns, e.g. *.md
-         * @return
+         * @see WildcardFileFilter
+         *
+         * @param exclude  Wildcard filename patterns, e.g. *.md
+         * @return  builder
          */
         public PathFinder excluding(List<String> exclude){
             this.exclude = exclude;
@@ -147,11 +147,11 @@ public class Resources {
 
         /**
          * Wild card include patterns
-         * <p>
-         * @see {@link WildcardFileFilter}
          *
-         * @param exclude Wildcard filename pattern, e.g. *.md
-         * @return
+         * @see WildcardFileFilter
+         *
+         * @param exclude  Wildcard filename pattern, e.g. *.md
+         * @return  builder
          */
         public PathFinder excluding(String exclude){
             this.exclude = Collections.singletonList(exclude);
@@ -161,8 +161,8 @@ public class Resources {
         /**
          * When set, recursively walk directories when finding files. Default:  true.
          *
-         * @param isRecursive
-         * @return
+         * @param isRecursive  whether to use recursion or not
+         * @return  builder
          */
         public PathFinder recursive(boolean isRecursive){
             this.recursive = isRecursive;
@@ -171,10 +171,10 @@ public class Resources {
 
         /**
          * Find all files using the builder properties.
-         * <p>
+         *
          * Files will only be included if they match any of the include patterns and none of the exclude filters.
          *
-         * @return List of matching {@link File} or an empty list.
+         * @return  List of matching {@link File} or an empty list.
          */
         public Collection<File> files(){
             IOFileFilter dirFilter = recursive ? TrueFileFilter.INSTANCE : null;
@@ -213,7 +213,7 @@ public class Resources {
 
     /**
      * Save the string content to a file at the provided file path, optionally overwriting the file if it exists.
-     * <p>
+     *
      * If the file path exists and is a directory or overwrite is false, an exception will be thrown, otherwise the file
      * will be deleted before being recreated with the new content.
      *
@@ -237,9 +237,9 @@ public class Resources {
     /**
      * Load the contents of the file located at the file path. See {@link FileUtils#readFileToString(File, String)}
      *
-     * @param filePath
-     * @return File contents as a string.
-     * @throws IOException The file doesnt exist or cant be read.
+     * @param filePath  file path to load
+     * @return File  contents as a string.
+     * @throws IOException  The file doesnt exist or cant be read.
      */
     public static String load(String filePath) throws IOException {
         return FileUtils.readFileToString(Paths.get(filePath).toFile(), (String) null);
@@ -248,8 +248,8 @@ public class Resources {
     /**
      * Convert the path represented as a string into a {@link Path}.
      *
-     * @param rawPath
-     * @return
+     * @param rawPath  string path to convert
+     * @return  Path representation of the string
      */
     public static Path path(String rawPath){
         try {
@@ -262,10 +262,10 @@ public class Resources {
     /**
      * Convert the path represented as a string into a {@link Path}, optionally failing if the path doesnt exist.
      *
-     * @param rawPath
-     * @param failOnNonExistantPath Whether or not to throw an exception if the file deosnt exist.
-     * @return
-     * @throws FileNotFoundException The path doesnt exist and failOnNonExistantPath is true.
+     * @param rawPath  string path to convert
+     * @param failOnNonExistantPath  Whether or not to throw an exception if the file deosnt exist.
+     * @return  Path representation of the string
+     * @throws FileNotFoundException  The path doesnt exist and failOnNonExistantPath is true.
      */
     public static Path path(String rawPath, boolean failOnNonExistantPath) throws FileNotFoundException {
         Path p = Paths.get(rawPath);
@@ -278,9 +278,9 @@ public class Resources {
     /**
      * Make a collection of {@link Path}s relative the to provided base. See {@link Path#relativize(Path)}
      *
-     * @param base Base path other paths should be relative to
-     * @param paths
-     * @return
+     * @param base  Base path other paths should be relative to
+     * @param paths  paths to make relative
+     * @return  new collection of relative paths
      */
     public static Collection<Path> relativeTo(Path base, Collection<Path> paths){
         return paths.stream()

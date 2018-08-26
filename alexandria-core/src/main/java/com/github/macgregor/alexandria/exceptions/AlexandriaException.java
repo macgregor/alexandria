@@ -37,7 +37,7 @@ public class AlexandriaException extends IOException {
     }
 
     /**
-     * Builder class to help create {@link AlexandriaException) in a more fluent way.
+     * Builder class to help create {@link AlexandriaException} in a more fluent way.
      */
     public static class Builder {
         private Optional<Config.DocumentMetadata> metadata = Optional.empty();
@@ -45,10 +45,8 @@ public class AlexandriaException extends IOException {
         private Optional<Throwable> cause = Optional.empty();
 
         /**
-         * Message to include with the exception.
-         *
-         * @param message
-         * @return
+         * @param message  Message to include with the exception.
+         * @return  builder
          */
         public Builder withMessage(String message){
             this.message = Optional.ofNullable(message);
@@ -56,10 +54,8 @@ public class AlexandriaException extends IOException {
         }
 
         /**
-         * Exception that triggered this.
-         *
-         * @param cause
-         * @return
+         * @param cause  Exception that triggered this
+         * @return  builder
          */
         public Builder causedBy(Throwable cause){
             this.cause = Optional.ofNullable(cause);
@@ -67,10 +63,8 @@ public class AlexandriaException extends IOException {
         }
 
         /**
-         * The {@link com.github.macgregor.alexandria.Config.DocumentMetadata} being processed when the error occurred.
-         *
-         * @param metadata
-         * @return
+         * @param metadata  The {@link com.github.macgregor.alexandria.Config.DocumentMetadata} being processed when the error occurred.
+         * @return  builder
          */
         public Builder metadataContext(Config.DocumentMetadata metadata){
             this.metadata = Optional.ofNullable(metadata);
@@ -80,7 +74,7 @@ public class AlexandriaException extends IOException {
         /**
          * Create an {@link AlexandriaException} from the build configuration.
          *
-         * @return
+         * @return  new exception that can be thrown
          */
         public AlexandriaException build(){
             AlexandriaException exception = new AlexandriaException();
