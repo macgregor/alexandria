@@ -11,7 +11,6 @@ env:
 branches:
   only:
   - master
-  - gh-pages
   - "/^\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 cache:
   directories:
@@ -33,59 +32,60 @@ stages:
     if: tag IS present
 
 jobs:
-  - stage: build
-    name: "Build Project"
-    install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-    script: skip
-  - stage: test
-    name: "Testing and Code Analysis"
-    install: skip
-    script: mvn verify coveralls:report -Dmaven.javadoc.skip=true -B
-  - stage: deploy
-    name: "Deploy to Maven Central"
-    install: skip
-    script: skip
-    deploy:
-    - provider: script
-      script: mvn deploy --settings ci/.maven.xml -Dmaven.test.skip=true
-  - stage: deploy
-    name: "Deploy to Github"
-    install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-    script: skip
-    deploy:
-    - provider: releases
-      name: "$project_version"
-      api-key: $GH_TOKEN
-      file:
-      - alexandria-maven-plugin/target/alexandria-maven-plugin-$project_version.jar
-      - alexandria-core/target/alexandria-core-$project_version.jar
-      - alexandria-cli/target/alexandria-cli-$project_version.jar
-      skip_cleanup: true
-  - stage: deploy
-    name: "Deploy Javadocs"
-    install: mvn install -Dmaven.test.skip=true
-    script: skip
-    before_deploy:
-    - >
-      git clone --branch=gh-pages https://${GH_TOKEN}@github.com/macgregor/alexandria.git gh-pages
-      cd gh-pages
-      git rm -rf *
-      cp -Rf $TRAVIS_BUILD_DIR/alexandria-core/target/apidocs/* ./
-      git add -f .
-      git commit -m "Releasing $project_version javadocs [ci skip]"
-    deploy:
-    - provider: script
-      script: git push -f origin gh-pages
-      skip_cleanup: true
-  - stage: version
-    name: "Setting development version"
-    install:
-    - >
-      git clone --branch=master https://${GH_TOKEN}@github.com/macgregor/alexandria.git master
-      cd master
-      bash $TRAVIS_BUILD_DIR/ci/prepare-development
-    script: skip
-    deploy:
-    - provider: script
-      script: git push origin master
-      skip_cleanup: true
+  include:
+    - stage: build
+      name: "Build Project"
+      install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+      script: skip
+    - stage: test
+      name: "Testing and Code Analysis"
+      install: skip
+      script: mvn verify coveralls:report -Dmaven.javadoc.skip=true -B
+    - stage: deploy
+      name: "Deploy to Maven Central"
+      install: skip
+      script: skip
+      deploy:
+      - provider: script
+        script: mvn deploy --settings ci/.maven.xml -Dmaven.test.skip=true
+    - stage: deploy
+      name: "Deploy to Github"
+      install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+      script: skip
+      deploy:
+      - provider: releases
+        name: "$project_version"
+        api-key: $GH_TOKEN
+        file:
+        - alexandria-maven-plugin/target/alexandria-maven-plugin-$project_version.jar
+        - alexandria-core/target/alexandria-core-$project_version.jar
+        - alexandria-cli/target/alexandria-cli-$project_version.jar
+        skip_cleanup: true
+    - stage: deploy
+      name: "Deploy Javadocs"
+      install: mvn install -Dmaven.test.skip=true
+      script: skip
+      before_deploy:
+      - >
+        git clone --branch=gh-pages https://${GH_TOKEN}@github.com/macgregor/alexandria.git gh-pages
+        cd gh-pages
+        git rm -rf *
+        cp -Rf $TRAVIS_BUILD_DIR/alexandria-core/target/apidocs/* ./
+        git add -f .
+        git commit -m "Releasing $project_version javadocs [ci skip]"
+      deploy:
+      - provider: script
+        script: git push -f origin gh-pages
+        skip_cleanup: true
+    - stage: version
+      name: "Setting development version"
+      install:
+      - >
+        git clone --branch=master https://${GH_TOKEN}@github.com/macgregor/alexandria.git master
+        cd master
+        bash $TRAVIS_BUILD_DIR/ci/prepare-development
+      script: skip
+      deploy:
+      - provider: script
+        script: git push origin master
+        skip_cleanup: true
