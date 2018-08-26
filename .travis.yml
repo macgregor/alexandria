@@ -56,6 +56,10 @@ jobs:
       deploy:
       - provider: script
         script: mvn deploy --settings ci/.maven.xml -Dmaven.test.skip=true
+        branches:
+          only:
+          - master
+          - /^\d+\.\d+\.\d+?$/
     - stage: deploy
       name: "Deploy to Github"
       install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
@@ -69,6 +73,10 @@ jobs:
         - alexandria-core/target/alexandria-core-$project_version.jar
         - alexandria-cli/target/alexandria-cli-$project_version.jar
         skip_cleanup: true
+        branches:
+          only:
+          - master
+          - /^\d+\.\d+\.\d+?$/
     - stage: deploy
       name: "Deploy Javadocs"
       install: mvn install -Dmaven.test.skip=true
@@ -84,6 +92,10 @@ jobs:
       - provider: script
         script: git push -f origin gh-pages
         skip_cleanup: true
+        branches:
+          only:
+          - master
+          - /^\d+\.\d+\.\d+?$/
     - stage: version
       name: "Setting development version"
       install:
@@ -95,3 +107,7 @@ jobs:
       - provider: script
         script: git push origin master
         skip_cleanup: true
+        branches:
+          only:
+          - master
+          - /^\d+\.\d+\.\d+?$/
