@@ -12,6 +12,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+/**
+ * Converts indexed documents from markdown to html.
+ * <p>
+ * Most of the work is dome by <a href="https://github.com/vsch/flexmark-java">Flexmark</a>, with most
+ * of our work managing paths, files and errors.
+ * <p>
+ * If a remote supports native markdown, the documents will not be converted and this phase becomes essentially a noop.
+ * <p>
+ * @see Markdown
+ */
 @Slf4j
 @ToString
 @Getter @Setter @Accessors(fluent = true)
@@ -21,11 +31,15 @@ public class AlexandriaConvert {
     @NonNull private Context context;
 
     /**
-     * Convert HTML files from the files in the metadata index. Converted files will be saved to the configured {@link Context#outputPath}, if set.
-     * Otherwise the files will be converted in place in the same directory as the markdown file being converted. Any exceptions
-     * thrown will be collected and thrown after processing all documents.
+     * Convert all files in the metadata index into html.
+     * <p>
+     * Converted files will be saved to the configured {@link Context#outputPath}, if set. Otherwise the files will be
+     * converted in place in the same directory as the markdown file being converted. Files that have been deleted or
+     * marked for deletion will be ignored.
+     * <p>
+     * @see BatchProcess
      *
-     * @throws AlexandriaException Exception wrapping all exceptions thrown during document processing.
+     * @throws AlexandriaException  Exception wrapping all exceptions thrown during document processing.
      */
     public void convert() throws AlexandriaException {
         log.debug("Converting files to html.");
@@ -37,7 +51,7 @@ public class AlexandriaConvert {
 
         BatchProcess<Config.DocumentMetadata> batchProcess = new BatchProcess<>(context);
         batchProcess.execute(context -> context.config().metadata().get(), (context, metadata) -> {
-            log.debug(String.format("Converting %s.", metadata.sourcePath().toFile().getName()));
+            log.debug(String.format("Converting %s.", metadata.sourceFileName()));
             if(metadata.hasExtraProperty("delete") || metadata.deletedOn().isPresent()){
                 return;
             }
@@ -50,6 +64,13 @@ public class AlexandriaConvert {
         });
     }
 
+    /**
+     * Determine what the output path for converted files should be.
+     *
+     * @param context  Alexandria context containing information necessary to calculate the path
+     * @param metadata  the particular document being processed
+     * @return  absolute path to the converted html file
+     */
     protected static Path convertedPath(Context context, Config.DocumentMetadata metadata){
         Path sourceDir = context.resolveRelativePath(metadata.sourcePath()).getParent();
         String convertedDir = context.outputPath().orElse(sourceDir).toString();
@@ -57,6 +78,15 @@ public class AlexandriaConvert {
         return Paths.get(convertedDir, convertedFileName);
     }
 
+    /**
+     * Convert the document from markdown to html.
+     * <p>
+     * @see Markdown
+     *
+     * @param context  Alexandria context containing information necessary to calculate the path
+     * @param metadata  the particular document being processed
+     * @throws AlexandriaException  wrapper for any IOException thrown during conversion to make it integrate with {@link BatchProcess}
+     */
     protected static void convert(Context context, Config.DocumentMetadata metadata) throws AlexandriaException {
         Path convertedPath = convertedPath(context, metadata);
         Path sourcePath = context.resolveRelativePath(metadata.sourcePath());

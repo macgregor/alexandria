@@ -23,6 +23,11 @@ public class Markdown {
     private static HtmlRenderer renderer;
     public static MutableDataSet options;
 
+    /**
+     * Configure common Flexmark options to be used by both the {@link Parser} and {@link HtmlRenderer} instances.
+     *
+     * @return
+     */
     public static MutableDataSet options(){
         if(options == null){
             options = new MutableDataSet();
@@ -31,6 +36,11 @@ public class Markdown {
         return options;
     }
 
+    /**
+     * Retrieve the {@link Parser}, creating it if it doesnt exist
+     *
+     * @return
+     */
     public static Parser parser(){
         if(parser == null){
             parser = Parser.builder(options()).build();
@@ -38,6 +48,11 @@ public class Markdown {
         return parser;
     }
 
+    /**
+     * Retrieve the {@link HtmlRenderer}, creating it if it doesnt exist
+     *
+     * @return
+     */
     public  static HtmlRenderer renderer(){
         if(renderer == null){
             renderer = HtmlRenderer.builder(options()).build();
@@ -47,8 +62,12 @@ public class Markdown {
 
     /**
      * Convert a source file into html
-     * @param source
-     * @param converted
+     * <p>
+     * Source and converted paths dont have to be absolute, but it yields best results and to less confusing errors
+     * when they are absolute.
+     *
+     * @param source  Absolute path to the file to convert
+     * @param converted  Absolute path to output the converted html file to
      * @throws IOException
      */
     public static void toHtml(Path source, Path converted) throws IOException {

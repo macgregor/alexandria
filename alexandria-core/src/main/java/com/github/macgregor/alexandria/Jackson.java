@@ -17,12 +17,20 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Jackson parser configuration
+ * Static configuration of the Jackson parser
+ * <p>
+ * Used by {@link com.github.macgregor.alexandria.remotes.Remote} implementations for parsing json requests and responses
+ * as well as the saving/loading of the Alexandria {@link Context}.
  */
 public class Jackson {
     private static ObjectMapper yamlMapper;
     private static ObjectMapper jsonMapper;
 
+    /**
+     * Retrieve the yaml mapper, creating it if it doesnt exist.
+     *
+     * @return
+     */
     public static ObjectMapper yamlMapper(){
         if(yamlMapper == null){
             yamlMapper = configureMapper(new ObjectMapper(new YAMLFactory()));
@@ -30,27 +38,16 @@ public class Jackson {
         return yamlMapper;
     }
 
-    public static ObjectReader yamlReader(){
-        return yamlMapper().reader();
-    }
-
-    public static ObjectWriter yamlWriter(){
-        return yamlMapper().writer();
-    }
-
+    /**
+     * Retrieve the json mapper, creating it if it doesnt exist.
+     *
+     * @return
+     */
     public static ObjectMapper jsonMapper(){
         if(jsonMapper == null){
             jsonMapper = configureMapper(new ObjectMapper());
         }
         return jsonMapper;
-    }
-
-    public static ObjectReader jsonReader(){
-        return jsonMapper().reader();
-    }
-
-    public static ObjectWriter jsonWriter(){
-        return jsonMapper().writer();
     }
 
     /**
@@ -89,6 +86,9 @@ public class Jackson {
         }
     }
 
+    /**
+     * Converts a string into a {@link Path}, which Jackson wasnt always handling gracefully.
+     */
     public static class PathDeserializer extends JsonDeserializer<Path> {
 
         @Override
@@ -97,6 +97,9 @@ public class Jackson {
         }
     }
 
+    /**
+     * Converts a {@link Path} into a string, which Jackson wasnt always handling gracefully.
+     */
     public static class PathSerializer extends JsonSerializer<Path> {
 
         @Override
@@ -126,6 +129,7 @@ public class Jackson {
     /**
      * Configure Java 8 time module to allow use of newer, better date time features. Also add the {@link ZonedDateTime}
      * (de)serializers to the module.
+     *
      * @return
      */
     protected static JavaTimeModule java8TimeModule(){
@@ -138,6 +142,11 @@ public class Jackson {
         return javaTimeModule;
     }
 
+    /**
+     * Configure a new module for converting {@link Path} objects to/from JSON.
+     *
+     * @return
+     */
     protected static SimpleModule pathModule(){
         SimpleModule module = new SimpleModule();
         module.addDeserializer(Path.class, new PathDeserializer());
