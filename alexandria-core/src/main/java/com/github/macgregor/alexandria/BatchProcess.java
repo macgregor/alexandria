@@ -26,6 +26,7 @@ import java.util.Optional;
  *
  * For example, {@link AlexandriaConvert} is implemented roughly as:
  *
+ * <pre>
  * {@code
  * BatchProcess<Config.DocumentMetadata> batchProcess = new BatchProcess<>(context);
  * batchProcess.execute(
@@ -40,6 +41,7 @@ import java.util.Optional;
  *          return BatchProcess.EXCEPTIONS_UNHANDLED; //delegate exception handling to {@link BatchProcess}
  *      });
  * }
+ * </pre>
  *
  * TODO:
  * Errors thrown during batch processing are currently a bit hard to read. It can be hard to tell exactly where an exception

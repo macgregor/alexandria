@@ -22,9 +22,9 @@ import java.util.regex.Pattern;
 
 /**
  * Implements the Jive rest api for create/update/delete of documents.
- * <p>
+ *
  * Does not currently support OAuth as I do not have access to a Jive instance that supports it.
- * <p>
+ * <pre>
  * {@code
  * ---
  * remote:
@@ -49,6 +49,7 @@ import java.util.regex.Pattern;
  *     jiveParentApiUri: "https://jive.com/api/core/v3/places/1448512"
  *     jiveContentId: "1448517"
  * }
+ * </pre>
  *
  * {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}:
  * <ul>
@@ -56,16 +57,16 @@ import java.util.regex.Pattern;
  *  Jive document with the place where it will live. This will not be used for the api calls as the api needs a different URI
  *  (of course). This is the link a human can easily find in their browser, we have to search for the place to get the details
  *  needed by the content api.
- *  @see #findParentPlace(Context, Config.DocumentMetadata)
+ *  See {@link #findParentPlace(Context, Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_CONTENT_ID} - the identifier Jive uses for a document, hard for the user to get themselves. We either
  *  set it when we create the document or look it up from {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}.
- *  @see #findDocument(Context, Config.DocumentMetadata)
+ *  See {@link #findDocument(Context, Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_PARENT_PLACE_ID} - the identifier Jive uses for a place. Set when we lookup the parent place from the
  *  user defined {@value #JIVE_PARENT_URI}.
- *  @see #findParentPlace(Context, Config.DocumentMetadata)
+ *  See {@link #findParentPlace(Context, Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_PARENT_API_URI} - this is the actual api uri for a parent place. Set when we lookup the parent place
  *  from the user defined {@value #JIVE_PARENT_URI}.
- *  @see #findParentPlace(Context, Config.DocumentMetadata)
+ *  See {@link #findParentPlace(Context, Config.DocumentMetadata)}</li>
  * </ul>
  *
  * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/index.html">Introduction to the Jive REST API</a>
@@ -112,9 +113,9 @@ public class JiveRemote extends RestRemote implements Remote{
      *
      * Requires:
      * <ul>
-     *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#baseUrl}
-     *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#username}
-     *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#password}
+     *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#baseUrl}</li>
+     *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#username}</li>
+     *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#password}</li>
      * </ul>
      *
      * @throws IllegalStateException  Username, password and/or baseUrl are not set.
@@ -308,7 +309,7 @@ public class JiveRemote extends RestRemote implements Remote{
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#getContents(List%3CString%3E,%20String,%20int,%20int,%20String,%20boolean,%20boolean)">Jive REST API - Get Contents</a>
      * @see <a href="https://community.jivesoftware.com/docs/DOC-153931">Finding the Content ID and Place ID using Jive v3 API</a>
      *
-     *
+     * @param context  current Alexandria context
      * @param metadata  metadata to find on remote
      * @throws IOException  there was a problem with the request
      */
@@ -534,8 +535,10 @@ public class JiveRemote extends RestRemote implements Remote{
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/DocumentEntity.html">Jive REST API - Document Entity</a>
      *
+     * @param context  current Alexandria context
      * @param metadata  document metadata to generate post body from
      * @return  String representation of the json structure for the request
+     * @throws IOException  the converted document couldnt be loaded
      */
     protected static String documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
         JiveContent jiveDocument = new JiveContent();
