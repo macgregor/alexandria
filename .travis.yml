@@ -13,7 +13,7 @@ env:
 branches:
   only:
   - master
-  - "/^\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
+  - /^\d+\.\d+\.\d+?$/
 
 cache:
   directories:
@@ -87,8 +87,8 @@ jobs:
       name: "Setting development version"
       install:
       - >
+        mkdir master && cd master
         git clone --branch=master https://${GH_TOKEN}@github.com/macgregor/alexandria.git master
-        cd master
         bash $TRAVIS_BUILD_DIR/ci/prepare-development
       script: skip
       deploy:
