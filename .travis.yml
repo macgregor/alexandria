@@ -55,7 +55,7 @@ jobs:
       script: skip
       deploy:
       - provider: script
-        script: mvn deploy --settings ci/.maven.xml -Dmaven.test.skip=true
+        script: mvn deploy -Prelease --settings ci/.maven.xml -Dmaven.test.skip=true -Dmaven.javadoc.skip=true
         on:
           all_branches: true
     - stage: deploy
@@ -78,12 +78,11 @@ jobs:
       install: mvn install -Dmaven.test.skip=true
       script: skip
       before_deploy:
-      - >
-        cd $TRAVIS_BUILD_DIR/gh-pages
-        git rm -rf *
-        cp -Rf $TRAVIS_BUILD_DIR/alexandria-core/target/apidocs/* ./
-        git add -f .
-        git commit -m "Releasing $project_version javadocs [ci skip]"
+      - cd $TRAVIS_BUILD_DIR/gh-pages
+      - git rm -rf *
+      - cp -Rf $TRAVIS_BUILD_DIR/alexandria-core/target/apidocs/* ./
+      - git add -f .
+      - git commit -m "Releasing $project_version javadocs [ci skip]"
       deploy:
       - provider: script
         script: git push -f origin gh-pages
@@ -93,9 +92,8 @@ jobs:
     - stage: version
       name: "Setting development version"
       install:
-      - >
-        cd $TRAVIS_BUILD_DIR/master
-        bash $TRAVIS_BUILD_DIR/ci/prepare-development
+      - cd $TRAVIS_BUILD_DIR/master
+      - bash $TRAVIS_BUILD_DIR/ci/prepare-development
       script: skip
       deploy:
       - provider: script
