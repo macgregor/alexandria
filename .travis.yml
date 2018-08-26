@@ -55,7 +55,7 @@ jobs:
       script: skip
       deploy:
       - provider: script
-        script: mvn deploy -Prelease --settings ci/.maven.xml -Dmaven.test.skip=true -Dmaven.javadoc.skip=true
+        script: mvn deploy -Prelease --settings ci/.maven.xml -Dmaven.test.skip=true
         on:
           all_branches: true
     - stage: deploy

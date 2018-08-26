@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -45,6 +46,9 @@ public class Context {
 
     /** Aleandria config containing document index and remote config. */
     @NonNull private Config config = new Config();
+
+    /** Alexandria config originally loaded from the file system. */
+    @NonNull private Config originalConfig = new Config();
 
     /** Cache for tracking absolute converted file paths for indexed metadata. Default: empty map. */
     private Map<Config.DocumentMetadata, Path> convertedPaths = new HashMap<>();
@@ -87,5 +91,52 @@ public class Context {
      */
     public void convertedPath(Config.DocumentMetadata metadata, Path path){
         convertedPaths.put(metadata, path);
+    }
+
+    /**
+     * Initialize Alexandria's {@link Context}, loading the {@link Config} from the given file path.
+     *
+     * Required context paths will be set to the directory of {@code filePath} and should be appropriately
+     * overridden before performing any operations. If the path doesnt exist, a blank {@link Config}
+     * will be created and saved to {@code filePath} when saving.
+     *
+     * @param filePath  path to the config file where remote details and document metadata will be saved
+     * @return  Initialized Alexandria context instance that will be provided to operations
+     * @throws IOException  problems converting strings to paths or general file loading problems
+     */
+    public static Context load(String filePath) throws IOException {
+        Context context = new Context();
+        Path path = Resources.path(filePath, false).toAbsolutePath();
+        context.configPath(path);
+        context.projectBase(path.getParent().toAbsolutePath());
+        context.searchPath(Collections.singletonList(path.getParent().toAbsolutePath()));
+
+        if(path.toFile().exists()) {
+            Config originalConfig = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
+            Config config = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
+            context.config(config);
+            context.originalConfig(originalConfig);
+            log.debug(String.format("Loaded configuration from %s", path.toString()));
+        } else{
+            log.debug(String.format("Created default configuration for new file %s", path.toString()));
+        }
+
+        return context;
+    }
+
+    /**
+     * Save the current context config (metadata and remote configuration) to disk.
+     *
+     * Not all information is saved, only the config field. See {@link Config} and {@link Context}.
+     *
+     * @param context  context containing configuration to save
+     * @throws IOException  problems saving the file
+     */
+    public static void save(Context context) throws IOException {
+        Config toSave = context.originalConfig;
+        toSave.metadata(context.config.metadata());
+
+        Jackson.yamlMapper().writeValue(context.configPath().toFile(), toSave);
+        log.debug(String.format("Saved configuration to %s", context.configPath().toString()));
     }
 }
