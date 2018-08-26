@@ -9,9 +9,6 @@ help(){
         ./prepare-release [--dry-run]
 
         -h,--help   Show this message and exit
-        --major     Increment major version.
-        --minor     Increment minor version.
-        --patch     Increment patch version.
         --dry-run   Run without committing or pushing changes. Intermediate steps are rolled back.
 
     Example:
@@ -52,13 +49,11 @@ then
     git add $(find . -name pom.xml)
     git commit -m "Setting version $RELEASE for development. [ci skip]"
     mvn versions:commit &> /dev/null
-    git push origin HEAD:master
 else
     readarray message <<"    EOF"
         git add $(find . -name pom.xml)
         git commit -m "Setting version $RELEASE for development. [ci skip]"
         mvn versions:commit &> /dev/null
-        git push origin HEAD:master
     EOF
     printf '%s' "${message[@]#        }"
     mvn versions:revert &> /dev/null
