@@ -126,31 +126,6 @@ public class AlexandriaIndexTest {
     }
 
     @Test
-    public void testIndexLoadsRelativeSourcePathsCorrectly() throws IOException, BatchProcessException {
-        context.searchPath(Arrays.asList(hierarchy.getRoot().toPath()));
-        context.configPath(hierarchy.newFile().toPath());
-        context.projectBase(Paths.get(hierarchy.getRoot().toString()));
-
-        alexandriaIndex.findUnindexedFiles();
-        Context.save(context);
-
-        Context reloaded = Context.load(context.configPath().toString());
-        reloaded.searchPath(Arrays.asList(hierarchy.getRoot().toPath()));
-        alexandriaIndex.findUnindexedFiles();
-        assertThat(reloaded.config().metadata()).isPresent();
-        assertThat(reloaded.config().metadata().get()).hasSize(3);
-
-        Path[] expected = new Path[3];
-        expected[0] = Paths.get(hierarchy.getRoot().toString()).relativize(l1Readme.toPath());
-        expected[1] = Paths.get(hierarchy.getRoot().toString()).relativize(l2Readme.toPath());
-        expected[2] = Paths.get(hierarchy.getRoot().toString()).relativize(l3Readme.toPath());
-        assertThat(reloaded.config().metadata().get().stream()
-                .map(m -> m.sourcePath())
-                .collect(Collectors.toList()))
-                .containsExactlyInAnyOrder(expected);
-    }
-
-    @Test
     public void testIndexWrapsExceptionsInBatchProcessException() throws IOException {
         Context context = TestData.minimalContext(folder);
         context.projectBase(Paths.get(""));

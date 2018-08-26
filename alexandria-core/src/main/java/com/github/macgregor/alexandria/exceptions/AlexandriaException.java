@@ -11,11 +11,18 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.io.IOException;
 import java.util.Optional;
 
+/**
+ * Exception thrown during processing to wrap the cause and provide runtime context about the error.
+ * <p>
+ * If the error occurred while processing a particular {@link com.github.macgregor.alexandria.Config.DocumentMetadata},
+ * it will be included along with the cause and exception message.
+ */
 @Slf4j
 @NoArgsConstructor @AllArgsConstructor
 @Getter @Setter @Accessors(fluent = true)
 public class AlexandriaException extends IOException {
-    private Optional<Config.DocumentMetadata> metadata;
+    /** Contextual metadata when error ocurred. Default: none. */
+    private Optional<Config.DocumentMetadata> metadata = Optional.empty();
 
     public AlexandriaException(String message) {
         super(message);
@@ -29,26 +36,52 @@ public class AlexandriaException extends IOException {
         super(cause);
     }
 
+    /**
+     * Builder class to help create {@link AlexandriaException) in a more fluent way.
+     */
     public static class Builder {
         private Optional<Config.DocumentMetadata> metadata = Optional.empty();
         private Optional<String> message = Optional.empty();
         private Optional<Throwable> cause = Optional.empty();
 
+        /**
+         * Message to include with the exception.
+         *
+         * @param message
+         * @return
+         */
         public Builder withMessage(String message){
             this.message = Optional.ofNullable(message);
             return this;
         }
 
+        /**
+         * Exception that triggered this.
+         *
+         * @param cause
+         * @return
+         */
         public Builder causedBy(Throwable cause){
             this.cause = Optional.ofNullable(cause);
             return this;
         }
 
+        /**
+         * The {@link com.github.macgregor.alexandria.Config.DocumentMetadata} being processed when the error occurred.
+         *
+         * @param metadata
+         * @return
+         */
         public Builder metadataContext(Config.DocumentMetadata metadata){
             this.metadata = Optional.ofNullable(metadata);
             return this;
         }
 
+        /**
+         * Create an {@link AlexandriaException} from the build configuration.
+         *
+         * @return
+         */
         public AlexandriaException build(){
             AlexandriaException exception = new AlexandriaException();
             if(message.isPresent() && cause.isPresent()){
@@ -69,7 +102,7 @@ public class AlexandriaException extends IOException {
         String metadataString = null;
         if(metadata.isPresent()){
             try{
-                metadataString = Jackson.jsonWriter().writeValueAsString(metadata.get());
+                metadataString = Jackson.jsonMapper().writer().writeValueAsString(metadata.get());
             } catch(JsonProcessingException e){
                 metadataString = metadata.get().toString();
             }

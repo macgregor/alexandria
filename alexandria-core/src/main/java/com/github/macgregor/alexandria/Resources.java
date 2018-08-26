@@ -14,14 +14,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Utility class for working with file system resources. Find files/paths/directories that
- * match patterns, saving and loading files, etc.
+ * Utility class for working with file system resources.
+ * <p>
+ * Find files/paths/directories that match patterns, saving and loading files, etc.
  */
 public class Resources {
 
     /**
-     * Find files along a set of directories that based on include/exclude patterns. Makes use of
-     * {@link FileUtils#listFiles(File, IOFileFilter, IOFileFilter)} to do most of the work.
+     * Find files along a set of directories that based on include/exclude patterns.
+     * <p>
+     * Makes use of {@link FileUtils#listFiles(File, IOFileFilter, IOFileFilter)} to do most of the work.
      */
     public static class PathFinder{
 
@@ -37,14 +39,24 @@ public class Resources {
             recursive = true;
         }
 
+        /**
+         * Set starting directory to a single directory, converting it to a {@link Path}
+         * <p>
+         * Path will be validated to be a directory that exists
+         *
+         * @param dir
+         * @return
+         * @throws IOException  The path doesnt exist or is not a directory.
+         */
         public PathFinder startingIn(String dir) throws IOException {
             return startingIn(Collections.singletonList(dir));
         }
 
         /**
-         * Converts the provided strings into {@link Path} objects and validates they are directories that exist.
+         * Set the starting directories, converting the provided string paths into {@link Path} objects.
+         * <p>
+         * Each path will be validated to be a directory that exists
          *
-         * TODO: consider making this continue on failures
          * @param dirs
          * @return
          * @throws IOException Any path doesnt exist or is not a directory.
@@ -58,10 +70,28 @@ public class Resources {
             return startingInPaths(paths);
         }
 
+        /**
+         * Sets the starting directory to a single directory.
+         * <p>
+         * Path will be validated to be a directory that exists
+         *
+         * @param dir
+         * @return
+         * @throws IOException  The path doesnt exist or is not a directory.
+         */
         public PathFinder startingInPath(Path dir) throws IOException {
             return startingInPaths(Collections.singletonList(dir));
         }
 
+        /**
+         * Set the starting directories
+         * <p>
+         * Each path will be validated to be a directory that exists
+         *
+         * @param dirs
+         * @return
+         * @throws IOException Any path doesnt exist or is not a directory.
+         */
         public PathFinder startingInPaths(Collection<Path> dirs) throws IOException{
             this.startingDirs = new ArrayList<>();
             for(Path dir : dirs){
@@ -77,8 +107,11 @@ public class Resources {
         }
 
         /**
-         * Wild card include pattern, see {@link WildcardFileFilter}.
-         * @param include Wildcard filename patterns, e.g. *.md
+         * Wild card include pattern.
+         * <p>
+         * @see {@link WildcardFileFilter}
+         *
+         * @param include  Wildcard filename patterns, e.g. *.md
          * @return
          */
         public PathFinder including(List<String> include){
@@ -87,7 +120,10 @@ public class Resources {
         }
 
         /**
-         * Wild card include pattern, see {@link WildcardFileFilter}.
+         * Wild card include pattern.
+         * <p>
+         * @see {@link WildcardFileFilter}
+         *
          * @param include Wildcard filename pattern, e.g. *.md
          * @return
          */
@@ -97,7 +133,10 @@ public class Resources {
         }
 
         /**
-         * Wild card include pattern, see {@link WildcardFileFilter}.
+         * Wild card include patterns.
+         * <p>
+         * @see {@link WildcardFileFilter}
+         *
          * @param exclude Wildcard filename patterns, e.g. *.md
          * @return
          */
@@ -107,7 +146,10 @@ public class Resources {
         }
 
         /**
-         * Wild card include pattern, see {@link WildcardFileFilter}.
+         * Wild card include patterns
+         * <p>
+         * @see {@link WildcardFileFilter}
+         *
          * @param exclude Wildcard filename pattern, e.g. *.md
          * @return
          */
@@ -117,7 +159,7 @@ public class Resources {
         }
 
         /**
-         * When set, recursively walk directories when finding files. Defaults to true.
+         * When set, recursively walk directories when finding files. Default:  true.
          *
          * @param isRecursive
          * @return
@@ -128,8 +170,9 @@ public class Resources {
         }
 
         /**
-         * Find all files using the builder properties. Files will only be included if they match any
-         * of the include patterns and non of the exclude filters.
+         * Find all files using the builder properties.
+         * <p>
+         * Files will only be included if they match any of the include patterns and none of the exclude filters.
          *
          * @return List of matching {@link File} or an empty list.
          */
@@ -146,8 +189,8 @@ public class Resources {
         }
 
         /**
-         * Same as {@link PathFinder#files()} but files are converted to {@link Path}s before
-         * being returned.
+         * Same as {@link PathFinder#files()} but files are converted to {@link Path} objects before being returned.
+         *
          * @return List of matching {@link Path} or an empty list.
          */
         public Collection<Path> paths(){
@@ -159,6 +202,7 @@ public class Resources {
 
     /**
      * Save files contents to the file path, overwriting the file if it exists. See {@link Resources#save(String, String, boolean)}
+     *
      * @param filePath Path to the file to save. File path cannot be to an existing directory.
      * @param content File contents to write.
      * @throws IOException If the file path cant be overwritten, the file path is invalid or an general IO error occurred.
@@ -168,8 +212,9 @@ public class Resources {
     }
 
     /**
-     * Save the string content to a file at the provided file path, optionally overwriting the file if it exists. If
-     * the file path exists and is a directory or overwrite is false, an exception will be thrown, otherwise the file
+     * Save the string content to a file at the provided file path, optionally overwriting the file if it exists.
+     * <p>
+     * If the file path exists and is a directory or overwrite is false, an exception will be thrown, otherwise the file
      * will be deleted before being recreated with the new content.
      *
      * @param filePath Path to the file to save. File path cannot be to an existing directory.
@@ -191,6 +236,7 @@ public class Resources {
 
     /**
      * Load the contents of the file located at the file path. See {@link FileUtils#readFileToString(File, String)}
+     *
      * @param filePath
      * @return File contents as a string.
      * @throws IOException The file doesnt exist or cant be read.
@@ -201,6 +247,7 @@ public class Resources {
 
     /**
      * Convert the path represented as a string into a {@link Path}.
+     *
      * @param rawPath
      * @return
      */
@@ -214,6 +261,7 @@ public class Resources {
 
     /**
      * Convert the path represented as a string into a {@link Path}, optionally failing if the path doesnt exist.
+     *
      * @param rawPath
      * @param failOnNonExistantPath Whether or not to throw an exception if the file deosnt exist.
      * @return
@@ -229,6 +277,7 @@ public class Resources {
 
     /**
      * Make a collection of {@link Path}s relative the to provided base. See {@link Path#relativize(Path)}
+     *
      * @param base Base path other paths should be relative to
      * @param paths
      * @return
