@@ -8,8 +8,6 @@ env:
   - secure: ZJb7HxINLHct17/2ziAXPt39TGrLeq8rsbiQH0x8JVJhXhDWzYwyEC0r+iogHfAsiGQfLJg/6G3S3U1TziKAraWhyTjOEiJh0TnGRxC+XLRX2gEcrjB8nxoYYTbCe09DSpvYyIo5GEgvAjWWuU0jTb1JFtjqt4sCSEoDhAuIJxDMDe9SqedtxM+U/OxGxKDiE7+xxYBfYpR+R3fIc7MX/6LrVOp8GJJUcSi+tEp5K7g7ITqaoetWZL6W2wX7D891CiKgp6b60Unw4ah9kjRs4qojRrsswjZM+4FCRVB+U3l9Lxbhqs49SPsVkySJTgg71DoGLB8GtlNkXKuZbtEEYGZFVRKRThb1eC3yUA9y260KMN3p9hBzNsxiah4EDDv+B1zXxvOHC5lFO1rFqs6C/PYst6kO0Wz5Hs2M+MDP+e4LQy6a5wq2/PX69aY1UPPdB+WTvx+5bqMchuggBV/PKrVelLCztAgDeoAtcRfmk2mwFIPaFmtj3g3LC1yhLpV4nASCvDE7b0hkY7gYm5es9XTRR6Tu+utJpthHdXOZubEfzS1hAdqMMstZBYjhR+gH7i7NvmgrK3GrxABjCvYf4zBWEJqyDxVF+7uLwLYmbOeBHlGmCVVh5vmuBYHrTywnJEitW2waHODSJuLN69Vr1CEYpvz4eCw+ZFdWYcAzE3c=
   - secure: c06pQn4uXrAlegtf7P5+efhROII7lE2LDmWs5JlglbP4Jdbl54rA/TYMdVbn2bZ66YwASSqpsnyQcN0ION2LISf0MpKaC5J1osGdZ9QBqwz8nt0uvwMkiBLXfw21VecWRVlFvo/lUHfGdx2wNGTt+mUNtzfvBgC12TdHGJ570/TPpW6lFUbFsXxwDzCpy1K0dwWWJv88ms3aeBX71F9NG1cKv1ceR8xroLmAJL4/+bZRM1BbQyuvVYu9qhzkSfCyw/lK4g2z9u1eb3yU6O+nDEkAykNLROde7dQGFtYW4DIR+NRHO2LTLGXRUA1c3cNJhNZtfz3xEf+n1Uc6bV5EB8TW+QtUkdal9ekjZRaGwlx5TIGbvswjLiy8p6GAEqoHbDzWy0sFiY+lCwANw04CFcRnDzmh+LQsp0S9j55Ts5e7BDL9OOP7qNGj0e5CIX6hw4tI7PGqwyP+xWBFFLcUVPiULXPqlgRngofRrviG+aEkQDKflOSwDyT2flvPA0VsUJ9avJ3IWsERYCGiz8uQ23x2cH6eMkZC1MKnMJAnd7EcdHRS7lIadSseykKAGWXzjhORvfVAeeKFKCfTs/czSlSjf7TDoGn8DzkSHB8pSursiWxjWOoOJC2CmcmKNE7TW7QARUjt52MGyakhz4Qq/8S+SrOFhNCjxQwqBwGlKRY=
   - secure: vAC37ngk7dcXhil0H18wP3XOLNwE8LvlZvhLXGV5NrOhVTCuaeTEJfaeDTtdCSzYIx95hgDHbYVO6AETvnvzSRriyEbsOJpdyRvdgD71LhcfQpdHut+z1QFrDa928imwiW4MJXrt9tSZpX6JisPOVWeJfT40DZHrF+mXV4ra8z3xMhRB9v3SEDPZd/GBih2syiTK6JDEzKC8ocMJ6FKPrpTBa+nEooqBXw/gdodE+p1gl5alpGcoNHLIpKxcOKYnqOPhlTJozQTHG4FH+jhSKRCgRo3TRtdr/jwd025WTvb/hwBz2BJAAa7mdO0jsGTLTTr1+vU635Maz8HaIGsF2iCrliPSnufOc9sGNWmFqa7x3Y9Ik9z3H4xh9dU83q33152LT8h667c0WIwlfJDsiDdZk+MJNnPrnqZjk/bJbKsQxzPsZTVydTpX7M7O4XpXu3q6UMdIXizALWGnRxpI2SMph8V/VymWxkGynUjlKXpzsAiNiRXLGZ875Oxy2MnD+i/AOtOkenHnD8gKghOM41qkOloLfJzAxy3wjqXbUCkUXm52TN0bLj7ZE5rzaRJyCbrCYYjJWv59ujF4u/jY1LFY6AGbyE+YoRe39YFGfHq1LmQ3dZXmYLfN6kBNFZdpuS4SteqIqOqjKnnhHGXFQ0xJbphjDvhjoa7gdjkHiSA=
-git:
-  depth: false
 branches:
   only:
   - master
@@ -18,42 +16,77 @@ branches:
 cache:
   directories:
   - "~/.m2/repository"
-install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-script: mvn verify coveralls:report -Dmaven.javadoc.skip=true -B
-before_deploy:
-- >
-  if ! [ "$BEFORE_DEPLOY_RUN" ]; then
-    export BEFORE_DEPLOY_RUN=1;
-    export AFTER_DEPLOY_RUN=0;
-    openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d
-    gpg --fast-import signing_key.gpg
-    export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
-    git config --global user.email "builds@travis-ci.com"
-    git config --global user.name "Travis CI"
-    git remote rm origin
-    git remote add origin https://${GH_TOKEN}@github.com/macgregor/alexandria.git
-    git fetch origin master
-    git branch master FETCH_HEAD
-  fi
-deploy:
-- provider: script
-  script: mvn deploy --settings ci/.maven.xml -Dmaven.test.skip=true;
-  skip_cleanup: true
-  on:
-    tags: true
-- provider: releases
-  name: "$project_version"
-  api-key: $GH_TOKEN
-  file:
-  - alexandria-maven-plugin/target/alexandria-maven-plugin-$project_version.jar
-  - alexandria-core/target/alexandria-core-$project_version.jar
-  - alexandria-cli/target/alexandria-cli-$project_version.jar
-  skip_cleanup: true
-  on:
-    tags: true
-after_deploy:
-- >
-  if [ "$AFTER_DEPLOY_RUN" == "1" ]; then
-    bash ci/prepare-development;
-  fi
-- export AFTER_DEPLOY_RUN=$((AFTER_DEPLOY_RUN + 1))
+
+before_install:
+    - >
+      openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d
+      gpg --fast-import signing_key.gpg
+      export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
+      git config --global user.email "builds@travis-ci.com"
+      git config --global user.name "Travis CI"
+
+stages:
+  - build
+  - test
+  - name: deploy
+    if: tag IS present
+  - name: after-deploy
+    if: tag IS present
+
+jobs:
+  - stage: build
+    name: "Build Project"
+    install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+    script: skip
+  - stage: test
+    name: "Testing and Code Analysis"
+    install: skip
+    script: mvn verify coveralls:report -Dmaven.javadoc.skip=true -B
+  - stage: deploy
+    name: "Deploy to Maven Central"
+    install: skip
+    script: skip
+    deploy:
+    - provider: script
+      script: mvn deploy --settings ci/.maven.xml -Dmaven.test.skip=true
+  - stage: deploy
+    name: "Deploy to Github"
+    install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+    script: skip
+    deploy:
+    - provider: releases
+      name: "$project_version"
+      api-key: $GH_TOKEN
+      file:
+      - alexandria-maven-plugin/target/alexandria-maven-plugin-$project_version.jar
+      - alexandria-core/target/alexandria-core-$project_version.jar
+      - alexandria-cli/target/alexandria-cli-$project_version.jar
+      skip_cleanup: true
+  - stage: deploy
+    name: "Deploy Javadocs"
+    install: mvn install -Dmaven.test.skip=true
+    script: skip
+    before_deploy:
+    - >
+      git clone --branch=gh-pages https://${GH_TOKEN}@github.com/macgregor/alexandria.git gh-pages
+      cd gh-pages
+      git rm -rf *
+      cp -Rf $TRAVIS_BUILD_DIR/alexandria-core/target/apidocs/* ./
+      git add -f .
+      git commit -m "Releasing $project_version javadocs [ci skip]"
+    deploy:
+    - provider: script
+      script: git push -f origin gh-pages
+      skip_cleanup: true
+  - stage: version
+    name: "Setting development version"
+    install:
+    - >
+      git clone --branch=master https://${GH_TOKEN}@github.com/macgregor/alexandria.git master
+      cd master
+      bash $TRAVIS_BUILD_DIR/ci/prepare-development
+    script: skip
+    deploy:
+    - provider: script
+      script: git push origin master
+      skip_cleanup: true
