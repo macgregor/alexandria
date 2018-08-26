@@ -1,6 +1,7 @@
 language: java
 jdk:
 - oraclejdk8
+
 env:
   global:
   - secure: AxvkEfE4uSnoUwn+hRtbKmpxPFv7X4hovUu4iFuU4qVww6ZVhRd8imSy9K933bmOn4k52BO8pkuhxcPQ8UCdiq4Igrvk64V4XofRW/T18STkEg/8GfdwfF8WrRk4xE5FjNo0rlvT5qAEPorP3GL2d69CkIHQ6FVADXAy1nBJV3JX+K+tWl8GGtaOXq1cOn987ioDCdwDiEUZtqAI5pGstDYyl4OsugUo7QM2ngQeu7aDff7tOCuBvJ2Yyq+DZVW19EJqUnkWPHu4S2JVzSt5hRjdZP8ZeaVMhCsEIPG9GCJUDZ2hxE00O0h64w4EqKrpf0ITxcsTzpbHx0Wcy8lwWgZgrtv9V3Nq4sFEyWcBLyMVd9vPU+y+eF2Gl2LdgVddylfiLmXX/uSqkjsQR8qghg65+L8p65AEQ1vssTe/tOuHIMGJ4ZckDZjN/8lnUTmndHvel9spc+3x4uoqIL1Esh1utQEGZtIWOCRnsbHuciCvl7sLS6z18z1xoa0PFZ2b+Pwl7DRLXvXJ2sGPo1Rcq7x2OKMep6c8K0oWNi8rYlvfHlIC7XqeIPBI5e6U2UuL/HTKvfdOldflgsgskFcnwTvbryLMZ8KvcW/ws9E/Xb3zPl5MVBg0ZXIDP99i11bFeznIUyJs7+iWUaQOeO3yn9MyZOYFsJswfM9cpnY3qGU=
@@ -8,13 +9,18 @@ env:
   - secure: ZJb7HxINLHct17/2ziAXPt39TGrLeq8rsbiQH0x8JVJhXhDWzYwyEC0r+iogHfAsiGQfLJg/6G3S3U1TziKAraWhyTjOEiJh0TnGRxC+XLRX2gEcrjB8nxoYYTbCe09DSpvYyIo5GEgvAjWWuU0jTb1JFtjqt4sCSEoDhAuIJxDMDe9SqedtxM+U/OxGxKDiE7+xxYBfYpR+R3fIc7MX/6LrVOp8GJJUcSi+tEp5K7g7ITqaoetWZL6W2wX7D891CiKgp6b60Unw4ah9kjRs4qojRrsswjZM+4FCRVB+U3l9Lxbhqs49SPsVkySJTgg71DoGLB8GtlNkXKuZbtEEYGZFVRKRThb1eC3yUA9y260KMN3p9hBzNsxiah4EDDv+B1zXxvOHC5lFO1rFqs6C/PYst6kO0Wz5Hs2M+MDP+e4LQy6a5wq2/PX69aY1UPPdB+WTvx+5bqMchuggBV/PKrVelLCztAgDeoAtcRfmk2mwFIPaFmtj3g3LC1yhLpV4nASCvDE7b0hkY7gYm5es9XTRR6Tu+utJpthHdXOZubEfzS1hAdqMMstZBYjhR+gH7i7NvmgrK3GrxABjCvYf4zBWEJqyDxVF+7uLwLYmbOeBHlGmCVVh5vmuBYHrTywnJEitW2waHODSJuLN69Vr1CEYpvz4eCw+ZFdWYcAzE3c=
   - secure: c06pQn4uXrAlegtf7P5+efhROII7lE2LDmWs5JlglbP4Jdbl54rA/TYMdVbn2bZ66YwASSqpsnyQcN0ION2LISf0MpKaC5J1osGdZ9QBqwz8nt0uvwMkiBLXfw21VecWRVlFvo/lUHfGdx2wNGTt+mUNtzfvBgC12TdHGJ570/TPpW6lFUbFsXxwDzCpy1K0dwWWJv88ms3aeBX71F9NG1cKv1ceR8xroLmAJL4/+bZRM1BbQyuvVYu9qhzkSfCyw/lK4g2z9u1eb3yU6O+nDEkAykNLROde7dQGFtYW4DIR+NRHO2LTLGXRUA1c3cNJhNZtfz3xEf+n1Uc6bV5EB8TW+QtUkdal9ekjZRaGwlx5TIGbvswjLiy8p6GAEqoHbDzWy0sFiY+lCwANw04CFcRnDzmh+LQsp0S9j55Ts5e7BDL9OOP7qNGj0e5CIX6hw4tI7PGqwyP+xWBFFLcUVPiULXPqlgRngofRrviG+aEkQDKflOSwDyT2flvPA0VsUJ9avJ3IWsERYCGiz8uQ23x2cH6eMkZC1MKnMJAnd7EcdHRS7lIadSseykKAGWXzjhORvfVAeeKFKCfTs/czSlSjf7TDoGn8DzkSHB8pSursiWxjWOoOJC2CmcmKNE7TW7QARUjt52MGyakhz4Qq/8S+SrOFhNCjxQwqBwGlKRY=
   - secure: vAC37ngk7dcXhil0H18wP3XOLNwE8LvlZvhLXGV5NrOhVTCuaeTEJfaeDTtdCSzYIx95hgDHbYVO6AETvnvzSRriyEbsOJpdyRvdgD71LhcfQpdHut+z1QFrDa928imwiW4MJXrt9tSZpX6JisPOVWeJfT40DZHrF+mXV4ra8z3xMhRB9v3SEDPZd/GBih2syiTK6JDEzKC8ocMJ6FKPrpTBa+nEooqBXw/gdodE+p1gl5alpGcoNHLIpKxcOKYnqOPhlTJozQTHG4FH+jhSKRCgRo3TRtdr/jwd025WTvb/hwBz2BJAAa7mdO0jsGTLTTr1+vU635Maz8HaIGsF2iCrliPSnufOc9sGNWmFqa7x3Y9Ik9z3H4xh9dU83q33152LT8h667c0WIwlfJDsiDdZk+MJNnPrnqZjk/bJbKsQxzPsZTVydTpX7M7O4XpXu3q6UMdIXizALWGnRxpI2SMph8V/VymWxkGynUjlKXpzsAiNiRXLGZ875Oxy2MnD+i/AOtOkenHnD8gKghOM41qkOloLfJzAxy3wjqXbUCkUXm52TN0bLj7ZE5rzaRJyCbrCYYjJWv59ujF4u/jY1LFY6AGbyE+YoRe39YFGfHq1LmQ3dZXmYLfN6kBNFZdpuS4SteqIqOqjKnnhHGXFQ0xJbphjDvhjoa7gdjkHiSA=
+
 branches:
   only:
   - master
   - "/^\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
+
 cache:
   directories:
   - "~/.m2/repository"
+
+notifications:
+  email: false
 
 before_install:
   - openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d
@@ -28,7 +34,7 @@ stages:
   - test
   - name: deploy
     if: tag IS present
-  - name: after-deploy
+  - name: version
     if: tag IS present
 
 jobs:
