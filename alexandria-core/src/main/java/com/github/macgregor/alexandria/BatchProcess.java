@@ -73,7 +73,7 @@ public class BatchProcess<T> {
      */
     public void execute(Batch<T> batch, Task<T> task) throws BatchProcessException {
         execute(batch, task, (context, exceptions) -> {
-            Alexandria.save(context);
+            Context.save(context);
             return EXCEPTIONS_UNHANDLED;
         });
     }

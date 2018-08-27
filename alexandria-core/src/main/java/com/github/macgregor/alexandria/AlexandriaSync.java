@@ -101,7 +101,7 @@ public class AlexandriaSync {
                     log.info(String.format("%s (remote: %s) already current with remote: %s", metadata.sourceFileName(), metadata.remoteUri().orElse(null), state));
                     break;
             }
-            Alexandria.save(context);
+            Context.save(context);
         }, (context, exceptions) -> {
             log.info(String.format("Synced %d out of %d documents with remote %s",
                     context.documentCount() - exceptions.size(), context.documentCount(),

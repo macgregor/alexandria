@@ -7,6 +7,7 @@
     <artifactId>alexandria-parent</artifactId>
     <version>0.0.31</version>
     <packaging>pom</packaging>
+    <name>alexandria-parent</name>
     <description>Convert and publish project documentation from markdown to hosted html.</description>
     <url>https://github.com/macgregor/alexandria</url>
     <scm>
@@ -15,7 +16,13 @@
         <developerConnection>scm:git:ssh:git@github.com:macgregor/alexandria.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
-
+    <licenses>
+        <license>
+            <name>GNU GPL 3</name>
+            <url>https://www.gnu.org/licenses/gpl.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
     <developers>
         <developer>
             <id>macgregor</id>

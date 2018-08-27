@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alexandria-core</artifactId>
+    <name>alexandria-core</name>
     <packaging>jar</packaging>
 
     <dependencies>
