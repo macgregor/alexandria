@@ -106,6 +106,7 @@ public class AlexandriaSync {
             log.info(String.format("Synced %d out of %d documents with remote %s",
                     context.documentCount() - exceptions.size(), context.documentCount(),
                     context.config().remote().baseUrl().orElse(null)));
+            Context.save(context);
             return BatchProcess.EXCEPTIONS_UNHANDLED;
         });
     }

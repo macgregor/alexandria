@@ -2,7 +2,9 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.util.Collections;
 
@@ -11,6 +13,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class BatchProcessTest {
 
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
     private Context context = new Context();
 
     @Test
@@ -20,6 +24,15 @@ public class BatchProcessTest {
             batchProcess.execute(context -> Collections.singleton("foo"), (context, item) -> {
                 throw new AlexandriaException();
             })).isInstanceOf(BatchProcessException.class);
+    }
+
+    @Test
+    public void testBatchProcessHandlesTaskThrowingAlexandriaExceptionWithMetadata(){
+        BatchProcess<String> batchProcess = new BatchProcess<>(context);
+        assertThatThrownBy(() ->
+                batchProcess.execute(context -> Collections.singleton("foo"), (context, item) -> {
+                    throw new AlexandriaException.Builder().metadataContext(TestData.minimalDocumentMetadata(folder, "minimal.md")).build();
+                })).isInstanceOf(BatchProcessException.class);
     }
 
     @Test

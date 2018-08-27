@@ -1,10 +1,17 @@
 package com.github.macgregor.alexandria.exceptions;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.macgregor.alexandria.Config;
-import lombok.*;
+import com.github.macgregor.alexandria.Jackson;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.util.Optional;
 
@@ -14,7 +21,7 @@ import java.util.Optional;
  * In addition to the {@link com.github.macgregor.alexandria.Config.DocumentMetadata} context you get from {@link AlexandriaException},
  * this also contains the {@link Request} and {@link Response} objects when the error was triggered.
  */
-@ToString
+@Slf4j
 @NoArgsConstructor @AllArgsConstructor
 @Getter @Setter @Accessors(fluent = true)
 public class HttpException extends AlexandriaException {
@@ -108,5 +115,24 @@ public class HttpException extends AlexandriaException {
             exception.response(response);
             return exception;
         }
+    }
+
+    @Override
+    public String toString() {
+        String metadataString = null;
+        if(metadata.isPresent()){
+            try{
+                metadataString = Jackson.jsonMapper().writer().withDefaultPrettyPrinter().writeValueAsString(metadata.get());
+            } catch(JsonProcessingException e){
+                metadataString = metadata.get().toString();
+            }
+        }
+        return "HttpException{\n" +
+                "   message=\"" + ExceptionUtils.getMessage(this) + "\",\n" +
+                "   rootCauseMessage=\"" + ExceptionUtils.getRootCauseMessage(this) + "\",\n" +
+                "   metadata=" + metadataString + "\n" +
+                "   request=" + (request.isPresent() ? request.get().toString() : null) + "\n" +
+                "   response=" + (response.isPresent() ? response.get().toString() : null) + "\n" +
+                "}\n";
     }
 }

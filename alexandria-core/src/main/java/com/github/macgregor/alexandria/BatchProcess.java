@@ -126,10 +126,13 @@ public class BatchProcess<T> {
             exceptions.add(buildAlexandriaException(e, Optional.empty(), Optional.of("Unexpected exception thrown processing after batch.")));
         }
         if(exceptions.size() > 0 && exceptionsHandled == EXCEPTIONS_UNHANDLED){
-            throw new BatchProcessException.Builder()
+            BatchProcessException exception = new BatchProcessException.Builder()
                     .withMessage("Alexandria batch error.")
                     .causedBy(exceptions)
                     .build();
+            log.error(exception.toString());
+            exception.logStacktrace();
+            throw exception;
         }
     }
 

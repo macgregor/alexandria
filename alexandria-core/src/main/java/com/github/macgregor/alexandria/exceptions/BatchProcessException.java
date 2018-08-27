@@ -1,7 +1,11 @@
 package com.github.macgregor.alexandria.exceptions;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,7 +17,7 @@ import java.util.Optional;
  * This exception will not have a cause, but a list of causes in {@link #exceptions}. This makes the stack trace for
  * these exceptions not very helpful, but not impossible to debug.
  */
-@ToString
+@Slf4j
 @NoArgsConstructor @AllArgsConstructor
 @Getter @Setter @Accessors(fluent = true)
 public class BatchProcessException extends AlexandriaException {
@@ -60,6 +64,18 @@ public class BatchProcessException extends AlexandriaException {
             }
             exception.exceptions(exceptions);
             return exception;
+        }
+    }
+
+    @Override
+    public String toString(){
+        return String.format("BatchProcessException{message=%s, exceptions=%s}", getMessage(), exceptions);
+    }
+
+    @Override
+    public void logStacktrace(){
+        for(AlexandriaException exception : exceptions){
+            exception.logStacktrace();
         }
     }
 }

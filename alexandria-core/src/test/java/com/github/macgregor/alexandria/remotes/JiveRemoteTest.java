@@ -88,7 +88,9 @@ public class JiveRemoteTest {
 
     @Test
     public void testCreateUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")));
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setResponseCode(404),
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))));
 
         Context context = new Context();
         Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
@@ -154,6 +156,7 @@ public class JiveRemoteTest {
     @Test
     public void testCreateFetchesParentPlaceFromRemote() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setResponseCode(404),
                 new MockResponse().setBody(Resources.load("src/test/resources/parent_group-paged.json")),
                 new MockResponse().setBody(Resources.load("src/test/resources/parent_group.json"))));
 
@@ -202,6 +205,19 @@ public class JiveRemoteTest {
         assertThat(metadata.extraProps().get().get("jiveParentUri")).isEqualTo("https://jive.com/groups/parent_group");
         assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
         assertThat(metadata.extraProps().get().get("jiveContentId")).isEqualTo("1278973");
+    }
+
+    @Test
+    public void testUpdateSetsTrackingTagIfNeeded() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))));
+
+        Context context = new Context();
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
+        metadata.extraProps().get().put("jiveContentId", "1234");
+        jiveRemote.update(context, metadata);
+
+        assertThat(metadata.hasExtraProperty(JiveRemote.JIVE_TRACKING_TAG)).isTrue();
     }
 
     @Test

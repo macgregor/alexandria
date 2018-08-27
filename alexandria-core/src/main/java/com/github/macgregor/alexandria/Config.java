@@ -190,6 +190,32 @@ public class Config {
         }
 
         /**
+         * Convenience method safely set an extra property.
+         *
+         * @param key  key to set or update
+         * @param value  new value
+         */
+        public void setExtraProperty(String key, String value){
+            if(!extraProps.isPresent()){
+                extraProps = Optional.of(new HashMap<>());
+            }
+            extraProps.get().put(key, value);
+        }
+
+        /**
+         * Convenience method to safetly get an extra property value. Has safe behavior as {@link Map#get(Object)}.
+         *
+         * @param key  key to retrieve from map
+         * @return  the value in the map if it exists, or null if the value doesnt exist or the optional is empty
+         */
+        public String getExtraProperty(String key){
+            if(hasExtraProperty(key)){
+                return extraProps.get().get(key);
+            }
+            return null;
+        }
+
+        /**
          * Convenience method for getting the name of the document from {@link #sourcePath}.
          *
          * @return  name of the source document
