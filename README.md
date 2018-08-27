@@ -6,6 +6,7 @@
 [![Build Status](https://travis-ci.com/macgregor/alexandria.svg?branch=master)](https://travis-ci.com/macgregor/alexandria)
 [![Coverage Status](https://coveralls.io/repos/github/macgregor/alexandria/badge.svg?branch=master)](https://coveralls.io/github/macgregor/alexandria?branch=master)
 [![Maintainability](https://api.codeclimate.com/v1/badges/9d5c11a22e7e1d53693e/maintainability)](https://codeclimate.com/github/macgregor/alexandria/maintainability)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.macgregor/alexandria-maven-plugin.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.github.macgregor%22%20AND%20a:%22alexandria-maven-plugin%22)
 <!---
 ![GitHub tag](https://img.shields.io/github/tag/expressjs/express.svg)
 ![Sonatype Nexus (Releases)](https://img.shields.io/nexus/r/https/oss.sonatype.org/com.google.guava/guava.svg)
@@ -52,8 +53,9 @@ implementing an interface for creating, updating and deleting documents. Alexand
 * Java 8
 
 ## Getting Started
-1. run `mvn alexandria:index` or `java -jar alexandria-cli.jar index` to generate a config file ([.alexandria](./alexandria-demo/.alexandria) by default)
-2. add remote url, username, password and update metadata index if necessary
+1. Check out the [javadocs](https://macgregor.github.io/alexandria/)
+2. After you've ignored that, run `mvn alexandria:index` or `java -jar alexandria-cli.jar index` to generate a config file ([.alexandria](./alexandria-demo/.alexandria) by default)
+2. add remote url, username, password and update metadata index if necessary (username and password can be set to an envrionment/system variable like `${env.foo}`)
 3. run `mvn deploy` or `java -jar alexandria-cli.jar`
 
 See [alexandria-demo](./alexandria-demo) for a working example of the maven plugin. 
@@ -74,10 +76,6 @@ See [alexandria-demo](./alexandria-demo) for a working example of the maven plug
     </executions>
 </plugin>
 ```
-
-## Contributing
-Contributions are welcome, especially adding new remotes so that others can make use of them. Please provide adequate unit
-tests as part of the pull request.
 
 ## Concepts
 
@@ -123,11 +121,16 @@ This is where most of the complexity is.
 `sourceChecksum` (or `sourceChecksum` is not set), update the document
 * **delete** - not implemented yet
 
+## Contributing
+Contributions are welcome, especially adding new remotes so that others can make use of them. Please provide adequate unit
+tests as part of the pull request.
+
 ## Trobleshooting
 * [crazy long error about eclipse loggers](https://stackoverflow.com/questions/47920305/can-not-set-org-eclipse-aether-spi-log-logger-with-custom-maven-plugin) when trying to install alexandria-maven-plugin. Upgrade maven to at least 3.5.2
 
 ## Links
-* [Alexandria Javadocs](https://macgregor.github.io/alexandria/)
+* [Javadocs](https://macgregor.github.io/alexandria/)
 * [Travis Build](https://travis-ci.com/macgregor/alexandria)
 * [Code Climate](https://codeclimate.com/github/macgregor/alexandria)
 * [Coveralls](https://coveralls.io/github/macgregor/alexandria)
+* [Maven Artifacts](https://search.maven.org/search?q=g:com.github.macgregor%20AND%20a:alexandria-*)
