@@ -29,6 +29,7 @@ import java.util.*;
 @NoArgsConstructor @AllArgsConstructor
 public class Config {
     public static final String ALEXANDRIA_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    public static final String VARIABLE_INTERPOLATION_PATTERN = "\\${env\\.(.*)}";
 
     /** Configuration properties for {@link com.github.macgregor.alexandria.remotes.Remote}. Default: {@link com.github.macgregor.alexandria.remotes.NoopRemote}. */
     @JsonProperty
@@ -77,6 +78,28 @@ public class Config {
         /** Timeout in seconds for each rest call to the remote. Default: 60 seconds. */
         @JsonProperty
         private Integer requestTimeout = 60;
+
+        /**
+         * Returns the remote username, interpolating the variable if it follows the appropriate pattern (e.g. ${env.foo}).
+         *
+         * @see Resources#interpolate(String)
+         *
+         * @return  The set username or interpolated variable resolved to an environment variable.
+         */
+        public Optional<String> username(){
+            return Optional.ofNullable(Resources.interpolate(username.orElse(null)));
+        }
+
+        /**
+         * Returns the remote password, interpolating the variable if it follows the appropriate pattern (e.g. ${env.foo}).
+         *
+         * @see Resources#interpolate(String)
+         *
+         * @return  The set password or interpolated variable resolved to an environment variable.
+         */
+        public Optional<String> password(){
+            return Optional.ofNullable(Resources.interpolate(password.orElse(null)));
+        }
     }
 
     /**

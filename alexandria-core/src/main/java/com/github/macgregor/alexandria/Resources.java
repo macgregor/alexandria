@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
  * Find files/paths/directories that match patterns, saving and loading files, etc.
  */
 public class Resources {
+    public static final String VARIABLE_INTERPOLATION_PATTERN = "\\$\\{env\\.(.*)\\}";
 
     /**
      * Find files along a set of directories that based on include/exclude patterns.
@@ -286,5 +289,33 @@ public class Resources {
         return paths.stream()
                 .map(p -> p.isAbsolute() ? base.relativize(p) : p)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Interpolate a variable string (e.g. ${env.foo}) resolving to an environment variable or system property.
+     *
+     * The interpolation pattern is {@value VARIABLE_INTERPOLATION_PATTERN}. So ${env.foo} will will look up
+     * an envrionmental or system variable called foo. If the input string doesnt match the pattern, the input string is
+     * returned. Otherwise the extracted variable name is passed to {@link System#getenv(String)} which returns
+     * null if the variable isnt set.
+     *
+     * @param input  the input string to interpolate
+     * @return  The input string if it isnt an interpolation pattern, otherwise the environment/system variable or null if it isnt set
+     */
+    public static String interpolate(String input){
+        if(input != null) {
+            Pattern p = Pattern.compile(VARIABLE_INTERPOLATION_PATTERN);
+            Matcher m = p.matcher(input);
+            if (m.matches()) {
+                if(System.getenv(m.group(1)) != null){
+                    return System.getenv(m.group(1));
+                }
+                if(System.getProperty(m.group(1)) != null){
+                    return System.getProperty(m.group(1));
+                }
+                return null;
+            }
+        }
+        return input;
     }
 }
