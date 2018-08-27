@@ -205,4 +205,18 @@ public class AlexandriaCommandConfigTest {
         TestCommand command = CommandLine.populateCommand(new TestCommand(), args);
         assertThat(command.exclude()).containsExactlyInAnyOrder("foo/bar", "baz");
     }
+
+    @Test
+    public void testTimeoutShort(){
+        String[] args = {"-t", "45"};
+        TestCommand command = CommandLine.populateCommand(new TestCommand(), args);
+        assertThat(command.timeout()).isEqualTo(45);
+    }
+
+    @Test
+    public void testTimeoutLong(){
+        String[] args = {"--timeout", "45"};
+        TestCommand command = CommandLine.populateCommand(new TestCommand(), args);
+        assertThat(command.timeout()).isEqualTo(45);
+    }
 }

@@ -193,4 +193,17 @@ public class AlexandriaMojoTest {
         testAlexandriaMojo.init();
         assertThat(context.exclude()).containsExactlyInAnyOrder("foo");
     }
+
+    @Test
+    public void testInitSetsTimeoutDefault() throws IOException {
+        testAlexandriaMojo.init();
+        assertThat(context.config().remote().requestTimeout()).isEqualTo(30);
+    }
+
+    @Test
+    public void testInitSetsTimeout() throws IOException {
+        testAlexandriaMojo.timeout(45);
+        testAlexandriaMojo.init();
+        assertThat(context.config().remote().requestTimeout()).isEqualTo(45);
+    }
 }
