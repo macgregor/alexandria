@@ -20,8 +20,8 @@ import java.util.*;
  * contain any absolute paths or system specific data that will break if committed and used by another contributor.
  *
  * @see Context
- * @see Alexandria#load(String)
- * @see Alexandria#save(Context)
+ * @see Context#load(String)
+ * @see Context#save(Context)
  * @see Jackson
  */
 @Data

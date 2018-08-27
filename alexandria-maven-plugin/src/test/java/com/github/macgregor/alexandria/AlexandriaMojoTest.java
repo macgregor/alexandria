@@ -41,6 +41,7 @@ public class AlexandriaMojoTest {
         when(parentProject.getParent()).thenReturn(null);
         when(session.getExecutionRootDirectory()).thenReturn(new File("parent").toString());
 
+        context.configPath(new File(parentProject.getBasedir(), ".alexandria").toPath());
         alexandria.context(context);
         doReturn(alexandria).when(alexandria).context(any());
         testAlexandriaMojo.alexandria(alexandria);
@@ -149,7 +150,6 @@ public class AlexandriaMojoTest {
     public void testInitConfigPathDefaultsToRootDirDotAlexandria() throws IOException {
         testAlexandriaMojo.init();
         assertThat(testAlexandriaMojo.configPath()).isEqualTo(new File(parentProject.getBasedir(), ".alexandria").toString());
-        assertThat(alexandria.context().configPath()).isEqualTo(new File(parentProject.getBasedir(), ".alexandria").toString());
     }
 
     @Test

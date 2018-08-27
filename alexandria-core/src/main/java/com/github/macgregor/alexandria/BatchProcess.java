@@ -62,7 +62,7 @@ public class BatchProcess<T> {
     private Collection<AlexandriaException> exceptions = new ArrayList<>();
 
     /**
-     * Execute the batch, providing a default {@link AfterBatch} that calls {@link Alexandria#save(Context)} before
+     * Execute the batch, providing a default {@link AfterBatch} that calls {@link Context#save(Context)} before
      * throwing any errors that occurred.
      *
      * @see Batch#execute(Batch, Task, AfterBatch)

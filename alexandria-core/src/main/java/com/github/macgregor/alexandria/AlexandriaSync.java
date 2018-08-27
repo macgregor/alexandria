@@ -57,7 +57,7 @@ public class AlexandriaSync {
      *     <li>DELETED: ignore</li>
      * </ul>
      *
-     * {@link Alexandria#save(Context)} will be called after each document is handled to ensure an unexpected problem
+     * {@link Context#save(Context)} will be called after each document is handled to ensure an unexpected problem
      * in the batch wont make the local state differ from the remote state. For example, creating a document and not saving
      * the {@code remoteUri} would cause Alexandria to create a new document on the remote on the next run.
      *

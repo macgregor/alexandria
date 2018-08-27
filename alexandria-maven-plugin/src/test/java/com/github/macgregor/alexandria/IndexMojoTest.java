@@ -34,7 +34,7 @@ public class IndexMojoTest {
         when(session.getExecutionRootDirectory()).thenReturn(new File("parent").toString());
 
         alexandria.context(context);
-        doReturn(context).when(alexandria).context(any());
+        doReturn(alexandria).when(alexandria).context(any());
         doReturn(alexandria).when(alexandria).index();
         doReturn(alexandria).when(alexandria).convert();
         doReturn(alexandria).when(alexandria).syncWithRemote();
