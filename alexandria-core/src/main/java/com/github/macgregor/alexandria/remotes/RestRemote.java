@@ -33,14 +33,15 @@ public abstract class RestRemote {
      * @throws HttpException  if the response returned a non 20X status code, or general IO error making the call.
      */
     protected Response doRequest(Request request) throws HttpException {
-        log.trace(request.toString());
+        log.debug(request.toString());
         Call call = client.newCall(request);
 
         Response response = null;
         try {
             response = call.execute();
-            log.trace(response.toString());
+            log.debug(response.toString());
         } catch (IOException e) {
+            log.debug("Request error", e);
             throw new HttpException.Builder()
                     .withMessage(String.format("Unable to make request %s", request.url().toString()))
                     .causedBy(e)
