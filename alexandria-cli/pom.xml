@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alexandria-cli</artifactId>
+    <name>alexandria-cli</name>
     <packaging>jar</packaging>
 
     <dependencies>

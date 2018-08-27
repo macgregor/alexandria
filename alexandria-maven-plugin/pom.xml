@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alexandria-maven-plugin</artifactId>
+    <name>alexandria-maven-plugin</name>
     <packaging>maven-plugin</packaging>
 
     <dependencies>

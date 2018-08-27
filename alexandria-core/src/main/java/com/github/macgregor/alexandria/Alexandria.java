@@ -5,10 +5,6 @@ import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collections;
-
 /**
  * Core class for saving, loading and processing documents.
  *
@@ -37,73 +33,6 @@ import java.util.Collections;
 public class Alexandria {
 
     @NonNull private Context context;
-
-    /**
-     * Load {@link Config} from the given file path and initialize Alexandria's {@link Context}.
-     *
-     * Required context paths will be set to the directory of {@code filePath} and should be appropriately
-     * overridden before performing any operations. If the path doesnt exist, a blank {@link Config}
-     * will be created and saved to {@code filePath} when saving.
-     *
-     * @param filePath  path to the config file where remote details and document metadata will be saved
-     * @return  Alexandria instance with an initialized context that will be provided to operations
-     * @throws IOException  problems converting strings to paths or general file loading problems
-     */
-    public Alexandria load(String filePath) throws IOException {
-        Context context = new Context();
-        Path path = Resources.path(filePath, false).toAbsolutePath();
-        context.configPath(path);
-        context.projectBase(path.getParent().toAbsolutePath());
-        context.searchPath(Collections.singletonList(path.getParent().toAbsolutePath()));
-
-        Config config;
-        if(path.toFile().exists()) {
-            config = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
-            log.debug(String.format("Loaded configuration from %s", path.toString()));
-        } else{
-            config = new Config();
-            log.debug(String.format("Created default configuration for new file %s", path.toString()));
-        }
-        context.config(config);
-
-        this.context = context;
-        return this;
-    }
-
-    /**
-     * Static accessor for {@link Alexandria#load(String)}.
-     *
-     * @param filePath  path to the config file where remote details and document metadata will be saved
-     * @return  Alexandria instance with an initialized context that will be provided to operations
-     * @throws IOException  problems converting strings to paths or general file loading problems
-     */
-    public static Alexandria loadContext(String filePath) throws IOException {
-        return new Alexandria().load(filePath);
-    }
-
-    /**
-     * Save the current context config (metadata and remote configuration) to disk.
-     *
-     * Not all information is saved, only the config field. See {@link Config} and {@link Context}.
-     *
-     * @param context  context containing configuration to save
-     * @throws IOException  problems saving the file
-     */
-    public static void save(Context context) throws IOException {
-        Jackson.yamlMapper().writeValue(context.configPath().toFile(), context.config());
-        log.debug(String.format("Saved configuration to %s", context.configPath().toString()));
-    }
-
-    /**
-     * Convenience method for object access to {@link Alexandria#save(Context)}.
-     *
-     * @return  Alexandria instance whose state was saved
-     * @throws IOException  problems saving the file
-     */
-    public Alexandria save() throws IOException {
-        Alexandria.save(context);
-        return this;
-    }
 
     /**
      * Update the metadata index based on matched files found on the {@link Context#searchPath}.

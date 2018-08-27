@@ -23,67 +23,67 @@ public class ConfigSaveTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testSaveDefaultTags() throws IOException, URISyntaxException {
+    public void testDontSaveDefaultTags() throws IOException, URISyntaxException {
         Config config = new Config();
         config.defaultTags(expected().defaultTags());
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.defaultTags().get()).containsExactlyInAnyOrder(expected().defaultTags().get().toArray(new String[]{}));
+        assertThat(reloaded.defaultTags().get()).isEmpty();
     }
 
     @Test
-    public void testSaveRemoteClass() throws IOException, URISyntaxException {
+    public void testDontSaveRemoteClass() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.clazz(expected().remote().clazz());
         config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().clazz()).isEqualTo(expected().remote().clazz());
+        assertThat(reloaded.remote().clazz()).isEqualTo(new Config().remote().clazz());
     }
 
     @Test
-    public void testSaveRemoteBaseUrl() throws IOException, URISyntaxException {
+    public void testDontSaveRemoteBaseUrl() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.baseUrl(expected().remote().baseUrl());
         config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().baseUrl()).isEqualTo(expected().remote().baseUrl());
+        assertThat(reloaded.remote().baseUrl()).isEqualTo(Optional.empty());
     }
 
     @Test
-    public void testSaveRemoteUsername() throws IOException, URISyntaxException {
+    public void testDontSaveRemoteUsername() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.username(expected().remote().username());
         config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().username()).isEqualTo(expected().remote().username());
+        assertThat(reloaded.remote().username()).isEmpty();
     }
 
     @Test
-    public void testSaveRemotePassword() throws IOException, URISyntaxException {
+    public void testDontSaveRemotePassword() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.password(expected().remote().password());
         config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().password()).isEqualTo(expected().remote().password());
+        assertThat(reloaded.remote().password()).isEqualTo(Optional.empty());
     }
 
     @Test
-    public void testSaveRemoteSupportNativeMarkdown() throws IOException, URISyntaxException {
+    public void testDontSaveRemoteSupportNativeMarkdown() throws IOException, URISyntaxException {
         Config config = new Config();
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.supportsNativeMarkdown(expected().remote().supportsNativeMarkdown());
         config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().supportsNativeMarkdown()).isEqualTo(expected().remote().supportsNativeMarkdown());
+        assertThat(reloaded.remote().supportsNativeMarkdown()).isFalse();
     }
 
     @Test
@@ -94,7 +94,7 @@ public class ConfigSaveTest {
         config.remote(remoteConfig);
 
         Config reloaded = saveAndReload(config);
-        assertThat(reloaded.remote().datetimeFormat()).isEqualTo(expected().remote().datetimeFormat());
+        assertThat(reloaded.remote().datetimeFormat()).isEqualTo(Config.ALEXANDRIA_DATETIME_PATTERN);
     }
 
     @Test
@@ -221,7 +221,7 @@ public class ConfigSaveTest {
 
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
-        alexandria.save();
+        Context.save(alexandria.context());
     }
 
     private Config saveAndReload(Config config) throws IOException {
@@ -232,9 +232,9 @@ public class ConfigSaveTest {
 
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
-        alexandria.save();
+        Context.save(alexandria.context());
 
-        Config reloaded = alexandria.load(path.toString()).context().config();
+        Config reloaded = Context.load(path.toString()).config();
         assertThat(reloaded).isNotNull();
         return reloaded;
     }

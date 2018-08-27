@@ -42,7 +42,7 @@ public class AlexandriaMojoTest {
         when(session.getExecutionRootDirectory()).thenReturn(new File("parent").toString());
 
         alexandria.context(context);
-        doReturn(alexandria).when(alexandria).load(anyString());
+        doReturn(alexandria).when(alexandria).context(any());
         testAlexandriaMojo.alexandria(alexandria);
         testAlexandriaMojo.project(childProject);
         testAlexandriaMojo.mavenSession(session);
@@ -142,14 +142,14 @@ public class AlexandriaMojoTest {
         testAlexandriaMojo.configPath("foo");
         testAlexandriaMojo.init();
         assertThat(testAlexandriaMojo.configPath()).isEqualTo("foo");
-        verify(alexandria, times(1)).load("foo");
+        verify(alexandria, times(1)).context(context);
     }
 
     @Test
     public void testInitConfigPathDefaultsToRootDirDotAlexandria() throws IOException {
         testAlexandriaMojo.init();
         assertThat(testAlexandriaMojo.configPath()).isEqualTo(new File(parentProject.getBasedir(), ".alexandria").toString());
-        verify(alexandria, times(1)).load(new File(parentProject.getBasedir(), ".alexandria").toString());
+        assertThat(alexandria.context().configPath()).isEqualTo(new File(parentProject.getBasedir(), ".alexandria").toString());
     }
 
     @Test

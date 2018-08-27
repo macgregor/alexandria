@@ -66,7 +66,7 @@ public abstract class AlexandriaCommand implements Callable<Void> {
 
     public Alexandria init() throws IOException {
         alexandria = new Alexandria();
-        alexandria.load(configPath);
+        alexandria.context(Context.load(configPath));
         alexandria.context().searchPath(input.stream().map(Paths::get).collect(Collectors.toList()));
         alexandria.context().outputPath(outputPath == null ? Optional.empty() : Optional.of(Paths.get(outputPath)));
         if (include.size() > 0) {
