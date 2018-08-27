@@ -40,6 +40,9 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     @Parameter( property = "alexandria.excludes")
     private List<String> excludes = new ArrayList<>();
 
+    @Parameter( property = "alexandria.timeout", defaultValue = "30")
+    private Integer timeout = 30;
+
     private Alexandria alexandria = new Alexandria();
 
     public Alexandria init() throws IOException {
@@ -52,6 +55,7 @@ public abstract class AlexandriaMojo extends AbstractMojo {
         alexandria.context(Context.load(configPath));
         alexandria.context().searchPath(inputs.stream().map(Paths::get).collect(Collectors.toList()));
         alexandria.context().outputPath(Optional.of(Paths.get(outputPath)));
+        alexandria.context().config().remote().requestTimeout(timeout);
         if(includes.size() > 0) {
             alexandria.context().include(includes);
         }

@@ -41,6 +41,9 @@ public abstract class AlexandriaCommand implements Callable<Void> {
     @CommandLine.Option(names = {"-e", "--exclude"}, arity = "1..*", description = "One or more file naming patterns to explicitly exclude. Defaults to empty list (no exclusions).")
     private List<String> exclude = new ArrayList<>();
 
+    @CommandLine.Option(names = { "-t", "--timeout" }, description = "Timeout for remote request in seconds.")
+    private Integer timeout = 30;
+
     private Alexandria alexandria;
 
     public void configureLogging(){
@@ -69,6 +72,7 @@ public abstract class AlexandriaCommand implements Callable<Void> {
         alexandria.context(Context.load(configPath));
         alexandria.context().searchPath(input.stream().map(Paths::get).collect(Collectors.toList()));
         alexandria.context().outputPath(outputPath == null ? Optional.empty() : Optional.of(Paths.get(outputPath)));
+        alexandria.context().config().remote().requestTimeout(timeout);
         if (include.size() > 0) {
             alexandria.context().include(include);
         }

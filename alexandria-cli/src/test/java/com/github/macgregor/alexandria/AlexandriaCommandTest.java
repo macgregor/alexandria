@@ -112,6 +112,19 @@ public class AlexandriaCommandTest {
     }
 
     @Test
+    public void testInitSetsTimeout() throws IOException {
+        TestCommand testCommand = new TestCommand();
+        testCommand.timeout(45);
+        assertThat(testCommand.init().context().config().remote().requestTimeout()).isEqualTo(45);
+    }
+
+    @Test
+    public void testInitSetsTimeoutDefault() throws IOException {
+        TestCommand testCommand = new TestCommand();
+        assertThat(testCommand.init().context().config().remote().requestTimeout()).isEqualTo(30);
+    }
+
+    @Test
     public void testLogContextLogsConfigPath(){
         Context context = spyContext();
         verify(context, times(1)).configPath();
