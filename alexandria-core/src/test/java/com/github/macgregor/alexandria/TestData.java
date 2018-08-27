@@ -70,6 +70,7 @@ public class TestData {
 
     public static Config.DocumentMetadata documentForCreate(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
         Config.DocumentMetadata metadata = completeDocumentMetadata(context, temporaryFolder, "create.md");
+        metadata.remoteUri(Optional.empty());
         metadata.deletedOn(Optional.empty());
         metadata.sourceChecksum(Optional.empty());
         metadata.extraProps().get().remove("delete");
