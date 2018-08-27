@@ -3,7 +3,10 @@ package com.github.macgregor.alexandria.exceptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Jackson;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -92,19 +95,23 @@ public class AlexandriaException extends IOException {
 
     @Override
     public String toString() {
-        log.debug(getMessage(), this);
         String metadataString = null;
         if(metadata.isPresent()){
             try{
-                metadataString = Jackson.jsonMapper().writer().writeValueAsString(metadata.get());
+                metadataString = Jackson.jsonMapper().writer().withDefaultPrettyPrinter().writeValueAsString(metadata.get());
             } catch(JsonProcessingException e){
                 metadataString = metadata.get().toString();
             }
         }
+        String rootCauseMessage = ExceptionUtils.getRootCauseMessage(this);
         return "AlexandriaException{\n" +
                 "   message=\"" + ExceptionUtils.getMessage(this) + "\",\n" +
-                "   rootCauseMessage=\"" + ExceptionUtils.getRootCauseMessage(this) + "\",\n" +
+                "   rootCauseMessage=\"" + rootCauseMessage + "\",\n" +
                 "   metadata=" + metadataString + "\n" +
                 "}\n";
+    }
+
+    public void logStacktrace(){
+        log.error(ExceptionUtils.getMessage(this), this);
     }
 }

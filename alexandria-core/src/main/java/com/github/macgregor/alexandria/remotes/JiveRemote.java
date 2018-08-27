@@ -4,6 +4,7 @@ import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.Resources;
+import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.HttpException;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -67,6 +68,10 @@ import java.util.regex.Pattern;
  *  <li>{@value #JIVE_PARENT_API_URI} - this is the actual api uri for a parent place. Set when we lookup the parent place
  *  from the user defined {@value #JIVE_PARENT_URI}.
  *  See {@link #findParentPlace(Context, Config.DocumentMetadata)}</li>
+ *  <li>{@value #JIVE_TRACKING_TAG} - this is a tag set to help Alexandria track documents created or updated in case it needs
+ *  to find them later. Poor performance on the Jive instance can easily lead to state like the create request timing out
+ *  but still going through server side. We need to be able to locate documents easily without knowing the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
+ *  or {@value JIVE_CONTENT_ID}</li>
  * </ul>
  *
  * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/index.html">Introduction to the Jive REST API</a>
@@ -84,6 +89,7 @@ public class JiveRemote extends RestRemote implements Remote{
     public static final String JIVE_PARENT_URI = "jiveParentUri";
     public static final String JIVE_PARENT_API_URI = "jiveParentApiUri";
     public static final String JIVE_PARENT_PLACE_ID = "jiveParentPlaceId";
+    public static final String JIVE_TRACKING_TAG = "jiveTrackingTag";
 
     /**
      * Create {@link JiveRemote} with a default {@link OkHttpClient}.
@@ -92,9 +98,9 @@ public class JiveRemote extends RestRemote implements Remote{
      */
     public JiveRemote(Config.RemoteConfig config){
         client = new OkHttpClient.Builder()
-                .connectTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS)
+                .connectTimeout(config.requestTimeout(), TimeUnit.SECONDS)
+                .writeTimeout(config.requestTimeout(), TimeUnit.SECONDS)
+                .readTimeout(config.requestTimeout(), TimeUnit.SECONDS)
                 .build();
         this.config = config;
     }
@@ -150,6 +156,17 @@ public class JiveRemote extends RestRemote implements Remote{
      */
     @Override
     public void create(Context context, Config.DocumentMetadata metadata) throws IOException {
+        setTrackingTagAsNeeded(context, metadata);
+        try {
+            findDocument(context, metadata);
+        } catch(HttpException e){
+            if(e.response().isPresent() && e.response().get().code() == 404){
+                log.debug(String.format("Document %s not found on remote. Creating.", metadata.sourceFileName()));
+            } else{
+                throw e;
+            }
+        }
+
         if(needsParentPlaceUri(metadata)){
             findParentPlace(context, metadata);
         }
@@ -190,6 +207,7 @@ public class JiveRemote extends RestRemote implements Remote{
      */
     @Override
     public void update(Context context, Config.DocumentMetadata metadata) throws IOException {
+        setTrackingTagAsNeeded(context, metadata);
         if(needsContentId(metadata)){
             findDocument(context, metadata);
         }
@@ -314,9 +332,20 @@ public class JiveRemote extends RestRemote implements Remote{
      * @throws IOException  there was a problem with the request
      */
     public void findDocument(Context context, Config.DocumentMetadata metadata) throws IOException {
-        log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.remoteUri().get().toString()));
+        log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.sourceFileName()));
 
-        String filter = String.format("entityDescriptor(102,%s)", jiveObjectId(metadata.remoteUri().get()));
+        String filter;
+        if(metadata.hasExtraProperty(JIVE_TRACKING_TAG)){
+            filter = String.format("tag(%s)", metadata.getExtraProperty(JIVE_TRACKING_TAG));
+        } else if (metadata.remoteUri().isPresent()){
+            filter = String.format("entityDescriptor(102,%s)", jiveObjectId(metadata.remoteUri().get()));
+        } else{
+            throw new AlexandriaException.Builder()
+                    .withMessage("Not enough information to find document on remote. Manual intervention may be necessary.")
+                    .metadataContext(metadata)
+                    .build();
+        }
+
 
         HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
                 .addPathSegment("contents")
@@ -385,6 +414,7 @@ public class JiveRemote extends RestRemote implements Remote{
                 .url(route)
                 .get()
                 .build();
+
 
         Response response = doRequest(request);
         try {
@@ -530,6 +560,27 @@ public class JiveRemote extends RestRemote implements Remote{
         }
     }
 
+    protected static void setTrackingTagAsNeeded(Context context, Config.DocumentMetadata metadata){
+        if(metadata.hasExtraProperty(JIVE_TRACKING_TAG)){
+            return;
+        }
+        metadata.setExtraProperty(JIVE_TRACKING_TAG, UUID.randomUUID().toString());
+    }
+
+    protected static List<String> getTagsForDocument(Context context, Config.DocumentMetadata metadata){
+        List<String> tags = new ArrayList();
+        if(context.config().defaultTags().isPresent()){
+            tags.addAll(context.config().defaultTags().get());
+        }
+        if(metadata.tags().isPresent()){
+            tags.addAll(metadata.tags().get());
+        }
+        if(metadata.hasExtraProperty(JIVE_TRACKING_TAG)) {
+            tags.add(metadata.getExtraProperty(JIVE_TRACKING_TAG));
+        }
+        return tags;
+    }
+
     /**
      * Create the post body for a create or update request from the given {@link com.github.macgregor.alexandria.Config.DocumentMetadata}.
      *
@@ -556,9 +607,7 @@ public class JiveRemote extends RestRemote implements Remote{
             jiveDocument.parent = metadata.extraProps().get().get(JIVE_PARENT_API_URI);
         }
 
-        if(metadata.tags().isPresent()){
-            jiveDocument.tags = metadata.tags().get();
-        }
+        jiveDocument.tags = getTagsForDocument(context, metadata);
 
         String body = Jackson.jsonMapper().writeValueAsString(jiveDocument);
         log.trace(body);
