@@ -80,7 +80,7 @@ public class DocumentMetadataTest {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
         metadata.deletedOn(Optional.of(ZonedDateTime.now()));
-        assertThat(metadata.determineState(context)).isEqualTo(Config.DocumentMetadata.State.DELETED);
+        assertThat(metadata.determineState()).isEqualTo(Config.DocumentMetadata.State.DELETED);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class DocumentMetadataTest {
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         metadata.remoteUri(Optional.of(new URI("foo")));
         metadata.sourceChecksum(Optional.of(FileUtils.checksumCRC32(context.resolveRelativePath(metadata.sourcePath()).toFile())));
-        assertThat(metadata.determineState(context)).isEqualTo(Config.DocumentMetadata.State.CURRENT);
+        assertThat(metadata.determineState()).isEqualTo(Config.DocumentMetadata.State.CURRENT);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class DocumentMetadataTest {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         metadata.remoteUri(Optional.empty());
-        assertThat(metadata.determineState(context)).isEqualTo(Config.DocumentMetadata.State.CREATE);
+        assertThat(metadata.determineState()).isEqualTo(Config.DocumentMetadata.State.CREATE);
     }
 
     @Test
@@ -105,7 +105,15 @@ public class DocumentMetadataTest {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
         metadata.extraProps(Optional.of(Collections.singletonMap("delete", "true")));
-        assertThat(metadata.determineState(context)).isEqualTo(Config.DocumentMetadata.State.DELETE);
+        assertThat(metadata.determineState()).isEqualTo(Config.DocumentMetadata.State.DELETE);
+    }
+
+    @Test
+    public void testSyncDeterminesStateDeleteSourPathNotPresent() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
+        metadata.extraProps(Optional.empty());
+        assertThat(metadata.determineState()).isEqualTo(Config.DocumentMetadata.State.DELETE);
     }
 
     @Test
@@ -114,6 +122,6 @@ public class DocumentMetadataTest {
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         metadata.remoteUri(Optional.of(new URI("foo")));
         metadata.sourceChecksum(Optional.of(-1L));
-        assertThat(metadata.determineState(context)).isEqualTo(Config.DocumentMetadata.State.UPDATE);
+        assertThat(metadata.determineState()).isEqualTo(Config.DocumentMetadata.State.UPDATE);
     }
 }

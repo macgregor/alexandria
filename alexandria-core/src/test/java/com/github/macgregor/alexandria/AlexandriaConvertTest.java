@@ -11,12 +11,16 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 public class AlexandriaConvertTest {
 
@@ -59,11 +63,10 @@ public class AlexandriaConvertTest {
 
     @Test
     public void testConvertWrapsConvertErrorsPerDocument() throws IOException {
-        Context context = TestData.minimalContext(folder);
-        FileUtils.forceDelete(context.resolveRelativePath(context.config().metadata().get().get(0).sourcePath()).toFile());
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        assertThatThrownBy(() -> alexandria.convert()).isInstanceOf(BatchProcessException.class);
+        Context context = spy(TestData.minimalContext(folder));
+        doThrow(new RuntimeException("test exception")).when(context).convertedPath(any(Config.DocumentMetadata.class), any(Path.class));
+        AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
+        assertThatThrownBy(() -> alexandriaConvert.convert()).isInstanceOf(BatchProcessException.class);
     }
 
     @Test
@@ -89,6 +92,16 @@ public class AlexandriaConvertTest {
         Context context = TestData.minimalContext(folder);
         context.config().metadata(Optional.of(new ArrayList<>()));
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
+        AlexandriaConvert convert = new AlexandriaConvert(context);
+        convert.convert();
+    }
+
+    @Test
+    public void testConvertIgnoresMetadataMarkedForDelete() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.config().metadata(Optional.of(new ArrayList<>()));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
+        metadata.deletedOn(Optional.empty());
         AlexandriaConvert convert = new AlexandriaConvert(context);
         convert.convert();
     }

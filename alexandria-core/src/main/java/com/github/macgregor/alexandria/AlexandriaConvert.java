@@ -53,7 +53,10 @@ public class AlexandriaConvert {
         BatchProcess<Config.DocumentMetadata> batchProcess = new BatchProcess<>(context);
         batchProcess.execute(context -> context.config().metadata().get(), (context, metadata) -> {
             log.debug(String.format("Converting %s.", metadata.sourceFileName()));
-            if(metadata.hasExtraProperty("delete") || metadata.deletedOn().isPresent()){
+
+            Config.DocumentMetadata.State state = metadata.determineState();
+            if(Config.DocumentMetadata.State.DELETED.equals(state) || Config.DocumentMetadata.State.DELETE.equals(state)){
+                log.debug(String.format("Not converting deleted file %s", metadata.sourceFileName()));
                 return;
             }
             AlexandriaConvert.convert(context, metadata);

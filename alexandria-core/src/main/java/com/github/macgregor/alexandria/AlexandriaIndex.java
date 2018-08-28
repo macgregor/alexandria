@@ -10,13 +10,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
- * Process files into metadata for tracking.
- *
- * Currently has two main purposes:
- * <ol>
- *  <li>identifying un-indexed files and adding them to {@link Context#config}.</li>
- *  <li>identifying missing files to mark documents for deletion later when syncing with the remote.</li>
- * </ol>
+ * Process files into metadata for tracking, identifying un-indexed files and adding them to {@link Config#metadata}.
  */
 @Slf4j
 @ToString
@@ -24,17 +18,6 @@ import java.util.stream.Collectors;
 @NoArgsConstructor @AllArgsConstructor
 public class AlexandriaIndex {
     @NonNull private Context context;
-
-    /**
-     * Entry method for {@link AlexandriaIndex#findUnindexedFiles()} and {@link AlexandriaIndex#markFilesForDeletion()}.
-     *
-     * @throws AlexandriaException  Exception wrapping all exceptions thrown during document processing.
-     */
-    public void update() throws AlexandriaException {
-        context.makePathsAbsolute();
-        findUnindexedFiles();
-        markFilesForDeletion();
-    }
 
     /**
      * Find files on the {@link Context#searchPath} that are not already indexed.
@@ -47,7 +30,8 @@ public class AlexandriaIndex {
      *
      * @throws AlexandriaException  Exception wrapping all exceptions thrown during document processing.
      */
-    public void findUnindexedFiles() throws AlexandriaException{
+    public void update() throws AlexandriaException {
+        context.makePathsAbsolute();
         log.debug("Looking for un-indexed files.");
 
         BatchProcess<Path> batchProcess = new BatchProcess<>(context);
@@ -65,42 +49,6 @@ public class AlexandriaIndex {
             metadata.sourcePath(path);
             metadata.title(path.toFile().getName());
             context.addMetadata(metadata);
-        });
-    }
-
-    /**
-     * Find files in the {@link Config#metadata} index that are not found on the {@link Context#searchPath}.
-     *
-     * A field is set in the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps} called "delete"
-     * which the sync process is aware of. Once deleted on the remote, this extra property is removed and the
-     * {@link com.github.macgregor.alexandria.Config.DocumentMetadata#deletedOn} field is set. The metadata itself will
-     * remain unless manually deleted.
-     *
-     * This means you should be careful deleting files you want to remain on the remote. In this situation you can
-     * manually set the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#deletedOn} field or simply remove
-     * both the file and metadata (if you just remove metadata it will reappear the next time indexing runs).
-     *
-     * @throws AlexandriaException  Exception wrapping all exceptions thrown during document processing.
-     */
-    public void markFilesForDeletion() throws AlexandriaException{
-        log.debug("Marking files for deletion.");
-
-        BatchProcess<Config.DocumentMetadata> batchProcess = new BatchProcess<>(context);
-        batchProcess.execute(context -> {
-            Collection<Path> alreadyIndexed = documentsAlreadyIndexed(context);
-            Collection<Path> matchedDocuments = documentsMatched(context);
-            Collection<Path> missing = documentsIndexedButMissing(matchedDocuments, alreadyIndexed);
-
-            log.info(String.format("Marking %d files for deletion (%d matched, %d already indexed)",
-                    missing.size(), matchedDocuments.size(), alreadyIndexed.size()));
-
-            return context.config().metadata().get()
-                    .stream()
-                    .filter(m -> missing.contains(m.sourcePath()))
-                    .collect(Collectors.toList());
-        }, (context, metadata) -> {
-            log.debug(String.format("Marking %s for deletion.", metadata.sourcePath().toFile().getName()));
-            metadata.setExtraProperty("delete", "true");
         });
     }
 
@@ -156,21 +104,6 @@ public class AlexandriaIndex {
     protected static Collection<Path> documentsNotIndexed(Collection<Path> documentsMatched, Collection<Path> documentsAlreadyIndexed){
         return documentsMatched.stream()
                 .filter(p -> !documentsAlreadyIndexed.contains(p))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Compare to sets of paths to determine which are missing and need to be deleted.
-     *
-     * Both sets of Paths should have the same bases or they wont equate properly.
-     *
-     * @param documentsMatched  Collection of matched documents.
-     * @param documentsAlreadyIndexed  Collection of metadata paths.
-     * @return  List of all paths missing on file system, or empty list if no documents are missing.
-     */
-    protected static Collection<Path> documentsIndexedButMissing(Collection<Path> documentsMatched, Collection<Path> documentsAlreadyIndexed){
-        return documentsAlreadyIndexed.stream()
-                .filter(p -> !documentsMatched.contains(p))
                 .collect(Collectors.toList());
     }
 }
