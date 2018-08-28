@@ -107,7 +107,7 @@ public class AlexandriaException extends IOException {
         return "AlexandriaException{\n" +
                 "   message=\"" + ExceptionUtils.getMessage(this) + "\",\n" +
                 "   rootCauseMessage=\"" + rootCauseMessage + "\",\n" +
-                "   metadata=" + metadataString + "\n" +
+                "   metadata=\n" + metadataString + "\n" +
                 "}\n";
     }
 

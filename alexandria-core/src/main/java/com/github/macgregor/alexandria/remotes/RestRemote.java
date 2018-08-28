@@ -43,7 +43,7 @@ public abstract class RestRemote {
         } catch (IOException e) {
             log.debug("Request error", e);
             throw new HttpException.Builder()
-                    .withMessage(String.format("Unable to make request %s", request.url().toString()))
+                    .withMessage(String.format("Unable to make request %s %s", request.method(), request.url().toString()))
                     .causedBy(e)
                     .requestContext(request)
                     .responseContext(response)

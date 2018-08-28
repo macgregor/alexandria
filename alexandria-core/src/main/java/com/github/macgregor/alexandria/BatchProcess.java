@@ -96,6 +96,9 @@ public class BatchProcess<T> {
                 try {
                     task.execute(context, t);
                 } catch(AlexandriaException e){
+                    if(t instanceof Config.DocumentMetadata && !e.metadata().isPresent()){
+                        e.metadata(Optional.of((Config.DocumentMetadata) t));
+                    }
                     exceptions.add(e);
                 } catch(Exception e){
                     exceptions.add(buildAlexandriaException(e, Optional.of(t), Optional.of("Unexpected exception thrown processing task.")));
