@@ -130,7 +130,7 @@ public class HttpException extends AlexandriaException {
         return "HttpException{\n" +
                 "   message=\"" + ExceptionUtils.getMessage(this) + "\",\n" +
                 "   rootCauseMessage=\"" + ExceptionUtils.getRootCauseMessage(this) + "\",\n" +
-                "   metadata=" + metadataString + "\n" +
+                "   metadata=\n" + metadataString + "\n" +
                 "   request=" + (request.isPresent() ? request.get().toString() : null) + "\n" +
                 "   response=" + (response.isPresent() ? response.get().toString() : null) + "\n" +
                 "}\n";
