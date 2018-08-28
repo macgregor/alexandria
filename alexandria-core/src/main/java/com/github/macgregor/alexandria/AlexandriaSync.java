@@ -70,6 +70,8 @@ public class AlexandriaSync {
     public void syncWithRemote() throws AlexandriaException {
         log.debug("Initiating sync with remote.");
 
+        context.makePathsAbsolute();
+
         BatchProcess<Config.DocumentMetadata> batchProcess = new BatchProcess<>(context);
         batchProcess.execute(context -> context.config().metadata().get(), (context, metadata) -> {
             log.debug(String.format("Syncing %s with remote.", metadata.sourceFileName()));
@@ -85,14 +87,14 @@ public class AlexandriaSync {
                 case CREATE:
                     convertAsNeeded(context, metadata);
                     remote.create(context, metadata);
-                    currentChecksum = FileUtils.checksumCRC32(context.resolveRelativePath(metadata.sourcePath()).toFile());
+                    currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
                     metadata.sourceChecksum(Optional.of(currentChecksum));
                     log.info(String.format("%s (remote: %s) created on remote", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
                     break;
                 case UPDATE:
                     convertAsNeeded(context, metadata);
                     remote.update(context, metadata);
-                    currentChecksum = FileUtils.checksumCRC32(context.resolveRelativePath(metadata.sourcePath()).toFile());
+                    currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
                     metadata.sourceChecksum(Optional.of(currentChecksum));
                     log.info(String.format("%s (remote: %s) updated on remote.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
                     break;
@@ -171,6 +173,7 @@ public class AlexandriaSync {
         if(convertedPathGuess.toFile().exists()){
             long currentChecksum = FileUtils.checksumCRC32(convertedPathGuess.toFile());
             if(metadata.convertedChecksum().isPresent() && metadata.convertedChecksum().get().equals(currentChecksum)){
+                context.convertedPath(metadata, convertedPathGuess);
                 return false;
             }
         }

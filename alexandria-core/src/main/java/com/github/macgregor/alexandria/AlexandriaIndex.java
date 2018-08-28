@@ -5,11 +5,8 @@ import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -34,6 +31,7 @@ public class AlexandriaIndex {
      * @throws AlexandriaException  Exception wrapping all exceptions thrown during document processing.
      */
     public void update() throws AlexandriaException {
+        context.makePathsAbsolute();
         findUnindexedFiles();
         markFilesForDeletion();
     }
@@ -66,7 +64,7 @@ public class AlexandriaIndex {
             Config.DocumentMetadata metadata = new Config.DocumentMetadata();
             metadata.sourcePath(path);
             metadata.title(path.toFile().getName());
-            context.config().metadata().get().add(metadata);
+            context.addMetadata(metadata);
         });
     }
 
@@ -102,10 +100,7 @@ public class AlexandriaIndex {
                     .collect(Collectors.toList());
         }, (context, metadata) -> {
             log.debug(String.format("Marking %s for deletion.", metadata.sourcePath().toFile().getName()));
-            if(!metadata.extraProps().isPresent()){
-                metadata.extraProps(Optional.of(new HashMap<>()));
-            }
-            metadata.extraProps().get().put("delete", "true");
+            metadata.setExtraProperty("delete", "true");
         });
     }
 
@@ -115,18 +110,18 @@ public class AlexandriaIndex {
      * @see com.github.macgregor.alexandria.Resources.PathFinder
      *
      * @param context  Alexandria context containing information necessary to match files
-     * @return  All matching files relative to {@link Context#projectBase}
+     * @return  All matching files resolved as absolute using {@link Context#configPath}
      * @throws AlexandriaException  wrapper for any IOException thrown during conversion to make it integrate with {@link BatchProcess}
      */
     protected static Collection<Path> documentsMatched(Context context) throws AlexandriaException {
         try {
-            return Resources.relativeTo(context.projectBase(),
+            return Resources.absolutePath(context.configPath().getParent(),
                     new Resources.PathFinder()
                             .startingInPaths(context.searchPath())
                             .including(context.include())
                             .excluding(context.exclude())
                             .paths());
-        } catch(IOException e){
+        } catch(Exception e){
             throw new AlexandriaException.Builder()
                     .causedBy(e)
                     .withMessage("Problem with some of all search paths. Make sure they are all valid directories that exist.")
@@ -138,10 +133,10 @@ public class AlexandriaIndex {
      * Converts {@link Config#metadata} documents into their source file paths for comparison to matched documents.
      *
      * @param context  Alexandria context containing metadata index
-     * @return  Document metadata paths relative to {@link Context#projectBase}
+     * @return  Document metadata paths resolved as absolute using {@link Context#configPath}
      */
     protected static Collection<Path> documentsAlreadyIndexed(Context context){
-        return Resources.relativeTo(context.projectBase(),
+        return Resources.absolutePath(context.configPath(),
                 context.config()
                         .metadata().get()
                         .stream()

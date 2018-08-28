@@ -78,7 +78,7 @@ public class AlexandriaIndexTest {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata alreadyIndexed = context.config().metadata().get().get(0);
         alreadyIndexed.title("Custom Title");
-        Config.DocumentMetadata newDocument = TestData.minimalDocumentMetadata(folder, "new.md");
+        Config.DocumentMetadata newDocument = TestData.minimalDocumentMetadata(folder);
         AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
 
         alexandriaIndex.findUnindexedFiles();
@@ -116,9 +116,9 @@ public class AlexandriaIndexTest {
         assertThat(config.metadata().get()).hasSize(3);
 
         Path[] expected = new Path[3];
-        expected[0] = Paths.get(hierarchy.getRoot().toString()).relativize(l1Readme.toPath());
-        expected[1] = Paths.get(hierarchy.getRoot().toString()).relativize(l2Readme.toPath());
-        expected[2] = Paths.get(hierarchy.getRoot().toString()).relativize(l3Readme.toPath());
+        expected[0] = l1Readme.toPath();
+        expected[1] = l2Readme.toPath();
+        expected[2] = l3Readme.toPath();
         assertThat(config.metadata().get().stream()
                 .map(m -> m.sourcePath())
                 .collect(Collectors.toList()))

@@ -346,7 +346,6 @@ public class JiveRemote extends RestRemote implements Remote{
                     .build();
         }
 
-
         HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
                 .addPathSegment("contents")
                 .addQueryParameter("filter", filter)
@@ -380,9 +379,7 @@ public class JiveRemote extends RestRemote implements Remote{
      * @return  true if document has a parent but no {@value JIVE_PARENT_API_URI}, false if no parent or {@value JIVE_PARENT_API_URI} already set
      */
     public static boolean needsParentPlaceUri(Config.DocumentMetadata metadata){
-        return metadata.extraProps().isPresent() &&
-                metadata.extraProps().get().containsKey(JIVE_PARENT_URI) &&
-                !metadata.extraProps().get().containsKey(JIVE_PARENT_API_URI);
+        return metadata.hasExtraProperty(JIVE_PARENT_URI) && !metadata.hasExtraProperty(JIVE_PARENT_API_URI);
     }
 
     /**
@@ -399,7 +396,7 @@ public class JiveRemote extends RestRemote implements Remote{
     public void findParentPlace(Context context, Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Jive parent place detected, attempting to retrieve from remote."));
 
-        String parentPlaceUrl = metadata.extraProps().get().get(JIVE_PARENT_URI);
+        String parentPlaceUrl = metadata.getExtraProperty(JIVE_PARENT_URI);
         String filter = String.format("search(%s)", jiveParentPlaceName(parentPlaceUrl));
 
         HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
@@ -472,17 +469,17 @@ public class JiveRemote extends RestRemote implements Remote{
         }
         if(content.parentPlace != null){
             if(StringUtils.isNotBlank(content.parentPlace.html)){
-                metadata.extraProps().get().put(JIVE_PARENT_URI, content.parentPlace.html);
+                metadata.setExtraProperty(JIVE_PARENT_URI, content.parentPlace.html);
             }
             if(StringUtils.isNotBlank(content.parentPlace.placeID)){
-                metadata.extraProps().get().put(JIVE_PARENT_PLACE_ID, content.parentPlace.placeID);
+                metadata.setExtraProperty(JIVE_PARENT_PLACE_ID, content.parentPlace.placeID);
             }
             if(StringUtils.isNotBlank(content.parentPlace.uri)){
-                metadata.extraProps().get().put(JIVE_PARENT_API_URI, content.parentPlace.uri);
+                metadata.setExtraProperty(JIVE_PARENT_API_URI, content.parentPlace.uri);
             }
         }
         if(StringUtils.isNotBlank(content.contentID)){
-            metadata.extraProps().get().put(JIVE_CONTENT_ID, content.contentID);
+            metadata.setExtraProperty(JIVE_CONTENT_ID, content.contentID);
         }
 
         log.debug(String.format("Updated %s metadata from response content.", metadata.sourcePath().toAbsolutePath().toString()));
@@ -513,13 +510,13 @@ public class JiveRemote extends RestRemote implements Remote{
      */
     protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JivePlace place) {
         if(StringUtils.isNotBlank(place.placeID)){
-            metadata.extraProps().get().put(JIVE_PARENT_PLACE_ID, place.placeID);
+            metadata.setExtraProperty(JIVE_PARENT_PLACE_ID, place.placeID);
         }
         if(place.resources != null && place.resources.containsKey("html")){
-            metadata.extraProps().get().put(JIVE_PARENT_URI, place.resources.get("html").ref);
+            metadata.setExtraProperty(JIVE_PARENT_URI, place.resources.get("html").ref);
         }
         if(place.resources != null && place.resources.containsKey("self")){
-            metadata.extraProps().get().put(JIVE_PARENT_API_URI, place.resources.get("self").ref);
+            metadata.setExtraProperty(JIVE_PARENT_API_URI, place.resources.get("self").ref);
         }
 
         log.debug(String.format("Updated %s metadata from response content.", metadata.sourcePath().toAbsolutePath().toString()));
@@ -560,6 +557,16 @@ public class JiveRemote extends RestRemote implements Remote{
         }
     }
 
+    /**
+     * Set a UUID tracking tag Alexandria can use to track down documents.
+     *
+     * Rest APIs are fickle things. They may or may not provide decent search apis or reliable methods
+     * that return data needed to identify created or updated documents. Adding this tag lets us quickly
+     * and easily search for documents if we cant use the Jive identifier for some reason.
+     *
+     * @param context  current Alexandria context
+     * @param metadata  document metadata to add tracking tag to
+     */
     protected static void setTrackingTagAsNeeded(Context context, Config.DocumentMetadata metadata){
         if(metadata.hasExtraProperty(JIVE_TRACKING_TAG)){
             return;
@@ -567,6 +574,13 @@ public class JiveRemote extends RestRemote implements Remote{
         metadata.setExtraProperty(JIVE_TRACKING_TAG, UUID.randomUUID().toString());
     }
 
+    /**
+     * Set tags for the document resolving default tags, document tags and remote specific tags.
+     *
+     * @param context  Current Alexandria context
+     * @param metadata  document metadata to get tags for
+     * @return  list of tags to add to the request or empty list if none are set
+     */
     protected static List<String> getTagsForDocument(Context context, Config.DocumentMetadata metadata){
         List<String> tags = new ArrayList();
         if(context.config().defaultTags().isPresent()){

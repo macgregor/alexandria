@@ -4,7 +4,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,6 +25,7 @@ public class TestData {
         context.exclude(Collections.singletonList(EXCLUDE));
         context.include(Collections.singletonList(INCLUDE));
         context.searchPath(Collections.singletonList(base));
+        context.makePathsAbsolute();
         completeConfig(context, temporaryFolder);
         return context;
     }
@@ -37,10 +37,10 @@ public class TestData {
         context.projectBase(base);
         context.searchPath(Collections.singletonList(base));
         context.include(Collections.singletonList(INCLUDE));
-
         context.outputPath(Optional.empty());
         context.exclude(Collections.emptyList());
         minimalConfig(context, temporaryFolder);
+        context.makePathsAbsolute();
         return context;
     }
 
@@ -53,7 +53,7 @@ public class TestData {
         documentForCreate(context, temporaryFolder);
         documentForDelete(context, temporaryFolder);
         documentForUpdate(context, temporaryFolder);
-        minimalDocumentMetadata(context, temporaryFolder, "doc.ignore");
+        minimalDocumentMetadata(context, temporaryFolder);
 
         return config;
     }
@@ -64,34 +64,33 @@ public class TestData {
         config.defaultTags(Optional.empty());
         config.remote(minimalRemoteConfig());
         config.metadata(Optional.of(new ArrayList<>()));
-        minimalDocumentMetadata(context, temporaryFolder, "minimal.md");
+        minimalDocumentMetadata(context, temporaryFolder);
         return config;
     }
 
     public static Config.DocumentMetadata documentForCreate(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
-        Config.DocumentMetadata metadata = completeDocumentMetadata(context, temporaryFolder, "create.md");
+        context.configPath(Paths.get(temporaryFolder.getRoot().toPath().toAbsolutePath().toString(), ".alexandria"));
+        Config.DocumentMetadata metadata = completeDocumentMetadata(context, temporaryFolder);
         metadata.remoteUri(Optional.empty());
         metadata.deletedOn(Optional.empty());
         metadata.sourceChecksum(Optional.empty());
         metadata.extraProps().get().remove("delete");
-
-        context.config().metadata().get().add(metadata);
         return metadata;
     }
 
     public static Config.DocumentMetadata documentForUpdate(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
-        Config.DocumentMetadata metadata = completeDocumentMetadata(context, temporaryFolder, "update.md");
+        context.configPath(Paths.get(temporaryFolder.getRoot().toPath().toAbsolutePath().toString(), ".alexandria"));
+        Config.DocumentMetadata metadata = completeDocumentMetadata(context, temporaryFolder);
         metadata.deletedOn(Optional.empty());
         metadata.sourceChecksum(Optional.of(-1L));
         metadata.extraProps().get().remove("delete");
-
-        context.config().metadata().get().add(metadata);
         return metadata;
     }
 
     public static Config.DocumentMetadata documentForDelete(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
-        Config.DocumentMetadata metadata = minimalDocumentMetadata(context, temporaryFolder, "delete.md");
-        FileUtils.forceDelete(new File(temporaryFolder.getRoot().toString(), metadata.sourcePath().toString()));
+        context.configPath(Paths.get(temporaryFolder.getRoot().toPath().toAbsolutePath().toString(), ".alexandria"));
+        Config.DocumentMetadata metadata = minimalDocumentMetadata(context, temporaryFolder);
+        FileUtils.forceDelete(metadata.sourcePath().toFile());
         metadata.remoteUri(Optional.of(new URI("https://jive.com/api/core/v3/contents/DOC-1234")));
         Map<String, String> extraProps = new HashMap<>();
         extraProps.put("delete", "true");
@@ -99,15 +98,15 @@ public class TestData {
         return metadata;
     }
 
-    public static Config.DocumentMetadata minimalDocumentMetadata(TemporaryFolder temporaryFolder, String name) throws IOException {
-        Path path = temporaryFolder.getRoot().toPath().relativize(temporaryFolder.newFile(name).toPath());
-        Path absPath = Paths.get(temporaryFolder.getRoot().toString(), name);
+    public static Config.DocumentMetadata minimalDocumentMetadata(TemporaryFolder temporaryFolder) throws IOException {
+        String fileName = UUID.randomUUID().toString() + ".md";
+        Path path = temporaryFolder.newFile(fileName).toPath().toAbsolutePath();
 
-        Resources.save(absPath.toString(), String.format("# %s\n\nHello", name));
+        Resources.save(path.toString(), String.format("# %s\n\nHello", fileName));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(path);
-        metadata.title(name);
+        metadata.title(fileName);
 
         metadata.extraProps(Optional.empty());
         metadata.remoteUri(Optional.empty());
@@ -121,24 +120,24 @@ public class TestData {
         return metadata;
     }
 
-    public static Config.DocumentMetadata minimalDocumentMetadata(Context context, TemporaryFolder temporaryFolder, String name) throws IOException {
-        Config.DocumentMetadata metadata = minimalDocumentMetadata(temporaryFolder, name);
-        context.config().metadata().get().add(metadata);
+    public static Config.DocumentMetadata minimalDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException {
+        Config.DocumentMetadata metadata = minimalDocumentMetadata(temporaryFolder);
+        context.addMetadata(metadata);
         return metadata;
     }
 
-    public static Config.DocumentMetadata completeDocumentMetadata(Context context, TemporaryFolder temporaryFolder, String name) throws IOException, URISyntaxException {
-        Path path = temporaryFolder.getRoot().toPath().relativize(temporaryFolder.newFile(name).toPath());
-        Path absPath = Paths.get(temporaryFolder.getRoot().toString(), name);
-        Path converted = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), FilenameUtils.getBaseName(path.toFile().getName()) + ".html");
-        Resources.save(absPath.toString(), String.format("# %s\n\nHello", name));
-        Markdown.toHtml(absPath, converted);
-        long sourceCheckSum = FileUtils.checksumCRC32(absPath.toFile());
+    public static Config.DocumentMetadata completeDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
+        String fileName = UUID.randomUUID().toString() + ".md";
+        Path path = temporaryFolder.newFile(fileName).toPath().toAbsolutePath();
+        Path converted = Paths.get(path.getParent().toString(), FilenameUtils.getBaseName(path.toFile().getName()) + ".html");
+        Resources.save(path.toString(), String.format("# %s\n\nHello", fileName));
+        Markdown.toHtml(path, converted);
+        long sourceCheckSum = FileUtils.checksumCRC32(path.toFile());
         long convertedCheckSum = FileUtils.checksumCRC32(converted.toFile());
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(path);
-        metadata.title(name);
+        metadata.title(fileName);
         metadata.remoteUri(Optional.of(new URI("https://jive.com/api/core/v3/contents/DOC-1234")));
         metadata.sourceChecksum(Optional.of(sourceCheckSum));
         metadata.tags(Optional.of(Collections.singletonList("complete")));
@@ -154,7 +153,7 @@ public class TestData {
 
         context.convertedPath(metadata, converted);
 
-        context.config().metadata().get().add(metadata);
+        context.addMetadata(metadata);
 
         return metadata;
     }

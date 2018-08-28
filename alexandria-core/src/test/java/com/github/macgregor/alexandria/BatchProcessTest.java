@@ -31,7 +31,7 @@ public class BatchProcessTest {
         BatchProcess<String> batchProcess = new BatchProcess<>(context);
         assertThatThrownBy(() ->
                 batchProcess.execute(context -> Collections.singleton("foo"), (context, item) -> {
-                    throw new AlexandriaException.Builder().metadataContext(TestData.minimalDocumentMetadata(folder, "minimal.md")).build();
+                    throw new AlexandriaException.Builder().metadataContext(TestData.minimalDocumentMetadata(folder)).build();
                 })).isInstanceOf(BatchProcessException.class);
     }
 

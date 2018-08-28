@@ -135,7 +135,7 @@ public class AlexandriaSyncTest {
     public void testSyncIgnoresCurrent() throws BatchProcessException, IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         context.config().metadata(Optional.of(new ArrayList<>()));
-        Config.DocumentMetadata metadata = TestData.completeDocumentMetadata(context, folder, "foo.md");
+        Config.DocumentMetadata metadata = TestData.completeDocumentMetadata(context, folder);
         metadata.extraProps(Optional.empty());
         metadata.deletedOn(Optional.empty());
         Remote remote = mock(NoopRemote.class);
