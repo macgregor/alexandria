@@ -5,8 +5,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
-import java.io.IOException;
-
 @Mojo( name = "convert", defaultPhase = LifecyclePhase.PACKAGE)
 public class ConvertMojo extends AlexandriaMojo {
 
@@ -17,8 +15,12 @@ public class ConvertMojo extends AlexandriaMojo {
                 init();
                 logContext();
                 alexandria().convert();
-            } catch (IOException e) {
-                throw new MojoFailureException("Failed to convert documents.", e);
+            } catch (Exception e) {
+                if(failBuild()) {
+                    throw new MojoFailureException("Failed to convert documents.", e);
+                } else{
+                    getLog().warn(e);
+                }
             }
         }
     }

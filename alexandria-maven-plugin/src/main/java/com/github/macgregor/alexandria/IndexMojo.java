@@ -17,8 +17,12 @@ public class IndexMojo extends AlexandriaMojo {
                 init();
                 logContext();
                 alexandria().index();
-            } catch (IOException e) {
-                throw new MojoFailureException("Failed to index documents.", e);
+            } catch (Exception e) {
+                if(failBuild()) {
+                    throw new MojoFailureException("Failed to index documents.", e);
+                } else{
+                    getLog().warn(e);
+                }
             }
         }
     }

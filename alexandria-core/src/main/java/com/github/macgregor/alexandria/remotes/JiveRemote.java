@@ -110,7 +110,11 @@ public class JiveRemote extends RestRemote implements Remote{
      */
     @Override
     public void configure(Config.RemoteConfig config){
-        this.client = new OkHttpClient();
+        this.client = new OkHttpClient.Builder()
+                .connectTimeout(config.requestTimeout(), TimeUnit.SECONDS)
+                .writeTimeout(config.requestTimeout(), TimeUnit.SECONDS)
+                .readTimeout(config.requestTimeout(), TimeUnit.SECONDS)
+                .build();
         this.config = config;
     }
 
