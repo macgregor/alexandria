@@ -215,6 +215,12 @@ public class ResourcesTest {
     }
 
     @Test
+    public void testLoadEmptyFile() throws IOException {
+        File f = folder.newFile();
+        assertThat(Resources.load(f.getPath())).isNotNull();
+    }
+
+    @Test
     public void testPathConvertsString(){
         Path p = Resources.path("readme.md");
         assertThat(p).isEqualTo(Paths.get("readme.md"));

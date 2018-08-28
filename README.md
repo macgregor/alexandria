@@ -25,16 +25,16 @@ implementing an interface for creating, updating and deleting documents. Alexand
 [INFO] Scanning for projects...
 [INFO]
 [INFO] ----------------< com.github.macgregor:alexandria-demo >----------------
-[INFO] Building alexandria-demo 0.0.6-SNAPSHOT
+[INFO] Building alexandria-demo 0.1.2
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO]
-[INFO] --- alexandria-maven-plugin:0.0.6-SNAPSHOT:index (alexandria) @ alexandria-demo ---
+[INFO] --- alexandria-maven-plugin:0.1.2:index (alexandria) @ alexandria-demo ---
 [INFO] Matched 4 files (1 indexed, 3 already indexed)
 [INFO]
 [INFO] --- alexandria-maven-plugin:0.0.6-SNAPSHOT:convert (alexandria) @ alexandria-demo ---
 [INFO] 4 out of 4 files converted successfully.
 [INFO]
-[INFO] --- alexandria-maven-plugin:0.0.6-SNAPSHOT:sync (alexandria) @ alexandria-demo ---
+[INFO] --- alexandria-maven-plugin:0.1.2:sync (alexandria) @ alexandria-demo ---
 [INFO] images.md is already up to date (checksum: 1751689934, last updated: 2018-08-22T02:27:51.789Z)
 [INFO] Update document at empahsis.md https://jive.com/docs/DOC-1140809-empahsismd
 [INFO] Update document at codeblocks.md https://jive.com/docs/DOC-1140806-codeblocksmd
@@ -64,6 +64,7 @@ See [alexandria-demo](./alexandria-demo) for a working example of the maven plug
 <plugin>
     <groupId>com.github.macgregor</groupId>
     <artifactId>alexandria-maven-plugin</artifactId>
+    <version>0.1.2</version>
     <executions>
         <execution>
             <id>alexandria</id>
@@ -127,6 +128,7 @@ tests as part of the pull request.
 
 ## Trobleshooting
 * [crazy long error about eclipse loggers](https://stackoverflow.com/questions/47920305/can-not-set-org-eclipse-aether-spi-log-logger-with-custom-maven-plugin) when trying to install alexandria-maven-plugin. Upgrade maven to at least 3.5.2
+* trace level maven logging: `mvn alexandria:sync -Dorg.slf4j.simpleLogger.defaultLogLevel=trace`
 
 ## Links
 * [Javadocs](https://macgregor.github.io/alexandria/)
