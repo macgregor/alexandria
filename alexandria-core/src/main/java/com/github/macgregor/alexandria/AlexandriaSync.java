@@ -20,7 +20,7 @@ import java.util.Optional;
  *
  * @see Remote
  * @see com.github.macgregor.alexandria.remotes.JiveRemote
- * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState(Context)
+ * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState()
  */
 @Slf4j
 @ToString
@@ -63,7 +63,7 @@ public class AlexandriaSync {
      *
      * @see Remote
      * @see com.github.macgregor.alexandria.remotes.JiveRemote
-     * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState(Context)
+     * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState()
      *
      * @throws AlexandriaException  Exception wrapping all exceptions thrown while syncing documents
      */
@@ -78,11 +78,11 @@ public class AlexandriaSync {
             remote.validateDocumentMetadata(metadata);
 
             long currentChecksum;
-            Config.DocumentMetadata.State state = metadata.determineState(context);
+            Config.DocumentMetadata.State state = metadata.determineState();
             switch(state){
                 case DELETE:
                     remote.delete(context, metadata);
-                    log.info(String.format("%s (remote: %s) deleted from remote. Local file will remain.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
+                    log.info(String.format("%s (remote: %s) deleted from remote. Local file will not be removed by Alexandria.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
                     break;
                 case CREATE:
                     convertAsNeeded(context, metadata);

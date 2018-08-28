@@ -283,9 +283,6 @@ public class JiveRemote extends RestRemote implements Remote{
             if(e.response().isPresent() && e.response().get().code() == 404){
                 log.debug("Looking for document to delete returned a 404, assuming its already deleted.");
                 metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
-                if(metadata.hasExtraProperty("delete")){
-                    metadata.extraProps().get().remove("delete");
-                }
                 return;
             }
             throw e;

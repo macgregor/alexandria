@@ -9,7 +9,6 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -20,6 +19,9 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 public class AlexandriaIndexTest {
 
@@ -67,7 +69,7 @@ public class AlexandriaIndexTest {
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         context.config().metadata(Optional.of(new ArrayList<>()));
         AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
-        alexandriaIndex.findUnindexedFiles();
+        alexandriaIndex.update();
         assertThat(context.config().metadata()).isPresent();
         assertThat(context.config().metadata().get()).hasSize(1);
         assertThat(context.config().metadata().get().get(0)).isEqualTo(metadata);
@@ -81,7 +83,7 @@ public class AlexandriaIndexTest {
         Config.DocumentMetadata newDocument = TestData.minimalDocumentMetadata(folder);
         AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
 
-        alexandriaIndex.findUnindexedFiles();
+        alexandriaIndex.update();
         assertThat(context.config().metadata().get()
                 .stream()
                 .map(m -> m.sourcePath().toFile().getName())
@@ -96,7 +98,7 @@ public class AlexandriaIndexTest {
         Config.DocumentMetadata alreadyIndexed = context.config().metadata().get().get(0);
         context.config().metadata(Optional.of(new ArrayList<>()));
         AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
-        alexandriaIndex.findUnindexedFiles();
+        alexandriaIndex.update();
         assertThat(context.config().metadata()).isPresent();
         assertThat(context.config().metadata().get()
                 .stream()
@@ -111,7 +113,7 @@ public class AlexandriaIndexTest {
         context.configPath(hierarchy.newFile().toPath());
         context.projectBase(Paths.get(hierarchy.getRoot().toString()));
 
-        alexandriaIndex.findUnindexedFiles();
+        alexandriaIndex.update();
         assertThat(config.metadata()).isPresent();
         assertThat(config.metadata().get()).hasSize(3);
 
@@ -127,10 +129,11 @@ public class AlexandriaIndexTest {
 
     @Test
     public void testIndexWrapsExceptionsInBatchProcessException() throws IOException {
-        Context context = TestData.minimalContext(folder);
-        context.projectBase(Paths.get(""));
+        Context context = spy(TestData.minimalContext(folder));
+        context.config().metadata(Optional.empty());
+        doThrow(new RuntimeException("test exception")).when(context).addMetadata(any(Config.DocumentMetadata.class));
         AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
-        assertThatThrownBy(() -> alexandriaIndex.findUnindexedFiles())
+        assertThatThrownBy(() -> alexandriaIndex.update())
                 .isInstanceOf(BatchProcessException.class);
     }
 
@@ -139,24 +142,5 @@ public class AlexandriaIndexTest {
         Context context = new Context();
         context.searchPath(Collections.singletonList(Paths.get("foo")));
         assertThatThrownBy(() -> AlexandriaIndex.documentsMatched(context)).isInstanceOf(AlexandriaException.class);
-    }
-
-    @Test
-    public void testIndexMarksMissingFilesForDeletion() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata deletedDocument = TestData.documentForDelete(context, folder);
-        AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
-        alexandriaIndex.markFilesForDeletion();
-        assertThat(deletedDocument.extraProps().get().containsKey("delete"));
-    }
-
-    @Test
-    public void testIndexCreatesExtraPropsIfNecessary() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata deletedDocument = TestData.documentForDelete(context, folder);
-        deletedDocument.extraProps(Optional.empty());
-        AlexandriaIndex alexandriaIndex = new AlexandriaIndex(context);
-        alexandriaIndex.markFilesForDeletion();
-        assertThat(deletedDocument.extraProps().get().containsKey("delete"));
     }
 }

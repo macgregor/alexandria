@@ -15,9 +15,11 @@ import java.util.*;
  * Alexandria configuration that should be persisted between runs.
  *
  * Runtime specific configuration (i.e. {@link Context} fields) will not be saved as they are considered
- * specific to the runtime environment. The data here should be normalized such that it is valid across from any
- * runtime execution. In otherwords, if Alexandria is being used in a git repository, the config file shouldnt
- * contain any absolute paths or system specific data that will break if committed and used by another contributor.
+ * specific to the runtime environment. At runtime Paths contained here can be assumed to be absolute paths
+ * however when serialzed all paths should be converted to relatative paths to {@link Context#configPath} so
+ * that they are valid across any runtime execition. In otherwords, if Alexandria is being used in a git repository,
+ * the config file on disk shouldnt contain any absolute paths or system specific data that will break if committed
+ * and used by another contributor.
  *
  * @see Context
  * @see Context#load(String)
@@ -39,7 +41,7 @@ public class Config {
     @JsonProperty
     private Optional<List<DocumentMetadata>> metadata = Optional.of(new ArrayList<>());
 
-    /** default tags added to all documents. Default: empty list. (TODO: not implemented yet). */
+    /** default tags added to all documents. Default: empty list. */
     @JsonProperty
     private Optional<List<String>> defaultTags = Optional.of(new ArrayList<>());
 
@@ -117,9 +119,13 @@ public class Config {
     @ToString @AllArgsConstructor
     public static class DocumentMetadata{
         /**
-         * File path to the indexed document relative to {@link Context#projectBase}.
+         * File path to the indexed document which may or may not exist.
          *
-         * You can get an absolute path at runtime by calling {@link Context#resolveRelativePath(Path)}.
+         * At runtime, this will be an absolute path, but when persisted it will be converted to a path relative to
+         * {@link Context#configPath}.
+         *
+         * @see Context#makePathsAbsolute()
+         * @see Context#makePathsRelative()
          * */
         @JsonProperty
         @NonNull private Path sourcePath;
@@ -226,26 +232,28 @@ public class Config {
 
         /**
          * Determine the state of a document when processing the sync phase.
-         * TODO: move to {@link Context}
          *
-         * @param context  Alexandria context needed to properly resolve the relative {@link #sourcePath}.
+         * {@link #sourcePath} should be made absolute before calling this or you risk the checksum failing.
+         *
+         * @see Context#makePathsAbsolute()
+         *
          * @return  state that can be used to determine how to process the document
          * @throws IOException  when problems working with {@link #sourcePath} occur.
          */
-        public State determineState(Context context) throws IOException {
+        public State determineState() throws IOException {
             if(this.deletedOn().isPresent()){
                 return State.DELETED;
+            }
+
+            if(!sourcePath.toFile().exists()){
+                return State.DELETE;
             }
 
             if (!this.remoteUri().isPresent()) {
                 return State.CREATE;
             }
 
-            if(this.extraProps().isPresent() && this.extraProps().get().containsKey("delete")){
-                return State.DELETE;
-            }
-
-            long currentChecksum = FileUtils.checksumCRC32(context.resolveRelativePath(this.sourcePath()).toFile());
+            long currentChecksum = FileUtils.checksumCRC32(sourcePath.toFile());
             if(this.sourceChecksum().isPresent() && this.sourceChecksum().get().equals(currentChecksum)){
                 return State.CURRENT;
             }

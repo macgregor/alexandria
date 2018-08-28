@@ -319,7 +319,6 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
         jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
-        assertThat(metadata.hasExtraProperty("delete")).isFalse();
     }
 
     @Test
@@ -331,7 +330,6 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
         jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
-        assertThat(metadata.hasExtraProperty("delete")).isFalse();
     }
 
     @Test
@@ -342,7 +340,7 @@ public class JiveRemoteTest {
                 new MockResponse().setResponseCode(204)));
 
         Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
-        metadata.extraProps().get().put("jiveContentId", "1234");
+        metadata.setExtraProperty("jiveContentId", "1234");
         jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
     }

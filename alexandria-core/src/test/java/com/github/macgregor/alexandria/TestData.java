@@ -92,9 +92,6 @@ public class TestData {
         Config.DocumentMetadata metadata = minimalDocumentMetadata(context, temporaryFolder);
         FileUtils.forceDelete(metadata.sourcePath().toFile());
         metadata.remoteUri(Optional.of(new URI("https://jive.com/api/core/v3/contents/DOC-1234")));
-        Map<String, String> extraProps = new HashMap<>();
-        extraProps.put("delete", "true");
-        metadata.extraProps(Optional.of(extraProps));
         return metadata;
     }
 

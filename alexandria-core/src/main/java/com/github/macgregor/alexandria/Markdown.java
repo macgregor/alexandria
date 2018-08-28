@@ -1,7 +1,9 @@
 package com.github.macgregor.alexandria;
 
 import com.vladsch.flexmark.ast.Node;
+import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
+import com.vladsch.flexmark.ext.gfm.tasklist.TaskListExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
@@ -30,8 +32,18 @@ public class Markdown {
      */
     public static MutableDataSet options(){
         if(options == null){
-            options = new MutableDataSet();
-            options.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create()));
+            options = new MutableDataSet().set(Parser.EXTENSIONS, Arrays.asList(
+                    AutolinkExtension.create(),
+                    StrikethroughExtension.create(),
+                    TaskListExtension.create(),
+                    TablesExtension.create()))
+                    .set(TablesExtension.WITH_CAPTION, false)
+                    .set(TablesExtension.COLUMN_SPANS, false)
+                    .set(TablesExtension.MIN_HEADER_ROWS, 1)
+                    .set(TablesExtension.MAX_HEADER_ROWS, 1)
+                    .set(TablesExtension.APPEND_MISSING_COLUMNS, true)
+                    .set(TablesExtension.DISCARD_EXTRA_COLUMNS, true)
+                    .set(TablesExtension.HEADER_SEPARATOR_COLUMN_MATCH, true);
         }
         return options;
     }
