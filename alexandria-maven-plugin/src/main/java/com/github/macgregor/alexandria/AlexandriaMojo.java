@@ -43,6 +43,9 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     @Parameter( property = "alexandria.timeout", defaultValue = "30")
     private Integer timeout = 30;
 
+    @Parameter( property = "alexandria.failBuild", defaultValue = "false")
+    private boolean failBuild = false;
+
     private Alexandria alexandria = new Alexandria();
 
     public Alexandria init() throws IOException {

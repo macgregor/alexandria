@@ -77,9 +77,9 @@ public class Config {
         @JsonProperty
         private String datetimeFormat = ALEXANDRIA_DATETIME_PATTERN;
 
-        /** Timeout in seconds for each rest call to the remote. Default: 60 seconds. */
+        /** Timeout in seconds for each rest call to the remote. Default: 30 seconds. */
         @JsonProperty
-        private Integer requestTimeout = 60;
+        private Integer requestTimeout = 30;
 
         /**
          * Returns the remote username, interpolating the variable if it follows the appropriate pattern (e.g. ${env.foo}).

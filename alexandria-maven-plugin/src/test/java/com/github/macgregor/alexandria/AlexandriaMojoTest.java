@@ -206,4 +206,9 @@ public class AlexandriaMojoTest {
         testAlexandriaMojo.init();
         assertThat(context.config().remote().requestTimeout()).isEqualTo(45);
     }
+
+    @Test
+    public void testFailBuildDefaultsToFalse(){
+        assertThat(testAlexandriaMojo.failBuild()).isFalse();
+    }
 }

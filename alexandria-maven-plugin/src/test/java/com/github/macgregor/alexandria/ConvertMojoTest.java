@@ -1,5 +1,6 @@
 package com.github.macgregor.alexandria;
 
+import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -75,6 +76,7 @@ public class ConvertMojoTest {
 
     @Test
     public void testConvertWrapsIOExceptions() throws IOException {
+        convertMojo.failBuild(true);
         convertMojo.project(parentProject);
         doThrow(IOException.class).when(convertMojo).init();
         assertThatThrownBy(() -> convertMojo.execute()).isInstanceOf(MojoFailureException.class);
@@ -82,8 +84,17 @@ public class ConvertMojoTest {
 
     @Test
     public void testConvertWrapsBatchProcessException() throws IOException {
+        convertMojo.failBuild(true);
         convertMojo.project(parentProject);
         doThrow(BatchProcessException.class).when(alexandria).convert();
         assertThatThrownBy(() -> convertMojo.execute()).isInstanceOf(MojoFailureException.class);
+    }
+
+    @Test
+    public void testSyncDoesntThrowErrorWhenFailBuildsSetToFalse() throws AlexandriaException, MojoFailureException, MojoExecutionException {
+        convertMojo.failBuild(false);
+        convertMojo.project(parentProject);
+        doThrow(BatchProcessException.class).when(alexandria).syncWithRemote();
+        convertMojo.execute();
     }
 }
