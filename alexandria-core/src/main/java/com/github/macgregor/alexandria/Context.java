@@ -54,6 +54,25 @@ public class Context {
     private Map<Config.DocumentMetadata, Path> convertedPaths = new HashMap<>();
 
     /**
+     * Sets the path to the Alexandria config file. <b>Must be an absolute path</b>.
+     *
+     * Resolving relative paths is system dependent. If we dont have a predictable absolute path to use as a reference
+     * point we may get into some weird states. It is up to the caller instantiating the context to properly set this
+     * absolute path so that Alexandria can accurately create absolute and relative paths as it works.
+     *
+     * @param configPath  An absolute path to the Alexandria config file. Used to resolve all other relative and absolute paths.
+     * @return  Alexandria context
+     */
+    public Context configPath(Path configPath){
+        if(!configPath.isAbsolute()){
+            this.configPath = configPath.toAbsolutePath();
+        } else {
+            this.configPath = configPath;
+        }
+        return this;
+    }
+
+    /**
      * Resolve a relative path to an absolute one using the {@link #configPath} directory. Useful for resolving relative
      * {@link com.github.macgregor.alexandria.Config.DocumentMetadata#sourcePath}.
      *
@@ -94,6 +113,63 @@ public class Context {
     }
 
     /**
+     * Safetly add new document metadata to the index, converting the source path to absolute if necessary.
+     *
+     * @param metadata  metadata to add
+     * @return  Alexandria context.
+     */
+    public Context addMetadata(Config.DocumentMetadata metadata){
+        if(!config.metadata().isPresent()){
+            config.metadata(Optional.of(new ArrayList<>()));
+        }
+        metadata.sourcePath(Resources.absolutePath(configPath.getParent(), metadata.sourcePath()));
+        config.metadata().get().add(metadata);
+        return this;
+    }
+
+    /**
+     * Make all {@link Config} and {@link Context} paths absolute relative to {@link #configPath}.
+     *
+     * @return  Alexandria context.
+     */
+    public Context makePathsAbsolute(){
+        if( configPath != null){
+            projectBase = Resources.absolutePath(configPath.getParent(), projectBase);
+            outputPath = Optional.ofNullable(Resources.absolutePath(configPath.getParent(), outputPath.orElse(null)));
+            searchPath = (List<Path>) Resources.absolutePath(configPath.getParent(), searchPath);
+            if(config.metadata().isPresent()){
+                config.metadata().get()
+                        .stream()
+                        .forEach(m -> {
+                            m.sourcePath(Resources.absolutePath(configPath.getParent(), m.sourcePath()));
+                        });
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Make all {@link Config} and {@link Context} paths relative to {@link #configPath}.
+     *
+     * @return  Alexandria context.
+     */
+    public Context makePathsRelative(){
+        if( configPath != null){
+            projectBase = Resources.relativeTo(configPath.getParent(), projectBase);
+            outputPath = Optional.ofNullable(Resources.relativeTo(configPath.getParent(), outputPath.orElse(null)));
+            searchPath = (List<Path>) Resources.relativeTo(configPath.getParent(), searchPath);
+            if(config.metadata().isPresent()){
+                config.metadata().get()
+                        .stream()
+                        .forEach(m -> {
+                            m.sourcePath(Resources.relativeTo(configPath.getParent(), m.sourcePath()));
+                        });
+            }
+        }
+        return this;
+    }
+
+    /**
      * Initialize Alexandria's {@link Context}, loading the {@link Config} from the given file path.
      *
      * Required context paths will be set to the directory of {@code filePath} and should be appropriately
@@ -108,8 +184,8 @@ public class Context {
         Context context = new Context();
         Path path = Resources.path(filePath, false).toAbsolutePath();
         context.configPath(path);
-        context.projectBase(path.getParent().toAbsolutePath());
-        context.searchPath(Collections.singletonList(path.getParent().toAbsolutePath()));
+        context.projectBase(path.getParent());
+        context.searchPath(Collections.singletonList(path.getParent()));
 
         if(path.toFile().exists()) {
             Config originalConfig = Jackson.yamlMapper().readValue(path.toFile(), Config.class);
@@ -121,6 +197,7 @@ public class Context {
             log.debug(String.format("Created default configuration for new file %s", path.toString()));
         }
 
+        context.makePathsAbsolute();
         return context;
     }
 
@@ -133,10 +210,12 @@ public class Context {
      * @throws IOException  problems saving the file
      */
     public static void save(Context context) throws IOException {
+        context.makePathsRelative();
         Config toSave = context.originalConfig;
         toSave.metadata(context.config.metadata());
 
         Jackson.yamlMapper().writeValue(context.configPath().toFile(), toSave);
+        context.makePathsAbsolute();
         log.debug(String.format("Saved configuration to %s", context.configPath().toString()));
     }
 }

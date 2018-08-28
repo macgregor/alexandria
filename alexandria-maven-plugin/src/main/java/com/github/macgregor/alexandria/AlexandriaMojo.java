@@ -52,7 +52,7 @@ public abstract class AlexandriaMojo extends AbstractMojo {
         if(configPath == null){
             configPath = Paths.get(rootDir(), ".alexandria").toString();
         }
-        alexandria.context(Context.load(configPath));
+        alexandria.context(Context.load(Paths.get(configPath).toAbsolutePath().toString()));
         alexandria.context().searchPath(inputs.stream().map(Paths::get).collect(Collectors.toList()));
         alexandria.context().outputPath(Optional.of(Paths.get(outputPath)));
         alexandria.context().config().remote().requestTimeout(timeout);

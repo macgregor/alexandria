@@ -3,6 +3,7 @@ package com.github.macgregor.alexandria;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -42,8 +43,8 @@ public class AlexandriaConvertTest {
 
         AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
         alexandriaConvert.convert();
-        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(subdir.getPath(), "minimal.html"));
-        assertThat(Paths.get(subdir.getPath(), "minimal.html")).exists();
+        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(subdir.getPath(), FilenameUtils.getBaseName(metadata.sourceFileName()) + ".html"));
+        assertThat(Paths.get(subdir.getPath(), FilenameUtils.getBaseName(metadata.sourceFileName()) + ".html")).exists();
     }
 
     @Test
@@ -52,8 +53,8 @@ public class AlexandriaConvertTest {
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
         alexandriaConvert.convert();
-        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), "minimal.html"));
-        assertThat(Paths.get(folder.getRoot().toString(), "minimal.html")).exists();
+        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), FilenameUtils.getBaseName(metadata.sourceFileName()) + ".html"));
+        assertThat(Paths.get(folder.getRoot().toString(), FilenameUtils.getBaseName(metadata.sourceFileName()) + ".html")).exists();
     }
 
     @Test

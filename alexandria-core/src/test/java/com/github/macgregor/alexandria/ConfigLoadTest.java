@@ -66,8 +66,10 @@ public class ConfigLoadTest {
 
     @Test
     public void testLoadMetadataSourcePath() throws IOException, URISyntaxException {
-        Config.DocumentMetadata loaded = Context.load("src/test/resources/config.yaml").config().metadata().get().get(0);
-        assertThat(loaded.sourcePath()).isEqualTo(expected().metadata().get().get(0).sourcePath());
+        Context context = Context.load("src/test/resources/config.yaml");
+        Config.DocumentMetadata loaded = context.config().metadata().get().get(0);
+        assertThat(loaded.sourcePath())
+                .isEqualTo(Resources.absolutePath(context.configPath().getParent(), expected().metadata().get().get(0).sourcePath()));
     }
 
     @Test

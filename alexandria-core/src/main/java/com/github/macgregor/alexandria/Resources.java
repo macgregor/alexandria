@@ -286,9 +286,58 @@ public class Resources {
      * @return  new collection of relative paths
      */
     public static Collection<Path> relativeTo(Path base, Collection<Path> paths){
+        if(paths == null){
+            return null;
+        }
         return paths.stream()
                 .map(p -> p.isAbsolute() ? base.relativize(p) : p)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Make a {@link Path} relative to the provided base. See {@link Path#relativize(Path)}.
+     *
+     * @param base  Base path other paths should be relative to
+     * @param path  path to make relative
+     * @return  if path is null, null; otherwise a relative path
+     */
+    public static Path relativeTo(Path base, Path path){
+        if(path == null){
+            return null;
+        }
+        return base.relativize(path);
+    }
+
+    /**
+     * Make a collection of relative paths absolute using the provided base as a reference point.
+     *
+     * @param base  absolute base path to resolve the relative path against
+     * @param paths  the relative path to resolve
+     * @return  if paths is null, null; otherwise the absolute representation of the paths
+     */
+    public static Collection<Path> absolutePath(Path base, Collection<Path> paths){
+        if(paths == null){
+            return null;
+        }
+        List<Path> converted = new ArrayList<>(paths.size());
+        for(Path p : paths){
+            converted.add(absolutePath(base, p));
+        }
+        return converted;
+    }
+
+    /**
+     * Make a relative path absolute using the provided base as a reference point.
+     *
+     * @param base  absolute base path to resolve the relative path against
+     * @param path  the relative path to resolve
+     * @return  if path is null; null otherwise the absolute representation of path
+     */
+    public static Path absolutePath(Path base, Path path){
+        if(path == null || path.isAbsolute()){
+            return path;
+        }
+        return base.resolve(path).normalize();
     }
 
     /**

@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -44,6 +43,8 @@ public class AlexandriaConvert {
     public void convert() throws AlexandriaException {
         log.debug("Converting files to html.");
 
+        context.makePathsAbsolute();
+
         if(context.config().remote().supportsNativeMarkdown()){
             log.debug("Remote supports native markdown, no need to convert anything.");
             return;
@@ -72,7 +73,7 @@ public class AlexandriaConvert {
      * @return  absolute path to the converted html file
      */
     protected static Path convertedPath(Context context, Config.DocumentMetadata metadata){
-        Path sourceDir = context.resolveRelativePath(metadata.sourcePath()).getParent();
+        Path sourceDir =  metadata.sourcePath().getParent();
         String convertedDir = context.outputPath().orElse(sourceDir).toString();
         String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
         return Paths.get(convertedDir, convertedFileName);
@@ -88,18 +89,18 @@ public class AlexandriaConvert {
      * @throws AlexandriaException  wrapper for any IOException thrown during conversion to make it integrate with {@link BatchProcess}
      */
     protected static void convert(Context context, Config.DocumentMetadata metadata) throws AlexandriaException {
-        Path convertedPath = convertedPath(context, metadata);
-        Path sourcePath = context.resolveRelativePath(metadata.sourcePath());
         try {
+            Path convertedPath = convertedPath(context, metadata);
+            Path sourcePath = metadata.sourcePath();
             Markdown.toHtml(sourcePath, convertedPath);
             metadata.convertedChecksum(Optional.of(FileUtils.checksumCRC32(convertedPath.toFile())));
-        } catch (IOException e) {
+            context.convertedPath(metadata, convertedPath);
+        } catch (Exception e) {
             throw new AlexandriaException.Builder()
                     .withMessage(String.format("Unexcepted error converting %s to html", metadata.sourcePath()))
                     .causedBy(e)
                     .metadataContext(metadata)
                     .build();
         }
-        context.convertedPath(metadata, convertedPath);
     }
 }
