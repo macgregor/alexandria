@@ -213,6 +213,21 @@ public class Markdown {
 
         @Override
         public void setAttributes(Node node, AttributablePart part, Attributes attributes) {
+            /*
+            Jive syntax language options:
+            None,
+            Java
+            JavaScript
+            SQL
+            HTML/xml
+            CSS
+            php
+            Ruby
+            Python
+            C
+            C#
+            C++
+             */
             if(node instanceof FencedCodeBlock){
                 if(part == AttributablePart.NODE) {
                     String language = "none";
@@ -220,6 +235,8 @@ public class Markdown {
                         language = ((FencedCodeBlock) node).getInfo().toString();
                         if(language.equals("yaml") || language.equals("yml")){
                             language = "javascript";
+                        } else if(language.equals("html") || language.equals("xml")){
+                            language = "markup";
                         }
                     }
                     attributes.replaceValue("class", String.format("language-%s line-numbers", language));
