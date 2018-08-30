@@ -5,8 +5,8 @@
         </encoder>
     </appender>
 
-    <logger name="com.github.macgregor.alexandria" level="off" />
-    <root level="OFF">
+    <logger name="com.github.macgregor.alexandria" level="info" />
+    <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

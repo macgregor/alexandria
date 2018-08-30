@@ -11,6 +11,7 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okio.Buffer;
 
 import java.io.IOException;
 
@@ -34,6 +35,9 @@ public abstract class RestRemote {
      */
     protected Response doRequest(Request request) throws HttpException {
         log.debug(request.toString());
+        if(request.body() != null) {
+            log.debug(bodyToString(request));
+        }
         Call call = client.newCall(request);
 
         Response response = null;
@@ -82,6 +86,17 @@ public abstract class RestRemote {
                     .requestContext(request)
                     .responseContext(response)
                     .build();
+        }
+    }
+
+    private static String bodyToString(final Request request){
+        try {
+            final Request copy = request.newBuilder().build();
+            final Buffer buffer = new Buffer();
+            copy.body().writeTo(buffer);
+            return buffer.readUtf8();
+        } catch (final IOException e) {
+            return "did not work";
         }
     }
 }
