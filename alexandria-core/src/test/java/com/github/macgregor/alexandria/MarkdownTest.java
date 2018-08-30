@@ -49,7 +49,7 @@ public class MarkdownTest {
         Resources.save(markdown.getPath(), "```xml\nline1  \nline2  \n```");
         Markdown.toHtml(markdown.toPath(), Paths.get(folder.getRoot().toString(), "foo.html"));
         String html = Resources.load(out.toString());
-        assertThat(html).contains("<pre class=\"language-xml line-numbers\">");
+        assertThat(html).contains("<pre class=\"language-markup line-numbers\">");
         log.info(html);
     }
 
@@ -104,6 +104,28 @@ public class MarkdownTest {
         Markdown.toHtml(markdown.toPath(), Paths.get(folder.getRoot().toString(), "foo.html"));
         String html = Resources.load(out.toString());
         assertThat(html).contains("<pre class=\"language-javascript line-numbers\">");
+        log.info(html);
+    }
+
+    @Test
+    public void testJiveCodeBlockStyleChangesXmlToMarkup() throws IOException {
+        File markdown = folder.newFile("foo.md");
+        Path out = Paths.get(folder.getRoot().toString(), "foo.html");
+        Resources.save(markdown.getPath(), "```xml\nline1  \nline2  \n```");
+        Markdown.toHtml(markdown.toPath(), Paths.get(folder.getRoot().toString(), "foo.html"));
+        String html = Resources.load(out.toString());
+        assertThat(html).contains("<pre class=\"language-markup line-numbers\">");
+        log.info(html);
+    }
+
+    @Test
+    public void testJiveCodeBlockStyleChangesHtmlToMarkup() throws IOException {
+        File markdown = folder.newFile("foo.md");
+        Path out = Paths.get(folder.getRoot().toString(), "foo.html");
+        Resources.save(markdown.getPath(), "```html\nline1  \nline2  \n```");
+        Markdown.toHtml(markdown.toPath(), Paths.get(folder.getRoot().toString(), "foo.html"));
+        String html = Resources.load(out.toString());
+        assertThat(html).contains("<pre class=\"language-markup line-numbers\">");
         log.info(html);
     }
 
