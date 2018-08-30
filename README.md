@@ -126,6 +126,14 @@ This is where most of the complexity is.
 Contributions are welcome, especially adding new remotes so that others can make use of them. Please provide adequate unit
 tests as part of the pull request.
 
+## Quirks
+* Line breaks can be frustratingly hard to get exactly how you want Putting one or even two newlines
+between a paragraph doesnt give you a nice space between paragraphs like it does on github. If you really
+need that white space add a `<p/>` or `<br/>` tag between paragraphs.
+* if you are using the alexandria-mojo-plugin on a project that is pom packaging (so just a pom file), you
+cant you `mvn deploy` as there is nothing to deploy. You will have to run the goals explicitly:
+`mvn alexandria:index alexandria:clean alexandria:sync`. This is a maven thing.
+
 ## Trobleshooting
 * [crazy long error about eclipse loggers](https://stackoverflow.com/questions/47920305/can-not-set-org-eclipse-aether-spi-log-logger-with-custom-maven-plugin) when trying to install alexandria-maven-plugin. Upgrade maven to at least 3.5.2
 * trace level maven logging: `mvn alexandria:sync -Dorg.slf4j.simpleLogger.defaultLogLevel=trace`
