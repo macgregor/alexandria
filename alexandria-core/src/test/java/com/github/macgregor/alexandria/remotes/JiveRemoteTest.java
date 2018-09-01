@@ -3,6 +3,7 @@ package com.github.macgregor.alexandria.remotes;
 import com.github.macgregor.alexandria.*;
 import com.github.macgregor.alexandria.Config.RemoteConfig;
 import com.github.macgregor.alexandria.exceptions.HttpException;
+import com.github.macgregor.alexandria.remotes.jive.JiveData;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -32,7 +33,7 @@ public class JiveRemoteTest {
 
     @Test
     public void voidTestJivePagedContentParsing() throws IOException {
-        JiveRemote.PagedJiveContent parsed = Jackson.jsonMapper().readValue(Resources.load("src/test/resources/DOC-1072237-Paged.json"), JiveRemote.PagedJiveContent.class);
+        JiveData.PagedJiveContent parsed = Jackson.jsonMapper().readValue(Resources.load("src/test/resources/DOC-1072237-Paged.json"), JiveData.PagedJiveContent.class);
 
         assertThat(parsed).isEqualToComparingFieldByFieldRecursively(expectedPagedJiveContent());
     }
@@ -45,7 +46,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.findDocument(new Context(), metadata))
-                .withMessageContaining("Bad request");
+                .withMessageContaining("400");
     }
 
     @Test
@@ -56,7 +57,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.findDocument(new Context(), metadata))
-                .withMessageContaining("Unexpected status code");
+                .withMessageContaining("500");
     }
 
     @Test
@@ -114,7 +115,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.create(context, metadata))
-                .withMessageContaining("Bad request");
+                .withMessageContaining("400");
     }
 
     @Test
@@ -126,7 +127,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.create(context, metadata))
-                .withMessageContaining("Document conflicts with existing document");
+                .withMessageContaining("409");
     }
 
     @Test
@@ -138,7 +139,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.create(context, metadata))
-                .withMessageContaining("Unauthorized to access document");
+                .withMessageContaining("403");
     }
 
     @Test
@@ -258,7 +259,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.update(context, metadata))
-                .withMessageContaining("Bad request");
+                .withMessageContaining("400");
     }
 
     @Test
@@ -270,7 +271,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.update(context, metadata))
-                .withMessageContaining("Document conflicts with existing document");
+                .withMessageContaining("409");
     }
 
     @Test
@@ -282,7 +283,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.update(context, metadata))
-                .withMessageContaining("Unauthorized to access document");
+                .withMessageContaining("403");
     }
 
     @Test
@@ -294,7 +295,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.update(context, metadata))
-                .withMessageContaining("Document doesnt exist");
+                .withMessageContaining("404");
     }
 
     @Test
@@ -353,7 +354,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
-                .withMessageContaining("Bad request");
+                .withMessageContaining("400");
     }
 
     @Test
@@ -364,7 +365,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
-                .withMessageContaining("Unauthorized to access document");
+                .withMessageContaining("403");
     }
 
     @Test
@@ -378,7 +379,7 @@ public class JiveRemoteTest {
 
         assertThatExceptionOfType(HttpException.class)
                 .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
-                .withMessageContaining("Document doesnt exist");
+                .withMessageContaining("404");
     }
 
     @Test
@@ -415,8 +416,8 @@ public class JiveRemoteTest {
     public void testJiveRemoteUpdateMetadataRemoteUri() throws URISyntaxException {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
-        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
-        JiveRemote.Link link = new JiveRemote.Link();
+        JiveData.JiveContent content = new JiveData.JiveContent();
+        JiveData.Link link = new JiveData.Link();
         link.ref = "http://www.google.com";
         link.allowed = Collections.singletonList("GET");
         content.resources.put("html", link);
@@ -429,8 +430,8 @@ public class JiveRemoteTest {
     public void testJiveRemoteUpdateMetadataRemoteUriBadLink() {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
-        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
-        JiveRemote.Link link = new JiveRemote.Link();
+        JiveData.JiveContent content = new JiveData.JiveContent();
+        JiveData.Link link = new JiveData.Link();
         link.ref = null;
         link.allowed = Collections.singletonList("GET");
         content.resources.put("html", link);
@@ -443,8 +444,8 @@ public class JiveRemoteTest {
     public void testJiveRemoteUpdateMetadataParentUrl() {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
-        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
-        content.parentPlace = new JiveRemote.JiveContent.ParentPlace();
+        JiveData.JiveContent content = new JiveData.JiveContent();
+        content.parentPlace = new JiveData.JiveContent.ParentPlace();
         content.parentPlace.html = "http://www.google.com";
         JiveRemote remote = new JiveRemote();
         remote.updateMetadata(metadata, content);
@@ -455,8 +456,8 @@ public class JiveRemoteTest {
     public void testJiveRemoteUpdateMetadataParentId() {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
-        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
-        content.parentPlace = new JiveRemote.JiveContent.ParentPlace();
+        JiveData.JiveContent content = new JiveData.JiveContent();
+        content.parentPlace = new JiveData.JiveContent.ParentPlace();
         content.parentPlace.placeID = "1234";
         JiveRemote remote = new JiveRemote();
         remote.updateMetadata(metadata, content);
@@ -467,7 +468,7 @@ public class JiveRemoteTest {
     public void testJiveRemoteUpdateMetadataContentId() {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
-        JiveRemote.JiveContent content = new JiveRemote.JiveContent();
+        JiveData.JiveContent content = new JiveData.JiveContent();
         content.contentID = "1234";
         JiveRemote remote = new JiveRemote();
         remote.updateMetadata(metadata, content);
@@ -478,7 +479,7 @@ public class JiveRemoteTest {
     public void testJiveRemoteUpdateMetadataPagedEmpty() {
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
-        JiveRemote.PagedJiveContent content = new JiveRemote.PagedJiveContent();
+        JiveData.PagedJiveContent content = new JiveData.PagedJiveContent();
         content.list = Collections.EMPTY_LIST;
         JiveRemote remote = new JiveRemote();
         remote.updateMetadata(metadata, content);
@@ -513,8 +514,8 @@ public class JiveRemoteTest {
     @Test
     public void testJiveUpdateMetadataHandlesMissingMalformedPagedParent(){
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        assertThat(JiveRemote.updateMetadata(metadata, (JiveRemote.PagedJivePlace) null)).isEqualTo(metadata);
-        JiveRemote.PagedJivePlace parentPlace = new JiveRemote.PagedJivePlace();
+        assertThat(JiveRemote.updateMetadata(metadata, (JiveData.PagedJivePlace) null)).isEqualTo(metadata);
+        JiveData.PagedJivePlace parentPlace = new JiveData.PagedJivePlace();
         parentPlace.list = null;
         assertThat(JiveRemote.updateMetadata(metadata, parentPlace)).isEqualTo(metadata);
         parentPlace.list = new ArrayList<>();
@@ -525,7 +526,7 @@ public class JiveRemoteTest {
     public void testJiveUpdateMetadataFromParentPlacePlaceId(){
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
-        JiveRemote.JivePlace place = new JiveRemote.JivePlace();
+        JiveData.JivePlace place = new JiveData.JivePlace();
         place.placeID = null;
         assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
         place.placeID = "";
@@ -541,12 +542,12 @@ public class JiveRemoteTest {
     public void testJiveUpdateMetadataFromParentPlaceParentUri(){
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
-        JiveRemote.JivePlace place = new JiveRemote.JivePlace();
+        JiveData.JivePlace place = new JiveData.JivePlace();
         place.resources = null;
         assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
-        place.resources = new HashMap<String, JiveRemote.Link>();
+        place.resources = new HashMap<String, JiveData.Link>();
         assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
-        JiveRemote.Link link = new JiveRemote.Link();
+        JiveData.Link link = new JiveData.Link();
         link.ref = "foo";
         link.allowed = Collections.singletonList("GET");
         place.resources.put("html", link);
@@ -558,12 +559,12 @@ public class JiveRemoteTest {
     public void testJiveUpdateMetadataFromParentPlaceParentApiUri(){
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
-        JiveRemote.JivePlace place = new JiveRemote.JivePlace();
+        JiveData.JivePlace place = new JiveData.JivePlace();
         place.resources = null;
         assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
-        place.resources = new HashMap<String, JiveRemote.Link>();
+        place.resources = new HashMap<String, JiveData.Link>();
         assertThat(JiveRemote.updateMetadata(metadata, place)).isEqualTo(metadata);
-        JiveRemote.Link link = new JiveRemote.Link();
+        JiveData.Link link = new JiveData.Link();
         link.ref = "foo";
         link.allowed = Collections.singletonList("GET");
         place.resources.put("self", link);
@@ -574,8 +575,8 @@ public class JiveRemoteTest {
     @Test
     public void testJiveUpdateMetadataHandlesMissingMalformedPagedContent(){
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        assertThat(JiveRemote.updateMetadata(metadata, (JiveRemote.PagedJiveContent) null)).isEqualTo(metadata);
-        JiveRemote.PagedJiveContent content = new JiveRemote.PagedJiveContent();
+        assertThat(JiveRemote.updateMetadata(metadata, (JiveData.PagedJiveContent) null)).isEqualTo(metadata);
+        JiveData.PagedJiveContent content = new JiveData.PagedJiveContent();
         content.list = null;
         assertThat(JiveRemote.updateMetadata(metadata, content)).isEqualTo(metadata);
         content.list = new ArrayList<>();
@@ -643,8 +644,7 @@ public class JiveRemoteTest {
         Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
         context.config().metadata(Optional.of(Collections.singletonList(metadata)));
 
-        String postBody = JiveRemote.documentPostBody(context, metadata);
-        JiveRemote.JiveContent jiveContent = Jackson.jsonMapper().readValue(postBody, JiveRemote.JiveContent.class);
+        JiveData.JiveContent jiveContent = JiveRemote.documentPostBody(context, metadata);
 
         assertThat(jiveContent.parentPlace).isNull();
         assertThat(jiveContent.subject).isEqualTo(metadata.title());
@@ -660,8 +660,7 @@ public class JiveRemoteTest {
         context.config().metadata(Optional.of(Collections.singletonList(metadata)));
         metadata.extraProps().get().put("jiveContentId", "1234");
 
-        String postBody = JiveRemote.documentPostBody(context, metadata);
-        JiveRemote.JiveContent jiveContent = Jackson.jsonMapper().readValue(postBody, JiveRemote.JiveContent.class);
+        JiveData.JiveContent jiveContent = JiveRemote.documentPostBody(context, metadata);
 
         assertThat(jiveContent.contentID).isEqualTo("1234");
     }
@@ -673,8 +672,7 @@ public class JiveRemoteTest {
         context.config().metadata(Optional.of(Collections.singletonList(metadata)));
         metadata.extraProps().get().put("jiveParentApiUri", "wwww.google.com");
 
-        String postBody = JiveRemote.documentPostBody(context, metadata);
-        JiveRemote.JiveContent jiveContent = Jackson.jsonMapper().readValue(postBody, JiveRemote.JiveContent.class);
+        JiveData.JiveContent jiveContent = JiveRemote.documentPostBody(context, metadata);
 
         assertThat(jiveContent.parent).isEqualTo("wwww.google.com");
     }
@@ -686,8 +684,7 @@ public class JiveRemoteTest {
         context.config().metadata(Optional.of(Collections.singletonList(metadata)));
         metadata.tags(Optional.of(Collections.singletonList("foo")));
 
-        String postBody = JiveRemote.documentPostBody(context, metadata);
-        JiveRemote.JiveContent jiveContent = Jackson.jsonMapper().readValue(postBody, JiveRemote.JiveContent.class);
+        JiveData.JiveContent jiveContent = JiveRemote.documentPostBody(context, metadata);
 
         assertThat(jiveContent.tags).containsExactlyInAnyOrder("foo");
     }
@@ -715,8 +712,8 @@ public class JiveRemoteTest {
         return jiveRemote;
     }
 
-    private JiveRemote.PagedJiveContent expectedPagedJiveContent(){
-        JiveRemote.JiveContent jiveContent = new JiveRemote.JiveContent();
+    private JiveData.PagedJiveContent expectedPagedJiveContent(){
+        JiveData.JiveContent jiveContent = new JiveData.JiveContent();
         jiveContent.id = 1072237;
         jiveContent.published = ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
         jiveContent.updated = ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
@@ -727,13 +724,13 @@ public class JiveRemoteTest {
         jiveContent.type = "document";
         jiveContent.typeCode = 102;
 
-        JiveRemote.JiveContent.Content content = new JiveRemote.JiveContent.Content();
+        JiveData.JiveContent.Content content = new JiveData.JiveContent.Content();
         content.editable = true;
         content.type = "text/html";
         content.text = "<body></body>";
         jiveContent.content = content;
 
-        JiveRemote.JiveContent.ParentPlace parentPlace = new JiveRemote.JiveContent.ParentPlace();
+        JiveData.JiveContent.ParentPlace parentPlace = new JiveData.JiveContent.ParentPlace();
         parentPlace.id = 2276;
         parentPlace.html = "https://jive.com/groups/parent_group";
         parentPlace.placeID = "61562";
@@ -742,12 +739,12 @@ public class JiveRemoteTest {
         parentPlace.uri = "https://jive.com/api/core/v3/places/61562";
         jiveContent.parentPlace = parentPlace;
 
-        Map<String, JiveRemote.Link> resources = new HashMap<>();
+        Map<String, JiveData.Link> resources = new HashMap<>();
         resources.put("html", link("https://jive.com/docs/DOC-1072237", Arrays.asList("GET")));
         resources.put("extprops", link("https://jive.com/api/core/v3/contents/1278973/extprops", Arrays.asList("POST", "DELETE", "GET")));
         jiveContent.resources = resources;
 
-        JiveRemote.PagedJiveContent pagedContent = new JiveRemote.PagedJiveContent();
+        JiveData.PagedJiveContent pagedContent = new JiveData.PagedJiveContent();
         pagedContent.itemsPerPage = 1;
         pagedContent.links.put("next", "https://jive.com/api/core/v3/contents?sort=dateCreatedDesc&fields=id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent&filter=entityDescriptor%28102,1072237%29&abridged=false&includeBlogs=false&count=1&startIndex=1");
         pagedContent.startIndex = 0;
@@ -755,8 +752,8 @@ public class JiveRemoteTest {
         return pagedContent;
     }
 
-    private JiveRemote.Link link(String ref, List<String> allowed){
-        JiveRemote.Link link = new JiveRemote.Link();
+    private JiveData.Link link(String ref, List<String> allowed){
+        JiveData.Link link = new JiveData.Link();
         link.ref = ref;
         link.allowed = allowed;
         return link;

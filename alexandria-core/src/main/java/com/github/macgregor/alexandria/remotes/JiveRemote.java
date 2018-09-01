@@ -2,21 +2,29 @@ package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
-import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.Resources;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.HttpException;
-import lombok.*;
+import com.github.macgregor.alexandria.remotes.jive.JiveData;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
+import okhttp3.Credentials;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -83,7 +91,6 @@ import java.util.regex.Pattern;
 public class JiveRemote extends RestRemote implements Remote{
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    public static final String STANDARD_FIELD_PROJECTION = "id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent";
 
     public static final String JIVE_CONTENT_ID = "jiveContentId";
     public static final String JIVE_PARENT_URI = "jiveParentUri";
@@ -175,27 +182,15 @@ public class JiveRemote extends RestRemote implements Remote{
             findParentPlace(context, metadata);
         }
 
-        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
-                .addPathSegment("contents")
-                .addQueryParameter("fields", STANDARD_FIELD_PROJECTION)
+        RemoteDocument<JiveData.JiveContent> jiveContent = RemoteDocument.<JiveData.JiveContent>builder()
+                .baseUrl(config.baseUrl().get())
+                .pathSegment("contents")
+                .entity(JiveData.JiveContent.class)
+                .header("Authorization", Credentials.basic(config.username().get(), config.password().get()))
+                .queryParameter("fields", JiveData.JiveContent.FIELDS)
                 .build();
-
-        Request request = authenticated(new Request.Builder())
-                .url(route)
-                .post(RequestBody.create(JSON, documentPostBody(context, metadata)))
-                .build();
-
-        Response response = doRequest(request);
-        try {
-            JiveContent jiveContent =  Jackson.jsonMapper().readValue(response.body().charStream(), JiveContent.class);
-            updateMetadata(metadata, jiveContent);
-        } catch (IOException e) {
-            log.warn("Cannot parse response content", e);
-            HttpException exception = new HttpException("Cannot parse response content", e);
-            exception.request(Optional.of(request));
-            exception.response(Optional.ofNullable(response));
-            throw exception;
-        }
+        JiveData.JiveContent content = jiveContent.post(documentPostBody(context, metadata));
+        updateMetadata(metadata, content);
     }
 
     /**
@@ -221,29 +216,16 @@ public class JiveRemote extends RestRemote implements Remote{
             findParentPlace(context, metadata);
         }
 
-        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
-                .addPathSegment("contents")
-                .addPathSegment(contentId)
+        RemoteDocument<JiveData.JiveContent> jiveContent = RemoteDocument.<JiveData.JiveContent>builder()
+                .baseUrl(config.baseUrl().get())
+                .pathSegment("contents")
+                .pathSegment(contentId)
+                .entity(JiveData.JiveContent.class)
+                .header("Authorization", Credentials.basic(config.username().get(), config.password().get()))
+                .queryParameter("fields", JiveData.JiveContent.FIELDS)
                 .build();
-
-        Request request = authenticated(new Request.Builder())
-                .url(route)
-                .put(RequestBody.create(JSON, documentPostBody(context, metadata)))
-                .build();
-
-        Response response = doRequest(request);
-        try {
-            JiveContent jiveContent =  Jackson.jsonMapper().readValue(response.body().charStream(), JiveContent.class);
-            updateMetadata(metadata, jiveContent);
-        } catch (IOException e) {
-            log.warn("Cannot parse response content", e);
-            throw new HttpException.Builder()
-                    .withMessage("Cannot parse response content")
-                    .causedBy(e)
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
-        }
+        JiveData.JiveContent content = jiveContent.put(documentPostBody(context, metadata));
+        updateMetadata(metadata, content);
     }
     /**
      * {@inheritDoc}
@@ -270,19 +252,17 @@ public class JiveRemote extends RestRemote implements Remote{
         }
         String contentId = metadata.extraProps().get().get(JIVE_CONTENT_ID);
 
-        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
-                .addPathSegment("contents")
-                .addPathSegment(contentId)
+        RemoteDocument<JiveData.JiveContent> jiveContent = RemoteDocument.<JiveData.JiveContent>builder()
+                .baseUrl(config.baseUrl().get())
+                .pathSegment("contents")
+                .pathSegment(contentId)
+                .entity(JiveData.JiveContent.class)
+                .header("Authorization", Credentials.basic(config.username().get(), config.password().get()))
+                .queryParameter("fields", JiveData.JiveContent.FIELDS)
                 .build();
 
-        Request request = authenticated(new Request.Builder())
-                .url(route)
-                .get()
-                .build();
-
-        Response response;
         try{
-            response = doRequest(request);
+            jiveContent.get();
         } catch(HttpException e){
             if(e.response().isPresent() && e.response().get().code() == 404){
                 log.debug("Looking for document to delete returned a 404, assuming its already deleted.");
@@ -292,12 +272,7 @@ public class JiveRemote extends RestRemote implements Remote{
             throw e;
         }
 
-        request = authenticated(new Request.Builder())
-                .url(route)
-                .delete()
-                .build();
-
-        response = doRequest(request);
+        jiveContent.delete();
         metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
         if(metadata.hasExtraProperty("delete")){
             metadata.extraProps().get().remove("delete");
@@ -347,30 +322,17 @@ public class JiveRemote extends RestRemote implements Remote{
                     .build();
         }
 
-        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
-                .addPathSegment("contents")
-                .addQueryParameter("filter", filter)
-                .addQueryParameter("startIndex", "0")
-                .addQueryParameter("count", "1")
-                .addQueryParameter("fields", STANDARD_FIELD_PROJECTION)
+        RemoteDocument<JiveData.PagedJiveContent> pagedJiveContent = RemoteDocument.<JiveData.PagedJiveContent>builder()
+                .baseUrl(config.baseUrl().get())
+                .entity(JiveData.PagedJiveContent.class)
+                .header("Authorization", Credentials.basic(config.username().get(), config.password().get()))
+                .queryParameter("filter", filter)
+                .queryParameter("startIndex", "0")
+                .queryParameter("count", "1")
+                .queryParameter("fields", JiveData.JiveContent.FIELDS)
                 .build();
-
-        Request request = authenticated(new Request.Builder())
-                .url(route)
-                .get()
-                .build();
-
-        Response response = doRequest(request);
-        try {
-            PagedJiveContent pagedJiveContent = Jackson.jsonMapper().readValue(response.body().charStream(), PagedJiveContent.class);
-            updateMetadata(metadata, pagedJiveContent);
-        } catch (IOException e) {
-            log.warn("Cannot parse response content", e);
-            HttpException exception = new HttpException("Cannot parse response content", e);
-            exception.request(Optional.of(request));
-            exception.response(Optional.ofNullable(response));
-            throw exception;
-        }
+        JiveData.PagedJiveContent content = pagedJiveContent.get();
+        updateMetadata(metadata, content);
     }
 
     /**
@@ -400,52 +362,27 @@ public class JiveRemote extends RestRemote implements Remote{
         String parentPlaceUrl = metadata.getExtraProperty(JIVE_PARENT_URI);
         String filter = String.format("search(%s)", jiveParentPlaceName(parentPlaceUrl));
 
-        HttpUrl route = HttpUrl.parse(config.baseUrl().get()).newBuilder()
-                .addPathSegment("places")
-                .addQueryParameter("filter", filter)
-                .addQueryParameter("startIndex", "0")
-                .addQueryParameter("count", "1")
-                .addQueryParameter("fields", JivePlace.FIELDS)
+        RemoteDocument<JiveData.PagedJivePlace> pagedJivePlace = RemoteDocument.<JiveData.PagedJivePlace>builder()
+                .baseUrl(config.baseUrl().get())
+                .entity(JiveData.PagedJivePlace.class)
+                .header("Authorization", Credentials.basic(config.username().get(), config.password().get()))
+                .queryParameter("filter", filter)
+                .queryParameter("startIndex", "0")
+                .queryParameter("count", "1")
+                .queryParameter("fields", JiveData.JivePlace.FIELDS)
                 .build();
-
-        Request request = authenticated(new Request.Builder())
-                .url(route)
-                .get()
-                .build();
-
-
-        Response response = doRequest(request);
-        try {
-            PagedJivePlace pagedJiveContent = Jackson.jsonMapper().readValue(response.body().charStream(), PagedJivePlace.class);
-            updateMetadata(metadata, pagedJiveContent);
-        } catch (IOException e) {
-            log.warn("Cannot parse response content", e);
-            HttpException exception = new HttpException("Cannot parse response content", e);
-            exception.request(Optional.of(request));
-            exception.response(Optional.ofNullable(response));
-            throw exception;
-        }
+        JiveData.PagedJivePlace content = pagedJivePlace.get();
+        updateMetadata(metadata, content);
     }
 
     /**
-     * Convenience method for adding username and password to request builder.
-     *
-     * @param builder  request to add credentials to
-     * @return  the builder passed to it with credentials added
-     */
-    public Request.Builder authenticated(Request.Builder builder) {
-        builder.addHeader("Authorization", Credentials.basic(config.username().get(), config.password().get()));
-        return builder;
-    }
-
-    /**
-     * Update metadata from the {@link PagedJiveContent} from a {@link #findDocument(Context, Config.DocumentMetadata)} request.
+     * Update metadata from the {@link JiveData.PagedJiveContent} from a {@link #findDocument(Context, Config.DocumentMetadata)} request.
      *
      * @param metadata  document to update with request content
      * @param content  parsed content from the request
      * @return  the updated document metadata passed to it
      */
-    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJiveContent content) {
+    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JiveData.PagedJiveContent content) {
         if(content != null && content.list != null && content.list.size() > 0){
             return updateMetadata(metadata, content.list.get(0));
         }
@@ -454,12 +391,12 @@ public class JiveRemote extends RestRemote implements Remote{
     }
 
     /**
-     * Update metadata from the {@link JiveContent} from a create, update or find request
+     * Update metadata from the {@link JiveData.JiveContent} from a create, update or find request
      * @param metadata  document to update with request content
      * @param content  parsed content from the request
      * @return  the updated document metadata passed to it
      */
-    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JiveContent content) {
+    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JiveData.JiveContent content) {
         metadata.createdOn(Optional.ofNullable(content.published));
         metadata.lastUpdated(Optional.ofNullable(content.updated));
 
@@ -488,13 +425,13 @@ public class JiveRemote extends RestRemote implements Remote{
     }
 
     /**
-     * Update metadata from the {@link PagedJivePlace} from a {@link #findParentPlace(Context, Config.DocumentMetadata)} request.
+     * Update metadata from the {@link JiveData.PagedJivePlace} from a {@link #findParentPlace(Context, Config.DocumentMetadata)} request.
      *
      * @param metadata  document to update with request content
      * @param places  parsed content from the request
      * @return  the updated document metadata passed to it
      */
-    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, PagedJivePlace places) {
+    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JiveData.PagedJivePlace places) {
         if(places != null && places.list != null && places.list.size() > 0){
             return updateMetadata(metadata, places.list.get(0));
         }
@@ -503,13 +440,13 @@ public class JiveRemote extends RestRemote implements Remote{
     }
 
     /**
-     * Update metadata from the {@link JivePlace}
+     * Update metadata from the {@link JiveData.JivePlace}
      *
      * @param metadata  document to update with request content
      * @param place  parsed content from the request
      * @return  the updated document metadata passed to it
      */
-    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JivePlace place) {
+    protected static Config.DocumentMetadata updateMetadata(Config.DocumentMetadata metadata, JiveData.JivePlace place) {
         if(StringUtils.isNotBlank(place.placeID)){
             metadata.setExtraProperty(JIVE_PARENT_PLACE_ID, place.placeID);
         }
@@ -606,8 +543,8 @@ public class JiveRemote extends RestRemote implements Remote{
      * @return  String representation of the json structure for the request
      * @throws IOException  the converted document couldnt be loaded
      */
-    protected static String documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
-        JiveContent jiveDocument = new JiveContent();
+    protected static JiveData.JiveContent documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
+        JiveData.JiveContent jiveDocument = new JiveData.JiveContent();
         jiveDocument.parentPlace = null; //parent place is only in responses
         jiveDocument.subject = metadata.title();
         jiveDocument.content.text = Resources.load(context.convertedPath(metadata).get().toString());
@@ -623,76 +560,6 @@ public class JiveRemote extends RestRemote implements Remote{
         }
 
         jiveDocument.tags = getTagsForDocument(context, metadata);
-
-        String body = Jackson.jsonMapper().writeValueAsString(jiveDocument);
-        log.trace(body);
-        return body;
-    }
-
-    public static class Link{
-        public String ref;
-        public List<String> allowed;
-    }
-
-    public static class PagedJivePlace{
-        public List<JivePlace> list = new ArrayList<>();
-        public Integer startIndex;
-        public Integer itemsPerPage;
-    }
-
-    public static class JivePlace{
-        public static final String FIELDS = "id,resources,placeID,displayName,name,type,typeCode";
-        public Integer id;
-        public Map<String, Link> resources = new HashMap<>();
-        public String placeID;
-        public String displayName;
-        public String name;
-        public String type;
-        public Integer typeCode;
-    }
-
-    public static class PagedJiveContent{
-        public Map<String, String> links = new HashMap<>();
-        public List<JiveContent> list = new ArrayList<>();
-        public Integer startIndex;
-        public Integer itemsPerPage;
-    }
-
-    public static class JiveContent{
-        public Integer id;
-        public String contentID;
-        public ZonedDateTime published;
-        public ZonedDateTime updated;
-        public List<String> tags = new ArrayList<>();
-        public String type; // "document" for documents
-        public Integer typeCode; // 102 for documents
-        public String subject; //document name
-        public Content content = new Content();
-        public Via via = new Via();
-        public Map<String, Link> resources = new HashMap<>();
-        public String parent;
-        public ParentPlace parentPlace;
-
-        public JiveContent(){}
-
-        public static class Content{
-            public String type;
-            public String text;
-            public Boolean editable;
-        }
-
-        public static class Via{
-            public final String displayName = "Alexandria";
-            public final String url = "https://github.com/macgregor/alexandria";
-        }
-
-        public static class ParentPlace{
-            public Integer id;
-            public String html;
-            public String placeID;
-            public String name;
-            public String type;
-            public String uri;
-        }
+        return jiveDocument;
     }
 }

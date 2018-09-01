@@ -57,39 +57,27 @@ public abstract class RestRemote {
         if (response.isSuccessful()) {
             return response;
         } else if (response.code() == 400) {
-            throw new HttpException.Builder()
-                    .withMessage("Bad request.")
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
+            throw httpException("Bad request.", request, response);
         } else if (response.code() == 403) {
-            throw new HttpException.Builder()
-                    .withMessage("Unauthorized to access document.")
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
+            throw httpException("Unauthorized to access document.", request, response);
         } else if (response.code() == 404) {
-            throw new HttpException.Builder()
-                    .withMessage("Document doesnt exist.")
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
+            throw httpException("Document doesnt exist.", request, response);
         } else if (response.code() == 409) {
-            throw new HttpException.Builder()
-                    .withMessage("Document conflicts with existing document.")
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
+            throw httpException("Document conflicts with existing document.", request, response);
         } else {
-            throw new HttpException.Builder()
-                    .withMessage(String.format("Unexpected status code %d.", response.code()))
-                    .requestContext(request)
-                    .responseContext(response)
-                    .build();
+            throw httpException(String.format("Unexpected status code %d.", response.code()), request, response);
         }
     }
 
-    private static String bodyToString(final Request request){
+    protected HttpException httpException(String message, Request request, Response response){
+        return new HttpException.Builder()
+                .withMessage(message)
+                .requestContext(request)
+                .responseContext(response)
+                .build();
+    }
+
+    protected static String bodyToString(final Request request){
         try {
             final Request copy = request.newBuilder().build();
             final Buffer buffer = new Buffer();
