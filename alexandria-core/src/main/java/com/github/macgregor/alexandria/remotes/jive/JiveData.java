@@ -1,7 +1,11 @@
 package com.github.macgregor.alexandria.remotes.jive;
 
+import com.github.macgregor.alexandria.Config;
+import com.github.macgregor.alexandria.Context;
+import com.github.macgregor.alexandria.Resources;
 import lombok.EqualsAndHashCode;
 
+import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +13,36 @@ import java.util.List;
 import java.util.Map;
 
 public class JiveData{
+
+    /**
+     * Create the post body for a create or update request from the given {@link com.github.macgregor.alexandria.Config.DocumentMetadata}.
+     *
+     * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/DocumentEntity.html">Jive REST API - Document Entity</a>
+     *
+     * @param context  current Alexandria context
+     * @param metadata  document metadata to generate post body from
+     * @return  String representation of the json structure for the request
+     * @throws IOException  the converted document couldnt be loaded
+     */
+    protected static JiveContent documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
+        JiveData.JiveContent jiveDocument = new JiveData.JiveContent();
+        jiveDocument.parentPlace = null; //parent place is only in responses
+        jiveDocument.subject = metadata.title();
+        jiveDocument.content.text = Resources.load(context.convertedPath(metadata).get().toString());
+        jiveDocument.type = "document";
+        jiveDocument.typeCode = 102;
+
+        if(metadata.extraProps().get().containsKey(JiveRemote.JIVE_CONTENT_ID)){
+            jiveDocument.contentID = metadata.extraProps().get().get(JiveRemote.JIVE_CONTENT_ID);
+        }
+
+        if(metadata.extraProps().get().containsKey(JiveRemote.JIVE_PARENT_API_URI)) {
+            jiveDocument.parent = metadata.extraProps().get().get(JiveRemote.JIVE_PARENT_API_URI);
+        }
+
+        jiveDocument.tags = JiveUtils.getTagsForDocument(context, metadata);
+        return jiveDocument;
+    }
 
     @EqualsAndHashCode
     public static class Link{

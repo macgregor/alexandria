@@ -1,11 +1,12 @@
-package com.github.macgregor.alexandria.remotes;
+package com.github.macgregor.alexandria.remotes.jive;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
-import com.github.macgregor.alexandria.Resources;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.HttpException;
-import com.github.macgregor.alexandria.remotes.jive.JiveData;
+import com.github.macgregor.alexandria.remotes.Remote;
+import com.github.macgregor.alexandria.remotes.RemoteDocument;
+import com.github.macgregor.alexandria.remotes.RestRemote;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,7 +14,6 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,10 +24,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Implements the Jive rest api for create/update/delete of documents.
@@ -43,7 +40,7 @@ import java.util.regex.Pattern;
  *   supportsNativeMarkdown: false
  *   datetimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
  *   requestTimeout: 60
- *   class: "com.github.macgregor.alexandria.remotes.JiveRemote"
+ *   class: "com.github.macgregor.alexandria.remotes.jive.JiveRemote"
  * metadata:
  * - sourcePath: "docs/images.md"
  *   title: "images.md"
@@ -57,6 +54,7 @@ import java.util.regex.Pattern;
  *     jiveParentPlaceId: "1448512"
  *     jiveParentApiUri: "https://jive.com/api/core/v3/places/1448512"
  *     jiveContentId: "1448517"
+ *     jiveTrackingTag: ""
  * }
  * </pre>
  *
@@ -88,10 +86,7 @@ import java.util.regex.Pattern;
 @ToString
 @Getter @Setter @Accessors(fluent = true)
 @NoArgsConstructor
-public class JiveRemote extends RestRemote implements Remote{
-
-    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-
+public class JiveRemote extends RestRemote implements Remote {
     public static final String JIVE_CONTENT_ID = "jiveContentId";
     public static final String JIVE_PARENT_URI = "jiveParentUri";
     public static final String JIVE_PARENT_API_URI = "jiveParentApiUri";
@@ -162,12 +157,12 @@ public class JiveRemote extends RestRemote implements Remote{
      * {@code GET baseUrl/places} if the document has a parent place.
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#createContent(String,%20String,%20String,%20String)">Jive REST API - Create Content</a>
-     * @see #needsParentPlaceUri(Config.DocumentMetadata)
+     * @see JiveUtils#needsParentPlaceUri(Config.DocumentMetadata)
      * @see #findParentPlace(Context, Config.DocumentMetadata)
      */
     @Override
     public void create(Context context, Config.DocumentMetadata metadata) throws IOException {
-        setTrackingTagAsNeeded(context, metadata);
+        JiveUtils.setTrackingTagAsNeeded(context, metadata);
         try {
             findDocument(context, metadata);
         } catch(HttpException e){
@@ -178,7 +173,7 @@ public class JiveRemote extends RestRemote implements Remote{
             }
         }
 
-        if(needsParentPlaceUri(metadata)){
+        if(JiveUtils.needsParentPlaceUri(metadata)){
             findParentPlace(context, metadata);
         }
 
@@ -189,7 +184,7 @@ public class JiveRemote extends RestRemote implements Remote{
                 .header("Authorization", Credentials.basic(config.username().get(), config.password().get()))
                 .queryParameter("fields", JiveData.JiveContent.FIELDS)
                 .build();
-        JiveData.JiveContent content = jiveContent.post(documentPostBody(context, metadata));
+        JiveData.JiveContent content = jiveContent.post(JiveData.documentPostBody(context, metadata));
         updateMetadata(metadata, content);
     }
 
@@ -201,18 +196,18 @@ public class JiveRemote extends RestRemote implements Remote{
      * endpoint to the rest api endpoint for the document.
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#updateContent(String,%20String,%20String,%20boolean,%20String,%20boolean)">Jive REST API - Update Content</a>
-     * @see #needsContentId(Config.DocumentMetadata)
+     * @see JiveUtils#needsContentId(Config.DocumentMetadata)
      * @see #findDocument(Context, Config.DocumentMetadata)
      */
     @Override
     public void update(Context context, Config.DocumentMetadata metadata) throws IOException {
-        setTrackingTagAsNeeded(context, metadata);
-        if(needsContentId(metadata)){
+        JiveUtils.setTrackingTagAsNeeded(context, metadata);
+        if(JiveUtils.needsContentId(metadata)){
             findDocument(context, metadata);
         }
         String contentId = metadata.extraProps().get().get(JIVE_CONTENT_ID);
 
-        if(needsParentPlaceUri(metadata)){
+        if(JiveUtils.needsParentPlaceUri(metadata)){
             findParentPlace(context, metadata);
         }
 
@@ -224,7 +219,7 @@ public class JiveRemote extends RestRemote implements Remote{
                 .header("Authorization", Credentials.basic(config.username().get(), config.password().get()))
                 .queryParameter("fields", JiveData.JiveContent.FIELDS)
                 .build();
-        JiveData.JiveContent content = jiveContent.put(documentPostBody(context, metadata));
+        JiveData.JiveContent content = jiveContent.put(JiveData.documentPostBody(context, metadata));
         updateMetadata(metadata, content);
     }
     /**
@@ -240,14 +235,14 @@ public class JiveRemote extends RestRemote implements Remote{
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#getContent(String,%20String,%20boolean,%20List%3CString%3E)">Jive REST API - Get Content</a>
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#deleteContent(String,%20Boolean)">Jive REST API - Delete Content</a>
-     * @see #needsContentId(Config.DocumentMetadata)
+     * @see JiveUtils#needsContentId(Config.DocumentMetadata)
      * @see #findDocument(Context, Config.DocumentMetadata)
      */
     @Override
     public void delete(Context context, Config.DocumentMetadata metadata) throws IOException {
         // edge case here where the content is deleted on the remote, and doesnt have a jive content id in the metadata index
         // we will get a 404 here and fail.
-        if(needsContentId(metadata)){
+        if(JiveUtils.needsContentId(metadata)){
             findDocument(context, metadata);
         }
         String contentId = metadata.extraProps().get().get(JIVE_CONTENT_ID);
@@ -280,22 +275,6 @@ public class JiveRemote extends RestRemote implements Remote{
     }
 
     /**
-     * Determine if the indexed document needs to fetch the {@value #JIVE_CONTENT_ID} from the remote.
-     *
-     * @param metadata  document to check
-     * @return  true if {@value JIVE_CONTENT_ID} needs to be retrieved from remote, false if its already set.
-     */
-    protected static boolean needsContentId(Config.DocumentMetadata metadata){
-        if(metadata.remoteUri().isPresent()){
-            if(metadata.extraProps().isPresent()){
-                return !metadata.extraProps().get().containsKey(JIVE_CONTENT_ID);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * The uri a human uses to access a document ({@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri})
      * is not the uri we need to make rest requests. There is an sort of identifier in this uri, but we have to extract it
      * and then run a search for it to get the {@value JIVE_CONTENT_ID} which we can use to modify the document.
@@ -314,7 +293,7 @@ public class JiveRemote extends RestRemote implements Remote{
         if(metadata.hasExtraProperty(JIVE_TRACKING_TAG)){
             filter = String.format("tag(%s)", metadata.getExtraProperty(JIVE_TRACKING_TAG));
         } else if (metadata.remoteUri().isPresent()){
-            filter = String.format("entityDescriptor(102,%s)", jiveObjectId(metadata.remoteUri().get()));
+            filter = String.format("entityDescriptor(102,%s)", JiveUtils.jiveObjectId(metadata.remoteUri().get()));
         } else{
             throw new AlexandriaException.Builder()
                     .withMessage("Not enough information to find document on remote. Manual intervention may be necessary.")
@@ -336,16 +315,6 @@ public class JiveRemote extends RestRemote implements Remote{
     }
 
     /**
-     * Determine if an indexed document has a parent ({@value JIVE_PARENT_URI} but needs to have the parent place id looked up.
-     *
-     * @param metadata  document to check for parent information
-     * @return  true if document has a parent but no {@value JIVE_PARENT_API_URI}, false if no parent or {@value JIVE_PARENT_API_URI} already set
-     */
-    public static boolean needsParentPlaceUri(Config.DocumentMetadata metadata){
-        return metadata.hasExtraProperty(JIVE_PARENT_URI) && !metadata.hasExtraProperty(JIVE_PARENT_API_URI);
-    }
-
-    /**
      * Just like with documents, the parent uri a human interacts with is not the same as the one we need for rest requests.
      * This gives us the {@value JIVE_PARENT_API_URI} to use in the post body of create and update requests.
      *
@@ -360,7 +329,7 @@ public class JiveRemote extends RestRemote implements Remote{
         log.debug(String.format("Jive parent place detected, attempting to retrieve from remote."));
 
         String parentPlaceUrl = metadata.getExtraProperty(JIVE_PARENT_URI);
-        String filter = String.format("search(%s)", jiveParentPlaceName(parentPlaceUrl));
+        String filter = String.format("search(%s)", JiveUtils.jiveParentPlaceName(parentPlaceUrl));
 
         RemoteDocument<JiveData.PagedJivePlace> pagedJivePlace = RemoteDocument.<JiveData.PagedJivePlace>builder()
                 .baseUrl(config.baseUrl().get())
@@ -459,107 +428,5 @@ public class JiveRemote extends RestRemote implements Remote{
 
         log.debug(String.format("Updated %s metadata from response content.", metadata.sourcePath().toAbsolutePath().toString()));
         return metadata;
-    }
-
-    /**
-     * Extract the pseudo-identifier used in the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
-     * for use in a search request to retrieve the actual {@value JIVE_CONTENT_ID}.
-     *
-     * @param remoteDoc  {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
-     * @return  jive object id extracted from the uri
-     */
-    protected static String jiveObjectId(URI remoteDoc){
-        Pattern p = Pattern.compile(".*DOC-(\\d+)-*.*");
-        Matcher m = p.matcher(remoteDoc.getPath());
-        if(m.matches()) {
-            return m.group(1);
-        } else {
-            throw new IllegalStateException(String.format("Unable to extract jive object id from %s.", remoteDoc.toString()));
-        }
-    }
-
-    /**
-     * Extract the parent place name from the user defined {@value JIVE_PARENT_URI} for use in a search request for the
-     * actual {@value JIVE_PARENT_API_URI}.
-     *
-     * @param parentPlaceUrl  {@value #JIVE_PARENT_URI} value from {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
-     * @return  the extracted parent place name
-     */
-    protected static String jiveParentPlaceName(String parentPlaceUrl){
-        Pattern p = Pattern.compile(".*/(.*)");
-        Matcher m = p.matcher(parentPlaceUrl);
-        if(m.matches()) {
-            return m.group(1);
-        } else {
-            throw new IllegalStateException(String.format("Unable to parent place name from %s.", parentPlaceUrl));
-        }
-    }
-
-    /**
-     * Set a UUID tracking tag Alexandria can use to track down documents.
-     *
-     * Rest APIs are fickle things. They may or may not provide decent search apis or reliable methods
-     * that return data needed to identify created or updated documents. Adding this tag lets us quickly
-     * and easily search for documents if we cant use the Jive identifier for some reason.
-     *
-     * @param context  current Alexandria context
-     * @param metadata  document metadata to add tracking tag to
-     */
-    protected static void setTrackingTagAsNeeded(Context context, Config.DocumentMetadata metadata){
-        if(metadata.hasExtraProperty(JIVE_TRACKING_TAG)){
-            return;
-        }
-        metadata.setExtraProperty(JIVE_TRACKING_TAG, UUID.randomUUID().toString());
-    }
-
-    /**
-     * Set tags for the document resolving default tags, document tags and remote specific tags.
-     *
-     * @param context  Current Alexandria context
-     * @param metadata  document metadata to get tags for
-     * @return  list of tags to add to the request or empty list if none are set
-     */
-    protected static List<String> getTagsForDocument(Context context, Config.DocumentMetadata metadata){
-        List<String> tags = new ArrayList();
-        if(context.config().defaultTags().isPresent()){
-            tags.addAll(context.config().defaultTags().get());
-        }
-        if(metadata.tags().isPresent()){
-            tags.addAll(metadata.tags().get());
-        }
-        if(metadata.hasExtraProperty(JIVE_TRACKING_TAG)) {
-            tags.add(metadata.getExtraProperty(JIVE_TRACKING_TAG));
-        }
-        return tags;
-    }
-
-    /**
-     * Create the post body for a create or update request from the given {@link com.github.macgregor.alexandria.Config.DocumentMetadata}.
-     *
-     * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/DocumentEntity.html">Jive REST API - Document Entity</a>
-     *
-     * @param context  current Alexandria context
-     * @param metadata  document metadata to generate post body from
-     * @return  String representation of the json structure for the request
-     * @throws IOException  the converted document couldnt be loaded
-     */
-    protected static JiveData.JiveContent documentPostBody(Context context, Config.DocumentMetadata metadata) throws IOException {
-        JiveData.JiveContent jiveDocument = new JiveData.JiveContent();
-        jiveDocument.parentPlace = null; //parent place is only in responses
-        jiveDocument.subject = metadata.title();
-        jiveDocument.content.text = Resources.load(context.convertedPath(metadata).get().toString());
-        jiveDocument.type = "document";
-        jiveDocument.typeCode = 102;
-
-        if(metadata.extraProps().get().containsKey(JIVE_CONTENT_ID)){
-            jiveDocument.contentID = metadata.extraProps().get().get(JIVE_CONTENT_ID);
-        }
-
-        if(metadata.extraProps().get().containsKey(JIVE_PARENT_API_URI)) {
-            jiveDocument.parent = metadata.extraProps().get().get(JIVE_PARENT_API_URI);
-        }
-
-        jiveDocument.tags = getTagsForDocument(context, metadata);
-        return jiveDocument;
     }
 }

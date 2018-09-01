@@ -1,9 +1,8 @@
-package com.github.macgregor.alexandria.remotes;
+package com.github.macgregor.alexandria.remotes.jive;
 
 import com.github.macgregor.alexandria.*;
 import com.github.macgregor.alexandria.Config.RemoteConfig;
 import com.github.macgregor.alexandria.exceptions.HttpException;
-import com.github.macgregor.alexandria.remotes.jive.JiveData;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -30,13 +29,6 @@ public class JiveRemoteTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
-
-    @Test
-    public void voidTestJivePagedContentParsing() throws IOException {
-        JiveData.PagedJiveContent parsed = Jackson.jsonMapper().readValue(Resources.load("src/test/resources/DOC-1072237-Paged.json"), JiveData.PagedJiveContent.class);
-
-        assertThat(parsed).isEqualToComparingFieldByFieldRecursively(expectedPagedJiveContent());
-    }
 
     @Test
     public void testSyncMetadata400() throws IOException, URISyntaxException {
@@ -502,16 +494,6 @@ public class JiveRemoteTest {
     }
 
     @Test
-    public void testJiveObjectIdThrowsIllegalArgumentOnBadPattern(){
-        assertThatThrownBy(() -> JiveRemote.jiveObjectId(new URI("asldkasd"))).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    public void testJiveParentPlaceNameThrowsIllegalArgumentOnBadPattern(){
-        assertThatThrownBy(() -> JiveRemote.jiveParentPlaceName("asldkasd")).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
     public void testJiveUpdateMetadataHandlesMissingMalformedPagedParent(){
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         assertThat(JiveRemote.updateMetadata(metadata, (JiveData.PagedJivePlace) null)).isEqualTo(metadata);
@@ -572,123 +554,6 @@ public class JiveRemoteTest {
         assertThat(metadata.extraProps().get().get("jiveParentApiUri")).isEqualTo("foo");
     }
 
-    @Test
-    public void testJiveUpdateMetadataHandlesMissingMalformedPagedContent(){
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        assertThat(JiveRemote.updateMetadata(metadata, (JiveData.PagedJiveContent) null)).isEqualTo(metadata);
-        JiveData.PagedJiveContent content = new JiveData.PagedJiveContent();
-        content.list = null;
-        assertThat(JiveRemote.updateMetadata(metadata, content)).isEqualTo(metadata);
-        content.list = new ArrayList<>();
-        assertThat(JiveRemote.updateMetadata(metadata, content)).isEqualTo(metadata);
-    }
-
-    @Test
-    public void testJiveDoesntNeedContentIdWhenNoRemoteUri(){
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.remoteUri(Optional.empty());
-        assertThat(JiveRemote.needsContentId(metadata)).isFalse();
-    }
-
-    @Test
-    public void testJiveNeedsContentIdWhenRemoteUriWithoutExtraProps() throws URISyntaxException {
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.remoteUri(Optional.of(new URI("foo")));
-        metadata.extraProps(Optional.empty());
-        assertThat(JiveRemote.needsContentId(metadata)).isTrue();
-    }
-
-    @Test
-    public void testJiveNeedsContentIdWhenRemoteUriWithoutJiveContentIdProperty() throws URISyntaxException {
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.remoteUri(Optional.of(new URI("foo")));
-        metadata.extraProps(Optional.of(Collections.emptyMap()));
-        assertThat(JiveRemote.needsContentId(metadata)).isTrue();
-    }
-
-    @Test
-    public void testJiveDoesntNeedContentIdWhenRemoteUriWithJiveContentIdProperty() throws URISyntaxException {
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.remoteUri(Optional.of(new URI("foo")));
-        metadata.extraProps(Optional.of(Collections.singletonMap("jiveContentId", "1234")));
-        assertThat(JiveRemote.needsContentId(metadata)).isFalse();
-    }
-
-    @Test
-    public void testJiveDoesntNeedParentPlaceUriWhenNoExtraProps(){
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.extraProps(Optional.empty());
-        assertThat(JiveRemote.needsParentPlaceUri(metadata)).isFalse();
-    }
-
-    @Test
-    public void testJiveNeedsParentPlaceUriWhenNoJiveParentApiUriIsPresent(){
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.extraProps(Optional.of(Collections.singletonMap("jiveParentUri", "foo")));
-        assertThat(JiveRemote.needsParentPlaceUri(metadata)).isTrue();
-    }
-
-    @Test
-    public void testJiveDoesntNeedParentPlaceUriWhenJiveParentApiUriIsPresent(){
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        Map<String, String> extraProps = new HashMap<>();
-        extraProps.put("jiveParentApiUri", "foo");
-        extraProps.put("jiveParentApiUri", "foo");
-        metadata.extraProps(Optional.of(extraProps));
-        assertThat(JiveRemote.needsParentPlaceUri(metadata)).isFalse();
-    }
-
-    @Test
-    public void testJiveBuildsDocumentPostBody() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
-        context.config().metadata(Optional.of(Collections.singletonList(metadata)));
-
-        JiveData.JiveContent jiveContent = JiveRemote.documentPostBody(context, metadata);
-
-        assertThat(jiveContent.parentPlace).isNull();
-        assertThat(jiveContent.subject).isEqualTo(metadata.title());
-        assertThat(jiveContent.content.text).isEqualTo(Resources.load(context.convertedPath(metadata).get().toString()));
-        assertThat(jiveContent.type).isEqualTo("document");
-        assertThat(jiveContent.typeCode).isEqualTo(102);
-    }
-
-    @Test
-    public void testJiveBuildsDocumentPostBodyWithJiveContentId() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
-        context.config().metadata(Optional.of(Collections.singletonList(metadata)));
-        metadata.extraProps().get().put("jiveContentId", "1234");
-
-        JiveData.JiveContent jiveContent = JiveRemote.documentPostBody(context, metadata);
-
-        assertThat(jiveContent.contentID).isEqualTo("1234");
-    }
-
-    @Test
-    public void testJiveBuildsDocumentPostBodyWithJiveParentApiUri() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
-        context.config().metadata(Optional.of(Collections.singletonList(metadata)));
-        metadata.extraProps().get().put("jiveParentApiUri", "wwww.google.com");
-
-        JiveData.JiveContent jiveContent = JiveRemote.documentPostBody(context, metadata);
-
-        assertThat(jiveContent.parent).isEqualTo("wwww.google.com");
-    }
-
-    @Test
-    public void testJiveBuildsDocumentPostBodyWithTags() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
-        context.config().metadata(Optional.of(Collections.singletonList(metadata)));
-        metadata.tags(Optional.of(Collections.singletonList("foo")));
-
-        JiveData.JiveContent jiveContent = JiveRemote.documentPostBody(context, metadata);
-
-        assertThat(jiveContent.tags).containsExactlyInAnyOrder("foo");
-    }
-
 
     protected JiveRemote setup(MockResponse mockResponses) throws IOException {
         return setup(Collections.singletonList(mockResponses));
@@ -710,52 +575,5 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = new JiveRemote(config);
 
         return jiveRemote;
-    }
-
-    private JiveData.PagedJiveContent expectedPagedJiveContent(){
-        JiveData.JiveContent jiveContent = new JiveData.JiveContent();
-        jiveContent.id = 1072237;
-        jiveContent.published = ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
-        jiveContent.updated = ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
-        jiveContent.tags = Arrays.asList("foo", "bar", "baz");
-        jiveContent.contentID = "1278973";
-        jiveContent.parent = "https://jive.com/api/core/v3/places/61562";
-        jiveContent.subject = "Document Title";
-        jiveContent.type = "document";
-        jiveContent.typeCode = 102;
-
-        JiveData.JiveContent.Content content = new JiveData.JiveContent.Content();
-        content.editable = true;
-        content.type = "text/html";
-        content.text = "<body></body>";
-        jiveContent.content = content;
-
-        JiveData.JiveContent.ParentPlace parentPlace = new JiveData.JiveContent.ParentPlace();
-        parentPlace.id = 2276;
-        parentPlace.html = "https://jive.com/groups/parent_group";
-        parentPlace.placeID = "61562";
-        parentPlace.name = "Some Parent Group";
-        parentPlace.type = "group";
-        parentPlace.uri = "https://jive.com/api/core/v3/places/61562";
-        jiveContent.parentPlace = parentPlace;
-
-        Map<String, JiveData.Link> resources = new HashMap<>();
-        resources.put("html", link("https://jive.com/docs/DOC-1072237", Arrays.asList("GET")));
-        resources.put("extprops", link("https://jive.com/api/core/v3/contents/1278973/extprops", Arrays.asList("POST", "DELETE", "GET")));
-        jiveContent.resources = resources;
-
-        JiveData.PagedJiveContent pagedContent = new JiveData.PagedJiveContent();
-        pagedContent.itemsPerPage = 1;
-        pagedContent.links.put("next", "https://jive.com/api/core/v3/contents?sort=dateCreatedDesc&fields=id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent&filter=entityDescriptor%28102,1072237%29&abridged=false&includeBlogs=false&count=1&startIndex=1");
-        pagedContent.startIndex = 0;
-        pagedContent.list = Arrays.asList(jiveContent);
-        return pagedContent;
-    }
-
-    private JiveData.Link link(String ref, List<String> allowed){
-        JiveData.Link link = new JiveData.Link();
-        link.ref = ref;
-        link.allowed = allowed;
-        return link;
     }
 }

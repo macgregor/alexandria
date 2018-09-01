@@ -142,7 +142,7 @@ public class RemoteDocument<T> {
                     .responseContext(response)
                     .build();
         }
-        
+
         if((allowableStatusCodes.isEmpty() && response.isSuccessful()) ||
                 allowableStatusCodes.contains(response.code())){
             return response;
