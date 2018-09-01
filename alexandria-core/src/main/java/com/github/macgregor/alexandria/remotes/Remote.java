@@ -3,6 +3,7 @@ package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
+import com.github.macgregor.alexandria.remotes.jive.JiveRemote;
 
 import java.io.IOException;
 

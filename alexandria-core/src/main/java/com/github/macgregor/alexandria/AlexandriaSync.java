@@ -2,6 +2,7 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.remotes.Remote;
+import com.github.macgregor.alexandria.remotes.jive.JiveRemote;
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ import java.util.Optional;
  * the remote implementation as it is dependent on information from the rest response.
  *
  * @see Remote
- * @see com.github.macgregor.alexandria.remotes.JiveRemote
+ * @see JiveRemote
  * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState()
  */
 @Slf4j
@@ -62,7 +63,7 @@ public class AlexandriaSync {
      * the {@code remoteUri} would cause Alexandria to create a new document on the remote on the next run.
      *
      * @see Remote
-     * @see com.github.macgregor.alexandria.remotes.JiveRemote
+     * @see JiveRemote
      * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState()
      *
      * @throws AlexandriaException  Exception wrapping all exceptions thrown while syncing documents
@@ -122,7 +123,7 @@ public class AlexandriaSync {
      * {@link Remote#configure(Config.RemoteConfig)} and {@link Remote#validateRemoteConfig()}.
      *
      * @see com.github.macgregor.alexandria.remotes.NoopRemote
-     * @see com.github.macgregor.alexandria.remotes.JiveRemote
+     * @see JiveRemote
      *
      * @param context  Alexandria context containing the remote configuration
      * @return  configured remote ready for use
