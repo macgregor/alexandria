@@ -1,6 +1,5 @@
 package com.github.macgregor.alexandria.remotes;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.exceptions.HttpException;
 import lombok.*;
@@ -10,9 +9,39 @@ import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Abstraction around a remote document format to make get/put/post/delete methods against a rest api.
+ *
+ * The class is generic, taking a POJO that makes up the request body for put/post and the response for gets.
+ * The class handles error handling and marshalling for you, leaving less boiler plate in the actual application logic.
+ *
+ * <pre>
+ * {@code
+ * class Foo{
+ *     Integer id;
+ *     String name;
+ *     String address;
+ * }
+ *
+ * RemoteDocument<Foo> remoteFoo = RemoteDocument.<Foo>builder()
+ *          .baseUrl("www.google.com")
+ *          .pathSegment("foo")
+ *          .pathSegment("1")
+ *          .header("Authorization", Credentials.basic("username", "password"))
+ *          .queryParameter("fields", "id,name,address")
+ *          .build();
+ *
+ * Foo foo = remoteFoo.get();
+ * }
+ * </pre>
+ *
+ * @param <T>
+ */
 @Slf4j
 @Getter @Setter @Accessors(fluent = true)
 @Builder
@@ -28,14 +57,21 @@ public class RemoteDocument<T> {
     @Singular private List<Integer> allowableStatusCodes;
 
     public T get() throws HttpException {
-        Request request = Requests.requestBuilder(route(), headers).get().build();
+        Request request = null;
 
         try {
+            request = Requests.requestBuilder(route(), headers).get().build();
             Response response = doRequest(request);
             return parseResponse(response);
         } catch(HttpException e){
             e.request(Optional.of(request));
             throw e;
+        } catch(Exception e){
+            throw new HttpException.Builder()
+                    .withMessage("Unexpected error executing GET")
+                    .causedBy(e)
+                    .requestContext(request)
+                    .build();
         }
     }
 
@@ -54,6 +90,12 @@ public class RemoteDocument<T> {
         } catch(HttpException e){
             e.request(Optional.of(request));
             throw e;
+        } catch(Exception e){
+            throw new HttpException.Builder()
+                    .withMessage("Unexpected error executing PUT")
+                    .causedBy(e)
+                    .requestContext(request)
+                    .build();
         }
     }
 
@@ -68,25 +110,37 @@ public class RemoteDocument<T> {
         } catch(HttpException e){
             e.request(Optional.of(request));
             throw e;
+        } catch(Exception e){
+            throw new HttpException.Builder()
+                    .withMessage("Unexpected error executing POST")
+                    .causedBy(e)
+                    .requestContext(request)
+                    .build();
         }
 
     }
 
     public void delete() throws HttpException {
-        Request request = Requests.requestBuilder(route(), headers).delete().build();
-
+        Request request = null;
         try {
-           doRequest(request);
+            request = Requests.requestBuilder(route(), headers).delete().build();
+            doRequest(request);
         } catch(HttpException e){
-            e.request(Optional.of(request));
+            e.request(Optional.ofNullable(request));
             throw e;
+        } catch(Exception e){
+            throw new HttpException.Builder()
+                    .withMessage("Unexpected error executing DELETE")
+                    .causedBy(e)
+                    .requestContext(request)
+                    .build();
         }
     }
 
     protected RequestBody requestBody(T t) throws HttpException {
         try {
             return RequestBody.create(JSON, Jackson.jsonMapper().writeValueAsString(t));
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new HttpException.Builder()
                     .withMessage("Unable to parse content")
                     .causedBy(e)
@@ -97,7 +151,7 @@ public class RemoteDocument<T> {
     protected T parseResponse(Response response) throws HttpException {
         try {
             return Jackson.jsonMapper().readValue(response.body().charStream(), entity);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.warn("Cannot parse response content", e);
             throw new HttpException.Builder()
                     .withMessage("Cannot parse response content")
