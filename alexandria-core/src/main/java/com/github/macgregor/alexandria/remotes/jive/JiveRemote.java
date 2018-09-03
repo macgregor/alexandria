@@ -162,14 +162,23 @@ public class JiveRemote implements Remote {
     @Override
     public void create(Context context, Config.DocumentMetadata metadata) throws IOException {
         JiveUtils.setTrackingTagAsNeeded(context, metadata);
+        boolean found = false;
         try {
-            findDocument(context, metadata);
+            JiveData.JiveContent content = findDocument(context, metadata);
+            if(content != null){
+                found = true;
+            }
         } catch(HttpException e){
             if(e.response().isPresent() && e.response().get().code() == 404){
                 log.debug(String.format("Document %s not found on remote. Creating.", metadata.sourceFileName()));
-            } else{
+            } else {
                 throw e;
             }
+        }
+
+        if(found){
+            log.debug(String.format("Document %s (%s) already exists on remote. Not recreating.", metadata.sourceFileName(), metadata.remoteUri().get()));
+            return;
         }
 
         if(JiveUtils.needsParentPlaceUri(metadata)){
@@ -229,15 +238,24 @@ public class JiveRemote implements Remote {
      */
     @Override
     public void delete(Context context, Config.DocumentMetadata metadata) throws IOException {
+        boolean deleted = false;
         try{
-            findDocument(context, metadata);
+            JiveData.JiveContent content = findDocument(context, metadata);
+            if(content == null){
+                deleted = true;
+            }
         } catch(HttpException e){
             if(e.response().isPresent() && e.response().get().code() == 404){
-                log.debug("Looking for document to delete returned a 404, assuming its already deleted.");
-                metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
-                return;
+                deleted = true;
+            } else {
+                throw e;
             }
-            throw e;
+        }
+
+        if(deleted){
+            log.debug("Looking for document wasnt found, assuming its already deleted.");
+            metadata.deletedOn(Optional.of(ZonedDateTime.now(ZoneOffset.UTC)));
+            return;
         }
 
         String contentId = metadata.extraProps().get().get(JIVE_CONTENT_ID);
@@ -260,7 +278,7 @@ public class JiveRemote implements Remote {
      * @param metadata  metadata to find on remote
      * @throws IOException  there was a problem with the request
      */
-    public void findDocument(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public JiveData.JiveContent findDocument(Context context, Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.sourceFileName()));
 
         String filter;
@@ -282,6 +300,7 @@ public class JiveRemote implements Remote {
         if(content != null) {
             updateMetadata(metadata, content);
         }
+        return content;
     }
 
     /**
@@ -313,9 +332,13 @@ public class JiveRemote implements Remote {
             }
         } catch(Exception e){
             if(e.getCause() instanceof HttpException){
-                throw (HttpException)e.getCause();
+                HttpException exception = (HttpException)e.getCause();
+                if(!exception.response().isPresent() || exception.response().get().code() != 404){
+                    throw exception;
+                }
+            } else {
+                throw e;
             }
-            throw e;
         }
 
         if(JiveUtils.needsParentPlaceUri(metadata)){
