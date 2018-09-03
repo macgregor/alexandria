@@ -83,9 +83,13 @@ public abstract class AlexandriaMojo extends AbstractMojo {
 
     public String rootDir(){
         MavenProject parent = project;
+        String dir = parent.getBasedir().toString();
         while(parent.getParent() != null){
             parent = parent.getParent();
+            if(parent.getBasedir() != null){
+                dir = parent.getBasedir().toString();
+            }
         }
-        return parent.getBasedir().toString();
+        return dir;
     }
 }

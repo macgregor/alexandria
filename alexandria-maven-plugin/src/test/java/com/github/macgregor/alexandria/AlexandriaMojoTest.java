@@ -20,6 +20,7 @@ public class AlexandriaMojoTest {
 
     private MavenProject childProject = mock(MavenProject.class);
     private MavenProject parentProject = mock(MavenProject.class);
+    private MavenProject remoteParentProject = mock(MavenProject.class);
     private MavenSession session = mock(MavenSession.class);
     private Log log = mock(Log.class);
     private Context context = spy(new Context());
@@ -38,7 +39,9 @@ public class AlexandriaMojoTest {
         when(childProject.getBasedir()).thenReturn(new File("childProject"));
         when(childProject.getParent()).thenReturn(parentProject);
         when(parentProject.getBasedir()).thenReturn(new File("parent"));
-        when(parentProject.getParent()).thenReturn(null);
+        when(parentProject.getParent()).thenReturn(remoteParentProject);
+        when(remoteParentProject.getBasedir()).thenReturn(null);
+        when(remoteParentProject.getParent()).thenReturn(null);
         when(session.getExecutionRootDirectory()).thenReturn(new File("parent").toString());
 
         context.configPath(new File(parentProject.getBasedir(), ".alexandria").toPath());
