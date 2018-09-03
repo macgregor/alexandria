@@ -124,4 +124,15 @@ public class DocumentMetadataTest {
         metadata.sourceChecksum(Optional.of(-1L));
         assertThat(metadata.determineState()).isEqualTo(Config.DocumentMetadata.State.UPDATE);
     }
+
+    @Test
+    public void testSyncDeterminesStateUpdateClearsConvertedChecksum() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        metadata.remoteUri(Optional.of(new URI("foo")));
+        metadata.sourceChecksum(Optional.of(-1L));
+        metadata.convertedChecksum(Optional.of(-1L));
+        metadata.determineState();
+        assertThat(metadata.convertedChecksum()).isEmpty();
+    }
 }

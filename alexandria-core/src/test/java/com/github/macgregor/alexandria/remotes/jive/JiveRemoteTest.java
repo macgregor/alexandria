@@ -66,7 +66,7 @@ public class JiveRemoteTest {
     }
 
     @Test
-    public void testSyncMetadataUnparsableResponse() throws IOException, URISyntaxException {
+    public void testFindDocumentUnparsableResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
 
         Config.DocumentMetadata metadata = TestData.documentForUpdate(new Context(), folder);
@@ -74,6 +74,24 @@ public class JiveRemoteTest {
         assertThatThrownBy(() -> jiveRemote.findDocument(new Context(), metadata))
                 .isInstanceOf(HttpException.class)
                 .hasMessageContaining("Unexpected error fetching next page from remote");
+    }
+
+    @Test
+    public void testCreateDuplicateDocument() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-paged.json"))
+        ));
+        Context context = new Context();
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
+        jiveRemote.create(context, metadata);
+
+        assertThat(metadata.lastUpdated().get())
+                .isEqualTo(ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
+        assertThat(metadata.createdOn().get())
+                .isEqualTo(ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ")));
+        assertThat(metadata.extraProps().get().get("jiveParentUri")).isEqualTo("https://jive.com/groups/parent_group");
+        assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
+        assertThat(metadata.extraProps().get().get("jiveContentId")).isEqualTo("1278973");
     }
 
     @Test
@@ -121,6 +139,34 @@ public class JiveRemoteTest {
 
         assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
         assertThat(metadata.extraProps().get().get("jiveParentApiUri")).isEqualTo("https://jive.com/api/core/v3/places/61562");
+    }
+
+    @Test
+    public void testCreateNoParentPlaceFound404() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setResponseCode(404),
+                new MockResponse().setResponseCode(404),
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))
+        ));
+
+        Context context = new Context();
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
+        metadata.extraProps().get().put("jiveParentUri", "https://jive.com/places/parent_group");
+        jiveRemote.create(context, metadata);
+    }
+
+    @Test
+    public void testCreateNoParentPlaceFoundEmptyList() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setResponseCode(404),
+                new MockResponse().setBody("{\"itemsPerPage\": 1,\n\"list\": [],\n\"startIndex\": 1\n}"),
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))
+        ));
+
+        Context context = new Context();
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
+        metadata.extraProps().get().put("jiveParentUri", "https://jive.com/places/parent_group");
+        jiveRemote.create(context, metadata);
     }
 
     @Test
@@ -247,6 +293,18 @@ public class JiveRemoteTest {
     public void testDeleteConsiders404AlreadyDeleted() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setResponseCode(404)));
+
+        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
+        metadata.setExtraProperty("jiveContentId", "1234");
+        jiveRemote.delete(new Context(), metadata);
+        assertThat(metadata.deletedOn()).isPresent();
+    }
+
+    @Test
+    public void testDeleteConsidersEmptyPagedResponseAlreadyDeleted() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody("{\"itemsPerPage\": 1,\n\"list\": [],\n\"startIndex\": 1\n}")
+        ));
 
         Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
         metadata.setExtraProperty("jiveContentId", "1234");
@@ -425,7 +483,6 @@ public class JiveRemoteTest {
         JiveRemote.updateMetadata(metadata, place);
         assertThat(metadata.extraProps().get().get("jiveParentApiUri")).isEqualTo("foo");
     }
-
 
     protected JiveRemote setup(MockResponse mockResponses) throws IOException {
         return setup(Collections.singletonList(mockResponses));

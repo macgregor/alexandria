@@ -259,6 +259,7 @@ public class Config {
                 return State.CURRENT;
             }
 
+            this.convertedChecksum(Optional.empty());
             return State.UPDATE;
         }
 
