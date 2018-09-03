@@ -402,6 +402,11 @@ public class JiveRemote implements Remote {
         return metadata;
     }
 
+    /**
+     * Base {@link RemoteDocument.RemoteDocumentBuilder} for jive content requests.
+     *
+     * @return  {@link RemoteDocument.RemoteDocumentBuilder} with authorization credentials and field projects set.
+     */
     protected RemoteDocument.RemoteDocumentBuilder remoteJivePlaceBuilder(){
         return RemoteDocument.<JiveData.JivePlace>builder()
                 .baseUrl(config.baseUrl().get())
@@ -411,6 +416,11 @@ public class JiveRemote implements Remote {
                 .queryParameter("fields", JiveData.JivePlace.FIELDS);
     }
 
+    /**
+     * Base {@link RemoteDocument.RemoteDocumentBuilder} for jive place requests.
+     *
+     * @return  {@link RemoteDocument.RemoteDocumentBuilder} with authorization credentials and field projects set.
+     */
     protected RemoteDocument.RemoteDocumentBuilder remoteJiveContentBuilder(){
         return RemoteDocument.<JiveData.JiveContent>builder()
                 .baseUrl(config.baseUrl().get())
