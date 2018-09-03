@@ -12,6 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Jive specific POJOs for making requests and parsing responses.
+ */
 public class JiveData{
 
     /**
@@ -44,12 +47,20 @@ public class JiveData{
         return jiveDocument;
     }
 
+    /**
+     * Represents a link url and what methods can be performed on it
+     */
     @EqualsAndHashCode
     public static class Link {
         public String ref;
         public List<String> allowed;
     }
 
+    /**
+     * Represents a jive place
+     *
+     * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/PlaceEntity.html">Jive REST API - Place</a>
+     */
     @EqualsAndHashCode
     public static class JivePlace{
         public static final String FIELDS = "id,resources,placeID,displayName,name,type,typeCode";
@@ -62,6 +73,11 @@ public class JiveData{
         public Integer typeCode;
     }
 
+    /**
+     * Represents Jive content, currently only supports documents.
+     *
+     * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/DocumentEntity.html">Jive REST API - Document Entity</a>
+     */
     @EqualsAndHashCode
     public static class JiveContent {
         public static final String FIELDS = "id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent";

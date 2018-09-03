@@ -18,12 +18,21 @@ import java.util.Set;
 
 import static com.vladsch.flexmark.html.renderer.CoreNodeRenderer.CODE_CONTENT;
 
+/**
+ * Provides parsing and rendering support for Jive styling eccentricities.
+ */
 public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension{
     @Override
     public void rendererOptions(final MutableDataHolder options) {
 
     }
 
+    /**
+     * Adds {@link JiveAttributeProvider} and {@link JiveCodeBlockNodeRenderer} to Flexmark configuration.
+     *
+     * @param rendererBuilder  {@link HtmlRenderer.Builder}
+     * @param rendererType  type of the renderer, e.g. HTML
+     */
     @Override
     public void extend(HtmlRenderer.Builder rendererBuilder, String rendererType) {
         rendererBuilder.attributeProviderFactory(JiveAttributeProvider.Factory());
@@ -32,10 +41,17 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
         }
     }
 
+    /**
+     * Static initializer for {@link JiveFlexmarkExtension}
+     * @return  new {@link JiveFlexmarkExtension}
+     */
     public static JiveFlexmarkExtension create(){
         return new JiveFlexmarkExtension();
     }
 
+    /**
+     * Provides rendering support for atypical Jive styling
+     */
     public static class JiveCodeBlockNodeRenderer implements NodeRenderer {
 
         private DataHolder options;
@@ -44,6 +60,11 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
             this.options = options;
         }
 
+        /**
+         * Return {@link NodeRenderingHandler}'s to add to Flexmark's rendering engine.
+         *
+         * @return  set of {@link NodeRenderingHandler} to override default Flexmark rendering behavior
+         */
         @Override
         public Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
             HashSet<NodeRenderingHandler<?>> set = new HashSet<NodeRenderingHandler<?>>();
@@ -56,10 +77,24 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
             return set;
         }
 
+        /**
+         * Renders a {@link CodeBlock} with hardline breaks to preserve new lines in Jive
+         *
+         * @param node  {@link CodeBlock}
+         * @param context  {@link NodeRendererContext}
+         * @param html  {@link HtmlWriter}
+         */
         private void render(CodeBlock node, NodeRendererContext context, HtmlWriter html) {
             renderRawWithHardBreaks(node, html);
         }
 
+        /**
+         * Renders a {@link FencedCodeBlock} with hardline breaks to preserve new lines in Jive
+         *
+         * @param node  {@link FencedCodeBlock}
+         * @param context  {@link NodeRendererContext}
+         * @param html  {@link HtmlWriter}
+         */
         private void render(FencedCodeBlock node, NodeRendererContext context, HtmlWriter html) {
             html.line();
             html.srcPosWithTrailingEOL(node.getChars()).withAttr().tag("pre").openPre();
@@ -92,6 +127,13 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
             html.lineIf(context.getHtmlOptions().htmlBlockCloseTagEol);
         }
 
+        /**
+         * Renders a {@link IndentedCodeBlock} with hardline breaks to preserve new lines in Jive
+         *
+         * @param node  {@link IndentedCodeBlock}
+         * @param context  {@link NodeRendererContext}
+         * @param html  {@link HtmlWriter}
+         */
         private void render(IndentedCodeBlock node, NodeRendererContext context, HtmlWriter html) {
             html.line();
             html.srcPosWithEOL(node.getChars()).withAttr().tag("pre").openPre();
@@ -112,6 +154,12 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
             html.lineIf(context.getHtmlOptions().htmlBlockCloseTagEol);
         }
 
+        /**
+         * Render each line of html with a hard break {@code <br />} at the end
+         *
+         * @param node  {@link Block}
+         * @param html  {@link HtmlWriter}
+         */
         private void renderRawWithHardBreaks(Block node, HtmlWriter html){
             html.raw("\n");
             for(BasedSequence line : node.getContentLines()){
@@ -119,6 +167,9 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
             }
         }
 
+        /**
+         * Factory used by Flexmark to instantiate a {@link JiveCodeBlockNodeRenderer}
+         */
         public static class Factory implements NodeRendererFactory {
             @Override
             public NodeRenderer create(final DataHolder options) {
@@ -127,8 +178,21 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
         }
     }
 
+    /**
+     * {@link AttributeProvider} to override simple styling markup.
+     */
     public static class JiveAttributeProvider implements AttributeProvider{
 
+        /**
+         * Called by Flexmark renderers to add attributes to nodes.
+         *
+         * Used for things like overriding styling classes used. Currently overrides code block and table styling
+         * to render nicely on Jive platforms
+         *
+         * @param node  {@link Node}
+         * @param part  {@AttributablePart Node}
+         * @param attributes  {@Attributes Node}
+         */
         @Override
         public void setAttributes(Node node, AttributablePart part, Attributes attributes) {
             /*
