@@ -1,5 +1,9 @@
 package com.github.macgregor.alexandria.remotes;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.macgregor.alexandria.Jackson;
 import com.github.macgregor.alexandria.exceptions.HttpException;
 import lombok.*;
@@ -9,6 +13,7 @@ import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,8 +49,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Getter @Setter @Accessors(fluent = true)
-@Builder
-public class RemoteDocument<T> {
+@Builder(toBuilder = true)
+public class RemoteDocument<T>{
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     @NonNull private String baseUrl;
@@ -55,6 +60,11 @@ public class RemoteDocument<T> {
     @Singular private Map<String, String> queryParameters;
     @Singular private List<String> pathSegments;
     @Singular private List<Integer> allowableStatusCodes;
+    @Builder.Default private String pageOffsetRequestParameter = "startIndex";
+    @Builder.Default private String pageSizeRequestParameter = "count";
+    @Builder.Default private String pageOffsetResponseField = "startIndex";
+    @Builder.Default private String pageSizeResponseField = "itemsPerPage";
+    @Builder.Default private String pageListResponseField = "list";
 
     public T get() throws HttpException {
         Request request = null;
@@ -75,8 +85,8 @@ public class RemoteDocument<T> {
         }
     }
 
-    public List<T> get(int offset, int count){
-        return null;
+    public RemoteDocumentPage<T> getPaged(){
+        return new RemoteDocumentPage(this.toBuilder());
     }
 
     public T put(T t) throws HttpException {
@@ -201,13 +211,103 @@ public class RemoteDocument<T> {
                 allowableStatusCodes.contains(response.code())){
             return response;
         } else{
-            String expected = allowableStatusCodes.isEmpty() ? "20X" : StringUtils.join(allowableStatusCodes);
+            String expected = allowableStatusCodes.isEmpty() ? "20X" : StringUtils.join(allowableStatusCodes, ",");
             throw new HttpException.Builder()
                     .withMessage(String.format("%s %s - %d (excepted one of [%s])",
                             request.method(), request.url().toString(), response.code(), expected))
                     .responseContext(response)
                     .requestContext(request)
                     .build();
+        }
+    }
+
+    public static class RemoteDocumentPage<T> implements Iterable<T> {
+        private RemoteDocumentBuilder requestBuilder;
+
+        protected RemoteDocumentPage(RemoteDocumentBuilder requestBuilder){
+            this.requestBuilder = requestBuilder;
+        }
+
+        @Override
+        public Iterator<T> iterator() {
+            return new RemoteDocumentIterator(requestBuilder);
+        }
+
+        public T first() throws HttpException {
+            Iterator<T> iterator = iterator();
+            try{
+                if(iterator.hasNext()){
+                    return iterator.next();
+                } else{
+                    return null;
+                }
+            } catch(Exception e){
+                if(e.getCause() instanceof HttpException){
+                    throw (HttpException)e.getCause();
+                }
+                throw e;
+            }
+        }
+    }
+
+    static class RemoteDocumentIterator<T> implements Iterator<T>{
+
+        private RemoteDocumentBuilder requestBuilder;
+        private Iterator<T> current;
+        private Integer pageSize = 25;
+        private Integer offset = 0;
+        private boolean finished = false;
+
+        protected RemoteDocumentIterator(RemoteDocumentBuilder requestBuilder){
+            this.requestBuilder = requestBuilder;
+        }
+
+        @Override
+        public boolean hasNext() {
+            if(current == null || (!current.hasNext() && !finished)){
+                current = nextPage();
+            }
+            return current.hasNext();
+        }
+
+        @Override
+        public T next() {
+            return current.next();
+        }
+
+        protected Iterator<T> nextPage() {
+            RemoteDocument remoteDocument = requestBuilder
+                    .queryParameter(requestBuilder.pageSizeRequestParameter, pageSize.toString())
+                    .queryParameter(requestBuilder.pageOffsetRequestParameter, offset.toString())
+                    .build();
+            Request request = null;
+            try {
+                request = Requests.requestBuilder(remoteDocument.route(), remoteDocument.headers).get().build();
+                Response response = remoteDocument.doRequest(request);
+
+                JsonFactory factory = new JsonFactory();
+                ObjectMapper mapper = new ObjectMapper(factory);
+                JsonNode rootNode = mapper.readTree(response.body().charStream());
+                JsonNode results = rootNode.get(remoteDocument.pageListResponseField);
+                JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, remoteDocument.entity);
+                List<T> parsedResults = Jackson.jsonMapper().readValue(results.toString(), type);
+                offset += pageSize;
+                if(parsedResults.size() == 0){
+                    finished = true;
+                }
+                return parsedResults.iterator();
+            } catch(HttpException e){
+                finished = true;
+                e.request(Optional.of(request));
+                throw new RuntimeException(e);
+            } catch(Exception e){
+                finished = true;
+                throw new RuntimeException(new HttpException.Builder()
+                        .withMessage("Unexpected error fetching next page from remote")
+                        .causedBy(e)
+                        .requestContext(request)
+                        .build());
+            }
         }
     }
 }

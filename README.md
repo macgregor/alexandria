@@ -129,7 +129,7 @@ tests as part of the pull request.
 ## Quirks
 * Line breaks can be frustratingly hard to get exactly how you want Putting one or even two newlines
 between a paragraph doesnt give you a nice space between paragraphs like it does on github. If you really
-need that white space add a `<p/>` or `<br/>` tag between paragraphs.
+need that white space add a `<p/>\n` or `<br/>\n` tag between paragraphs (the newline is important).
 * if you are using the alexandria-mojo-plugin on a project that is pom packaging (so just a pom file), you
 cant you `mvn deploy` as there is nothing to deploy. You will have to run the goals explicitly:
 `mvn alexandria:index alexandria:clean alexandria:sync`. This is a maven thing.

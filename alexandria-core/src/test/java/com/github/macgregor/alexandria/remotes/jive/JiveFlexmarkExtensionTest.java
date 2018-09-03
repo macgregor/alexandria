@@ -89,6 +89,16 @@ public class JiveFlexmarkExtensionTest {
     }
 
     @Test
+    public void testJiveCodeBlockNoLanguage() throws IOException {
+        File markdown = folder.newFile("foo.md");
+        Path out = Paths.get(folder.getRoot().toString(), "foo.html");
+        Resources.save(markdown.getPath(), "```\nline1  \nline2  \n```");
+        Markdown.toHtml(markdown.toPath(), Paths.get(folder.getRoot().toString(), "foo.html"));
+        String html = Resources.load(out.toString());
+        assertThat(html).contains("<pre class=\"language-none line-numbers\">");
+    }
+
+    @Test
     public void testJiveCodeBlockStyleChangesHtmlToMarkup() throws IOException {
         File markdown = folder.newFile("foo.md");
         Path out = Paths.get(folder.getRoot().toString(), "foo.html");

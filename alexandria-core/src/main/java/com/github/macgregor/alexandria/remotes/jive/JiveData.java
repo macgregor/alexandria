@@ -45,16 +45,9 @@ public class JiveData{
     }
 
     @EqualsAndHashCode
-    public static class Link{
+    public static class Link {
         public String ref;
         public List<String> allowed;
-    }
-
-    @EqualsAndHashCode
-    public static class PagedJivePlace{
-        public List<JivePlace> list = new ArrayList<>();
-        public Integer startIndex;
-        public Integer itemsPerPage;
     }
 
     @EqualsAndHashCode
@@ -67,14 +60,6 @@ public class JiveData{
         public String name;
         public String type;
         public Integer typeCode;
-    }
-
-    @EqualsAndHashCode
-    public static class PagedJiveContent{
-        public Map<String, String> links = new HashMap<>();
-        public List<JiveContent> list = new ArrayList<>();
-        public Integer startIndex;
-        public Integer itemsPerPage;
     }
 
     @EqualsAndHashCode

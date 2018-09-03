@@ -1,13 +1,15 @@
 package com.github.macgregor.alexandria.remotes.jive;
 
-import com.github.macgregor.alexandria.*;
+import com.github.macgregor.alexandria.Config;
+import com.github.macgregor.alexandria.Context;
+import com.github.macgregor.alexandria.Resources;
+import com.github.macgregor.alexandria.TestData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -19,24 +21,6 @@ public class JiveDataTest {
     public TemporaryFolder folder = new TemporaryFolder();
     public Context context;
     public Config.DocumentMetadata metadata;
-
-    @Test
-    public void voidTestJivePagedContentParsing() throws IOException {
-        JiveData.PagedJiveContent parsed = Jackson.jsonMapper().readValue(Resources.load("src/test/resources/DOC-1072237-Paged.json"), JiveData.PagedJiveContent.class);
-
-        assertThat(parsed).isEqualToComparingFieldByFieldRecursively(TestData.expectedPagedJiveContent());
-    }
-
-    @Test
-    public void testJiveUpdateMetadataHandlesMissingMalformedPagedContent(){
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        assertThat(JiveRemote.updateMetadata(metadata, (JiveData.PagedJiveContent) null)).isEqualTo(metadata);
-        JiveData.PagedJiveContent content = new JiveData.PagedJiveContent();
-        content.list = null;
-        assertThat(JiveRemote.updateMetadata(metadata, content)).isEqualTo(metadata);
-        content.list = new ArrayList<>();
-        assertThat(JiveRemote.updateMetadata(metadata, content)).isEqualTo(metadata);
-    }
 
     @Test
     public void testJiveBuildsDocumentPostBody() throws IOException, URISyntaxException {

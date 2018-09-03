@@ -1,6 +1,5 @@
 package com.github.macgregor.alexandria;
 
-import com.github.macgregor.alexandria.remotes.jive.JiveData;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.rules.TemporaryFolder;
@@ -11,7 +10,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class TestData {
@@ -183,52 +181,5 @@ public class TestData {
         remoteConfig.baseUrl(Optional.empty());
 
         return remoteConfig;
-    }
-
-    public static JiveData.PagedJiveContent expectedPagedJiveContent(){
-        JiveData.JiveContent jiveContent = new JiveData.JiveContent();
-        jiveContent.id = 1072237;
-        jiveContent.published = ZonedDateTime.parse("2016-03-21T15:07:34.533+0000", DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
-        jiveContent.updated = ZonedDateTime.parse("2018-06-22T18:42:59.652+0000", DateTimeFormatter.ofPattern(Config.ALEXANDRIA_DATETIME_PATTERN));
-        jiveContent.tags = Arrays.asList("foo", "bar", "baz");
-        jiveContent.contentID = "1278973";
-        jiveContent.parent = "https://jive.com/api/core/v3/places/61562";
-        jiveContent.subject = "Document Title";
-        jiveContent.type = "document";
-        jiveContent.typeCode = 102;
-
-        JiveData.JiveContent.Content content = new JiveData.JiveContent.Content();
-        content.editable = true;
-        content.type = "text/html";
-        content.text = "<body></body>";
-        jiveContent.content = content;
-
-        JiveData.JiveContent.ParentPlace parentPlace = new JiveData.JiveContent.ParentPlace();
-        parentPlace.id = 2276;
-        parentPlace.html = "https://jive.com/groups/parent_group";
-        parentPlace.placeID = "61562";
-        parentPlace.name = "Some Parent Group";
-        parentPlace.type = "group";
-        parentPlace.uri = "https://jive.com/api/core/v3/places/61562";
-        jiveContent.parentPlace = parentPlace;
-
-        Map<String, JiveData.Link> resources = new HashMap<>();
-        resources.put("html", link("https://jive.com/docs/DOC-1072237", Arrays.asList("GET")));
-        resources.put("extprops", link("https://jive.com/api/core/v3/contents/1278973/extprops", Arrays.asList("POST", "DELETE", "GET")));
-        jiveContent.resources = resources;
-
-        JiveData.PagedJiveContent pagedContent = new JiveData.PagedJiveContent();
-        pagedContent.itemsPerPage = 1;
-        pagedContent.links.put("next", "https://jive.com/api/core/v3/contents?sort=dateCreatedDesc&fields=id,contentID,tags,updated,published,parentPlace,subject,resources,content,via,parent&filter=entityDescriptor%28102,1072237%29&abridged=false&includeBlogs=false&count=1&startIndex=1");
-        pagedContent.startIndex = 0;
-        pagedContent.list = Arrays.asList(jiveContent);
-        return pagedContent;
-    }
-
-    public static JiveData.Link link(String ref, List<String> allowed){
-        JiveData.Link link = new JiveData.Link();
-        link.ref = ref;
-        link.allowed = allowed;
-        return link;
     }
 }
