@@ -79,7 +79,7 @@ public class JiveRemoteTest {
     @Test
     public void testCreateDuplicateDocument() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(Arrays.asList(
-                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-paged.json"))
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json"))
         ));
         Context context = new Context();
         Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
