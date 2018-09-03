@@ -29,7 +29,7 @@ public class AlexandriaSyncTest {
     @Test
     public void testSyncWithJiveRemote() throws AlexandriaException {
         Config config = new Config();
-        config.remote().clazz("com.github.macgregor.alexandria.remotes.JiveRemote");
+        config.remote().clazz("com.github.macgregor.alexandria.remotes.jive.JiveRemote");
         config.remote().baseUrl(Optional.of(""));
         config.remote().username(Optional.of(""));
         config.remote().password(Optional.of(""));

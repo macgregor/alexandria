@@ -1,0 +1,43 @@
+{
+  "itemsPerPage" : 2,
+  "links" : {
+    "next" : "https://jive.com/api/core/v3/places?sort=titleAsc&fields=id,resources,placeID,displayName,name,type,typeCode&filter=search%28parent_group%29&count=2&startIndex=1"
+  },
+  "list" : [ {
+    "id" : "13475",
+    "resources" : {
+      "self" : {
+        "allowed" : [ "DELETE", "PUT", "GET" ],
+        "ref" : "https://jive.com/api/core/v3/places/61563"
+      },
+      "html" : {
+        "allowed" : [ "GET" ],
+        "ref" : "https://jive.com/groups/alexandria-test-group"
+      }
+    },
+    "placeID" : "61563",
+    "displayName" : "not_right",
+    "name" : "Not Right",
+    "type" : "group",
+    "typeCode" : 700
+  },
+    {
+      "id" : "13474",
+      "resources" : {
+        "self" : {
+          "allowed" : [ "DELETE", "PUT", "GET" ],
+          "ref" : "https://jive.com/api/core/v3/places/61562"
+        },
+        "html" : {
+          "allowed" : [ "GET" ],
+          "ref" : "https://jive.com/groups/alexandria-test-group"
+        }
+      },
+      "placeID" : "61562",
+      "displayName" : "parent_group",
+      "name" : "Parent Group",
+      "type" : "group",
+      "typeCode" : 700
+    }],
+  "startIndex" : 0
+}

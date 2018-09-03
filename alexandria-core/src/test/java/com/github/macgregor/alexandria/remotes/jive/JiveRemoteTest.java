@@ -1,8 +1,13 @@
 package com.github.macgregor.alexandria.remotes.jive;
 
-import com.github.macgregor.alexandria.*;
+import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Config.RemoteConfig;
+import com.github.macgregor.alexandria.Context;
+import com.github.macgregor.alexandria.Resources;
+import com.github.macgregor.alexandria.TestData;
+import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.HttpException;
+import lombok.EqualsAndHashCode;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -19,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.LogManager;
 
+import static com.github.macgregor.alexandria.remotes.jive.JiveRemote.JIVE_TRACKING_TAG;
 import static org.assertj.core.api.Assertions.*;
 
 public class JiveRemoteTest {
@@ -31,30 +37,11 @@ public class JiveRemoteTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testSyncMetadata400() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
-
-        Config.DocumentMetadata metadata = TestData.documentForUpdate(new Context(), folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.findDocument(new Context(), metadata))
-                .withMessageContaining("400");
-    }
-
-    @Test
-    public void testSyncMetadata500() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(500));
-
-        Config.DocumentMetadata metadata = TestData.documentForUpdate(new Context(), folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.findDocument(new Context(), metadata))
-                .withMessageContaining("500");
-    }
-
-    @Test
-    public void testSyncMetadataUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")));
+    public void testFindDocumentUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
+                new MockResponse().setBody("{\"itemsPerPage\": 1,\n\"list\": [],\n\"startIndex\": 1\n}")
+        ));
 
         Config.DocumentMetadata metadata = TestData.documentForUpdate(new Context(), folder);
         jiveRemote.findDocument(new Context(), metadata);
@@ -69,6 +56,16 @@ public class JiveRemoteTest {
     }
 
     @Test
+    public void testFindDocumentThrowsAlexandriaExceptionWhenNotEnoughInformation() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Collections.emptyList());
+
+        Config.DocumentMetadata metadata = TestData.documentForUpdate(new Context(), folder);
+        metadata.extraProps().get().remove(JIVE_TRACKING_TAG);
+        metadata.remoteUri(Optional.empty());
+        assertThatThrownBy(() -> jiveRemote.findDocument(new Context(), metadata)).isInstanceOf(AlexandriaException.class);
+    }
+
+    @Test
     public void testSyncMetadataUnparsableResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
 
@@ -76,7 +73,7 @@ public class JiveRemoteTest {
 
         assertThatThrownBy(() -> jiveRemote.findDocument(new Context(), metadata))
                 .isInstanceOf(HttpException.class)
-                .hasMessageContaining("Cannot parse response content");
+                .hasMessageContaining("Unexpected error fetching next page from remote");
     }
 
     @Test
@@ -99,42 +96,6 @@ public class JiveRemoteTest {
     }
 
     @Test
-    public void testCreate400() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
-
-        Context context = new Context();
-        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.create(context, metadata))
-                .withMessageContaining("400");
-    }
-
-    @Test
-    public void testCreate409() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
-
-        Context context = new Context();
-        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.create(context, metadata))
-                .withMessageContaining("409");
-    }
-
-    @Test
-    public void testCreate403() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
-
-        Context context = new Context();
-        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.create(context, metadata))
-                .withMessageContaining("403");
-    }
-
-    @Test
     public void tesCreateUnparsableResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
 
@@ -143,7 +104,7 @@ public class JiveRemoteTest {
 
         assertThatThrownBy(() -> jiveRemote.create(context, metadata))
                 .isInstanceOf(HttpException.class)
-                .hasMessageContaining("Cannot parse response content");
+                .hasMessageContaining("Unexpected error fetching next page from remote");
     }
 
     @Test
@@ -151,6 +112,22 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setResponseCode(404),
                 new MockResponse().setBody(Resources.load("src/test/resources/parent_group-paged.json")),
+                new MockResponse().setBody(Resources.load("src/test/resources/parent_group.json"))));
+
+        Context context = new Context();
+        Config.DocumentMetadata metadata = TestData.documentForCreate(context, folder);
+        metadata.extraProps().get().put("jiveParentUri", "https://jive.com/places/parent_group");
+        jiveRemote.create(context, metadata);
+
+        assertThat(metadata.extraProps().get().get("jiveParentPlaceId")).isEqualTo("61562");
+        assertThat(metadata.extraProps().get().get("jiveParentApiUri")).isEqualTo("https://jive.com/api/core/v3/places/61562");
+    }
+
+    @Test
+    public void testCreateMatchesParentPlaceDisplayName() throws IOException, URISyntaxException {
+        JiveRemote jiveRemote = setup(Arrays.asList(
+                new MockResponse().setResponseCode(404),
+                new MockResponse().setBody(Resources.load("src/test/resources/parent_group-paged-nonunique.json")),
                 new MockResponse().setBody(Resources.load("src/test/resources/parent_group.json"))));
 
         Context context = new Context();
@@ -210,7 +187,7 @@ public class JiveRemoteTest {
         metadata.extraProps().get().put("jiveContentId", "1234");
         jiveRemote.update(context, metadata);
 
-        assertThat(metadata.hasExtraProperty(JiveRemote.JIVE_TRACKING_TAG)).isTrue();
+        assertThat(metadata.hasExtraProperty(JIVE_TRACKING_TAG)).isTrue();
     }
 
     @Test
@@ -243,54 +220,6 @@ public class JiveRemoteTest {
     }
 
     @Test
-    public void testUpdate400() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
-
-        Context context = new Context();
-        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.update(context, metadata))
-                .withMessageContaining("400");
-    }
-
-    @Test
-    public void testUpdate409() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(409));
-
-        Context context = new Context();
-        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.update(context, metadata))
-                .withMessageContaining("409");
-    }
-
-    @Test
-    public void testUpdate403() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
-
-        Context context = new Context();
-        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.update(context, metadata))
-                .withMessageContaining("403");
-    }
-
-    @Test
-    public void testUpdate404() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(404));
-
-        Context context = new Context();
-        Config.DocumentMetadata metadata = TestData.documentForUpdate(context, folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.update(context, metadata))
-                .withMessageContaining("404");
-    }
-
-    @Test
     public void tesUpdateUnparsableResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(new MockResponse().setBody(""));
 
@@ -299,7 +228,7 @@ public class JiveRemoteTest {
 
         assertThatThrownBy(() -> jiveRemote.update(context, metadata))
                 .isInstanceOf(HttpException.class)
-                .hasMessageContaining("Cannot parse response content");
+                .hasMessageContaining("Unexpected error fetching next page from remote");
     }
 
     @Test
@@ -315,12 +244,12 @@ public class JiveRemoteTest {
     }
 
     @Test
-    public void testDeleteAssumes404WhenSearchingForDocMeansDeleted() throws URISyntaxException, IOException {
+    public void testDeleteConsiders404AlreadyDeleted() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(Arrays.asList(
-                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
                 new MockResponse().setResponseCode(404)));
 
         Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
+        metadata.setExtraProperty("jiveContentId", "1234");
         jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
     }
@@ -336,42 +265,6 @@ public class JiveRemoteTest {
         metadata.setExtraProperty("jiveContentId", "1234");
         jiveRemote.delete(new Context(), metadata);
         assertThat(metadata.deletedOn()).isPresent();
-    }
-
-    @Test
-    public void testDelete400() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(400));
-
-        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
-                .withMessageContaining("400");
-    }
-
-    @Test
-    public void testDelete403() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(new MockResponse().setResponseCode(403));
-
-        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
-                .withMessageContaining("403");
-    }
-
-    @Test
-    public void testDelete404() throws IOException, URISyntaxException {
-        JiveRemote jiveRemote = setup(Arrays.asList(
-                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237-Paged.json")),
-                new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json")),
-                new MockResponse().setResponseCode(404)));
-
-        Config.DocumentMetadata metadata = TestData.documentForDelete(new Context(), folder);
-
-        assertThatExceptionOfType(HttpException.class)
-                .isThrownBy(() -> jiveRemote.delete(new Context(), metadata))
-                .withMessageContaining("404");
     }
 
     @Test
@@ -468,16 +361,6 @@ public class JiveRemoteTest {
     }
 
     @Test
-    public void testJiveRemoteUpdateMetadataPagedEmpty() {
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.sourcePath(Paths.get("foo"));
-        JiveData.PagedJiveContent content = new JiveData.PagedJiveContent();
-        content.list = Collections.EMPTY_LIST;
-        JiveRemote remote = new JiveRemote();
-        remote.updateMetadata(metadata, content);
-    }
-
-    @Test
     public void testJiveFindParentPlaceThrowsHttpExceptionOnBadResponse() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setBody("asldalskd")));
@@ -491,17 +374,6 @@ public class JiveRemoteTest {
         context.convertedPath(metadata, folder.newFile().toPath());
 
         assertThatThrownBy(() -> jiveRemote.findParentPlace(context, metadata)).isInstanceOf(HttpException.class);
-    }
-
-    @Test
-    public void testJiveUpdateMetadataHandlesMissingMalformedPagedParent(){
-        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        assertThat(JiveRemote.updateMetadata(metadata, (JiveData.PagedJivePlace) null)).isEqualTo(metadata);
-        JiveData.PagedJivePlace parentPlace = new JiveData.PagedJivePlace();
-        parentPlace.list = null;
-        assertThat(JiveRemote.updateMetadata(metadata, parentPlace)).isEqualTo(metadata);
-        parentPlace.list = new ArrayList<>();
-        assertThat(JiveRemote.updateMetadata(metadata, parentPlace)).isEqualTo(metadata);
     }
 
     @Test
@@ -575,5 +447,19 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = new JiveRemote(config);
 
         return jiveRemote;
+    }
+
+    @EqualsAndHashCode
+    public static class PagedJivePlace{
+        public List<JiveData.JivePlace> list = new ArrayList<>();
+        public Integer startIndex;
+        public Integer itemsPerPage;
+    }
+
+    @EqualsAndHashCode
+    public static class PagedJiveContent{
+        public List<JiveData.JiveContent> list = new ArrayList<>();
+        public Integer startIndex;
+        public Integer itemsPerPage;
     }
 }

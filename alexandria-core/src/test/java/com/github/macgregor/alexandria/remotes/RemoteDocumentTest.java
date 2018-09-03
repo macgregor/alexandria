@@ -6,6 +6,7 @@ import okhttp3.*;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -13,12 +14,16 @@ import org.mockito.stubbing.Answer;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Objects;
+import java.util.logging.LogManager;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class RemoteDocumentTest {
 
+    static{
+        LogManager.getLogManager().reset();
+    }
 
     @Test
     public void testGetCreatesGetRequest() throws HttpException {
@@ -268,6 +273,36 @@ public class RemoteDocumentTest {
         when(responseBody.charStream()).thenReturn(new StringReader("{\"name\" \"foo\""));
         assertThatThrownBy(() -> minimalBuilder().build().parseResponse(response))
                 .isInstanceOf(HttpException.class);
+    }
+
+    @Test
+    public void testDoRequestDefaultsTo20XResponsesAsSuccessful() throws IOException {
+        MockWebServer server = setup(new MockResponse().setResponseCode(204));
+        RemoteDocument<TestDocument> test = spy(minimalBuilder().build());
+        doReturn(null).when(test).parseResponse(any());
+        assertThatCode(() -> test.get()).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void testDoRequestWrapsCallException() throws IOException {
+        MockWebServer server = setup(new MockResponse().setResponseCode(204));
+        server.shutdown();
+        RemoteDocument<TestDocument> test = spy(minimalBuilder().baseUrl(server.url("foo").toString()).build());
+        doReturn(null).when(test).parseResponse(any());
+        assertThatThrownBy(() -> test.get()).isInstanceOf(HttpException.class);
+    }
+
+    @Ignore
+    @Test
+    public void testDoRequestConsidersExpectedResponseCodesAsSuccessful() throws IOException {
+        MockWebServer server = setup(new MockResponse().setResponseCode(404));
+        server.enqueue(new MockResponse().setResponseCode(200));
+        RemoteDocument<TestDocument> test = minimalBuilder()
+                .baseUrl(server.url("foo").toString())
+                .allowableStatusCode(404)
+                .build();
+        assertThatCode(() -> test.get()).doesNotThrowAnyException();
+        assertThatThrownBy(() -> test.get()).isInstanceOf(HttpException.class);
     }
 
     @Test
