@@ -64,7 +64,7 @@ See [alexandria-demo](./alexandria-demo) for a working example of the maven plug
 <plugin>
     <groupId>com.github.macgregor</groupId>
     <artifactId>alexandria-maven-plugin</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.4</version>
     <executions>
         <execution>
             <id>alexandria</id>
@@ -94,7 +94,7 @@ remote:
   baseUrl: "https:/jive.com/api/core/v3"
   username: "macgregor"
   password: "password"
-  class: "com.github.macgregor.alexandria.remotes.JiveRemote"
+  class: "com.github.macgregor.alexandria.remotes.jive.JiveRemote"
 ```
 
 New remotes can be added by implementing the `Remote` interface which defines methods that will be called to create, update
@@ -120,7 +120,8 @@ This is where most of the complexity is.
 * **create** - if no `remoteUri` is set in the metadata, create the deocument
 * **update** - if `remoteUri` is set in the metadata and the runtime `sourceChecksum` of the file is different than the stored 
 `sourceChecksum` (or `sourceChecksum` is not set), update the document
-* **delete** - not implemented yet
+* **delete** - if a file exists in the index but cannot be found on the local file system, it is considered to be deleted and
+removed from the remote.
 
 ## Contributing
 Contributions are welcome, especially adding new remotes so that others can make use of them. Please provide adequate unit
