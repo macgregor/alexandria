@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.github.macgregor</groupId>
         <artifactId>alexandria-parent</artifactId>
-        <version>0.1.4</version>
+        <version>0.1.4-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -90,10 +90,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>

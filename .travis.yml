@@ -55,7 +55,7 @@ jobs:
       script: skip
       deploy:
       - provider: script
-        script: mvn deploy -Prelease --settings ci/.maven.xml -Dmaven.test.skip=true
+        script: mvn deploy -PreleaseNexus,createJavadocs --settings ci/.maven.xml -Dmaven.test.skip=true
         on:
           all_branches: true
     - stage: deploy
@@ -75,7 +75,7 @@ jobs:
           all_branches: true
     - stage: deploy
       name: "Deploy Javadocs"
-      install: mvn install -Dmaven.test.skip=true
+      install: mvn install -PcreateJavadocs -Dmaven.test.skip=true
       script: skip
       before_deploy:
       - cd $TRAVIS_BUILD_DIR/gh-pages
