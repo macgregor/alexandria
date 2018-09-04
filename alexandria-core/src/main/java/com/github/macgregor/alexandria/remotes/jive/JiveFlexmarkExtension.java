@@ -190,8 +190,8 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
          * to render nicely on Jive platforms
          *
          * @param node  {@link Node}
-         * @param part  {@AttributablePart Node}
-         * @param attributes  {@Attributes Node}
+         * @param part  {@link AttributablePart}
+         * @param attributes  {@link Attributes}
          */
         @Override
         public void setAttributes(Node node, AttributablePart part, Attributes attributes) {
