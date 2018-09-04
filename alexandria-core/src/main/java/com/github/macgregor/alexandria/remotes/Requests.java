@@ -96,7 +96,7 @@ public class Requests {
      *
      * @param request  {@link Request} with a body to stringify
      * @return  String representation of the request body
-     * @throws IOException
+     * @throws IOException  the request body couldnt be converted to a string
      */
     public static String bodyToString(final Request request) throws IOException {
         final Request copy = request.newBuilder().build();

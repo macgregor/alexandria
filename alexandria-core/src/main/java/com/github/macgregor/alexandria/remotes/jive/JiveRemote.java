@@ -277,6 +277,7 @@ public class JiveRemote implements Remote {
      * @param context  current Alexandria context
      * @param metadata  metadata to find on remote
      * @throws IOException  there was a problem with the request
+     * @return the matching {@link JiveData.JiveContent} or null if it wasnt found
      */
     public JiveData.JiveContent findDocument(Context context, Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.sourceFileName()));

@@ -124,7 +124,7 @@ public class RemoteDocument<T>{
      * Get an iterable to page through remote documents matching the request.
      *
      * @see RemoteDocumentPage
-     * @ee RemoteDocumentIterator
+     * @see RemoteDocumentIterator
      *
      * @return  An iterable of all remote documents matching the request.
      */
