@@ -146,6 +146,9 @@ public class JiveRemoteTest {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setResponseCode(404),
                 new MockResponse().setResponseCode(404),
+                new MockResponse().setResponseCode(404),
+                new MockResponse().setResponseCode(404),
+                new MockResponse().setResponseCode(404),
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))
         ));
 
@@ -159,6 +162,9 @@ public class JiveRemoteTest {
     public void testCreateNoParentPlaceFoundEmptyList() throws IOException, URISyntaxException {
         JiveRemote jiveRemote = setup(Arrays.asList(
                 new MockResponse().setResponseCode(404),
+                new MockResponse().setBody("{\"itemsPerPage\": 1,\n\"list\": [],\n\"startIndex\": 1\n}"),
+                new MockResponse().setBody("{\"itemsPerPage\": 1,\n\"list\": [],\n\"startIndex\": 1\n}"),
+                new MockResponse().setBody("{\"itemsPerPage\": 1,\n\"list\": [],\n\"startIndex\": 1\n}"),
                 new MockResponse().setBody("{\"itemsPerPage\": 1,\n\"list\": [],\n\"startIndex\": 1\n}"),
                 new MockResponse().setBody(Resources.load("src/test/resources/DOC-1072237.json"))
         ));
