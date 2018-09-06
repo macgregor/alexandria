@@ -230,20 +230,6 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.0.1</version>
-                    <executions>
-                        <execution>
-                            <id>attach-javadocs</id>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>3.1.0</version>
                     <configuration>
@@ -398,6 +384,7 @@
                         <version>1.18.0.0</version>
                         <configuration>
                             <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/delombok</outputDirectory>
                             <addOutputDirectory>false</addOutputDirectory>
                         </configuration>
                         <executions>
@@ -414,7 +401,7 @@
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>3.0.1</version>
                         <configuration>
-                            <sourcepath>${project.build.directory}/generated-sources/delombok</sourcepath>
+                            <sourcepath>${project.build.directory}/delombok</sourcepath>
                             <additionalJOption>-Xdoclint:none</additionalJOption>
                         </configuration>
                         <executions>
