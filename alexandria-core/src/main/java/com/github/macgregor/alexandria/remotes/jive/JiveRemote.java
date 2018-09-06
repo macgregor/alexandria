@@ -18,6 +18,7 @@ import java.net.URI;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -267,6 +268,8 @@ public class JiveRemote implements Remote {
     }
 
     /**
+     * Find a document's api identifiers from the human accessible uri.
+     *
      * The uri a human uses to access a document ({@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri})
      * is not the uri we need to make rest requests. There is an sort of identifier in this uri, but we have to extract it
      * and then run a search for it to get the {@value JIVE_CONTENT_ID} which we can use to modify the document.
@@ -305,8 +308,22 @@ public class JiveRemote implements Remote {
     }
 
     /**
+     * Find a parent place's api identifiers from the human accessible uri.
+     *
      * Just like with documents, the parent uri a human interacts with is not the same as the one we need for rest requests.
-     * This gives us the {@value JIVE_PARENT_API_URI} to use in the post body of create and update requests.
+     * This gives us the {@value JIVE_PARENT_API_URI} to use in the post body of create and update requests. The api
+     * we are calling for this is very limiting and inaccurate. To compensate for this we run a series of queries of decreasing
+     * accuracy:
+     * <ol>
+     *     <li>api/core/v3/places?filter=relationship(member)</li>
+     *     <li>api/core/v3/places?filter=relationship(following)</li>
+     *     <li>api/core/v3/places?filter=relationship(owner)</li>
+     *     <li>api/core/v3/places?filter=search({@link JiveUtils#jiveParentPlaceName(String)})</li>
+     * </ol>
+     *
+     * All of these require client side filtering to match the place name to the name extracted from the uri. The last query
+     * really is a last resort as it is slow and is a coin toss on whether you will find the place or not. For best results,
+     * the Jive user Alexandria uses should be made a member, owner or follower of the places it will be using.
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/PlaceService.html#getPlaces(List%3CString%3E,%20String,%20int,%20int,%20String)">Jive REST API - Get Places</a>
      * @see <a href="https://community.jivesoftware.com/docs/DOC-153931">Finding the Content ID and Place ID using Jive v3 API</a>
@@ -320,25 +337,33 @@ public class JiveRemote implements Remote {
 
         String parentPlaceUrl = metadata.getExtraProperty(JIVE_PARENT_URI);
         String parentPlaceName = JiveUtils.jiveParentPlaceName(parentPlaceUrl);
+        List<String> filters = Arrays.asList("relationship(member)", "relationship(following)", "relationship(owner)",
+                String.format("search(%s)", parentPlaceName));
 
-        RemoteDocument<JiveData.JivePlace> jivePlaces = remoteJivePlaceBuilder()
-                .queryParameter("filter", String.format("search(%s)", parentPlaceName))
-                .build();
-        try{
-            for(JiveData.JivePlace place : jivePlaces.getPaged()){
-                if(place.displayName.equals(parentPlaceName)){
-                    updateMetadata(metadata, place);
+        for(String filter : filters) {
+
+            RemoteDocument<JiveData.JivePlace> jivePlaces = remoteJivePlaceBuilder()
+                    .queryParameter("filter", filter)
+                    .build();
+            try {
+                for (JiveData.JivePlace place : jivePlaces.getPaged()) {
+                    if (place.displayName.equals(parentPlaceName)) {
+                        updateMetadata(metadata, place);
+                        break;
+                    }
+                }
+                if(!JiveUtils.needsParentPlaceUri(metadata)){
                     break;
                 }
-            }
-        } catch(Exception e){
-            if(e.getCause() instanceof HttpException){
-                HttpException exception = (HttpException)e.getCause();
-                if(!exception.response().isPresent() || exception.response().get().code() != 404){
-                    throw exception;
+            } catch (Exception e) {
+                if (e.getCause() instanceof HttpException) {
+                    HttpException exception = (HttpException) e.getCause();
+                    if (!exception.response().isPresent() || exception.response().get().code() != 404) {
+                        throw exception;
+                    }
+                } else {
+                    throw e;
                 }
-            } else {
-                throw e;
             }
         }
 
@@ -349,6 +374,7 @@ public class JiveRemote implements Remote {
 
     /**
      * Update metadata from the {@link JiveData.JiveContent} from a create, update or find request
+     * 
      * @param metadata  document to update with request content
      * @param content  parsed content from the request
      * @return  the updated document metadata passed to it
