@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit;
  *   datetimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
  *   requestTimeout: 60
  *   class: "com.github.macgregor.alexandria.remotes.jive.JiveRemote"
+ *   defaultExtraProps:
+ *      jiveParentUri: "https://jive.com/groups/alexandria-test-group"
  * metadata:
  * - sourcePath: "docs/images.md"
  *   title: "images.md"
@@ -51,11 +53,11 @@ import java.util.concurrent.TimeUnit;
  *     jiveParentPlaceId: "1448512"
  *     jiveParentApiUri: "https://jive.com/api/core/v3/places/1448512"
  *     jiveContentId: "1448517"
- *     jiveTrackingTag: ""
+ *     jiveTrackingTag: "fb25f4ee-b084-4bb2-a96f-3e656449ca20"
  * }
  * </pre>
  *
- * {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}:
+ * {@link com.github.macgregor.alexandria.Config.RemoteConfig#defaultExtraProps} and {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}:
  * <ul>
  *  <li><b>USER DEFINED</b> {@value #JIVE_PARENT_URI} - the uri used to access a parent place for the document. Setting this is how you link a
  *  Jive document with the place where it will live. This will not be used for the api calls as the api needs a different URI
@@ -157,7 +159,7 @@ public class JiveRemote implements Remote {
      * {@code GET baseUrl/places} if the document has a parent place.
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#createContent(String,%20String,%20String,%20String)">Jive REST API - Create Content</a>
-     * @see JiveUtils#needsParentPlaceUri(Config.DocumentMetadata)
+     * @see JiveUtils#needsParentPlaceUri(Context, Config.DocumentMetadata)
      * @see #findParentPlace(Context, Config.DocumentMetadata)
      */
     @Override
@@ -182,7 +184,7 @@ public class JiveRemote implements Remote {
             return;
         }
 
-        if(JiveUtils.needsParentPlaceUri(metadata)){
+        if(JiveUtils.needsParentPlaceUri(context, metadata)){
             findParentPlace(context, metadata);
         }
 
@@ -209,9 +211,9 @@ public class JiveRemote implements Remote {
         if(JiveUtils.needsContentId(metadata)){
             findDocument(context, metadata);
         }
-        String contentId = metadata.extraProps().get().get(JIVE_CONTENT_ID);
+        String contentId = context.getExtraPropertiesForDocument(metadata).get(JIVE_CONTENT_ID);
 
-        if(JiveUtils.needsParentPlaceUri(metadata)){
+        if(JiveUtils.needsParentPlaceUri(context, metadata)){
             findParentPlace(context, metadata);
         }
 
@@ -259,7 +261,7 @@ public class JiveRemote implements Remote {
             return;
         }
 
-        String contentId = metadata.extraProps().get().get(JIVE_CONTENT_ID);
+        String contentId = context.getExtraPropertiesForDocument(metadata).get(JIVE_CONTENT_ID);
         remoteJiveContentBuilder()
                 .pathSegment(contentId)
                 .build()
@@ -287,7 +289,7 @@ public class JiveRemote implements Remote {
 
         String filter;
         if(metadata.hasExtraProperty(JIVE_TRACKING_TAG)){
-            filter = String.format("tag(%s)", metadata.getExtraProperty(JIVE_TRACKING_TAG));
+            filter = String.format("tag(%s)", context.getExtraPropertiesForDocument(metadata).get(JIVE_TRACKING_TAG));
         } else if (metadata.remoteUri().isPresent()){
             filter = String.format("entityDescriptor(102,%s)", JiveUtils.jiveObjectId(metadata.remoteUri().get()));
         } else{
@@ -335,7 +337,7 @@ public class JiveRemote implements Remote {
     public void findParentPlace(Context context, Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Jive parent place detected, attempting to retrieve from remote."));
 
-        String parentPlaceUrl = metadata.getExtraProperty(JIVE_PARENT_URI);
+        String parentPlaceUrl = context.getExtraPropertiesForDocument(metadata).get(JIVE_PARENT_URI);
         String parentPlaceName = JiveUtils.jiveParentPlaceName(parentPlaceUrl);
         List<String> filters = Arrays.asList("relationship(member)", "relationship(following)", "relationship(owner)",
                 String.format("search(%s)", parentPlaceName));
@@ -352,7 +354,7 @@ public class JiveRemote implements Remote {
                         break;
                     }
                 }
-                if(!JiveUtils.needsParentPlaceUri(metadata)){
+                if(!JiveUtils.needsParentPlaceUri(context, metadata)){
                     break;
                 }
             } catch (Exception e) {
@@ -367,14 +369,14 @@ public class JiveRemote implements Remote {
             }
         }
 
-        if(JiveUtils.needsParentPlaceUri(metadata)){
+        if(JiveUtils.needsParentPlaceUri(context, metadata)){
             log.warn(String.format("Parent Place %s (%s) not found. Document will not be part of any Jive place.", parentPlaceName, parentPlaceUrl));
         }
     }
 
     /**
      * Update metadata from the {@link JiveData.JiveContent} from a create, update or find request
-     * 
+     *
      * @param metadata  document to update with request content
      * @param content  parsed content from the request
      * @return  the updated document metadata passed to it

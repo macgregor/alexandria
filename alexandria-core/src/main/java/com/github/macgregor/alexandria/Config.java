@@ -82,6 +82,10 @@ public class Config {
         @JsonProperty
         private Integer requestTimeout = 30;
 
+        /** Defaults extra properties to add to metadata. Metadata set values take precedent */
+        @JsonProperty
+        private Optional<Map<String, String>> defaultExtraProps = Optional.empty();
+
         /**
          * Returns the remote username, interpolating the variable if it follows the appropriate pattern (e.g. ${env.foo}).
          *

@@ -4,7 +4,6 @@ import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -69,18 +68,14 @@ public class JiveUtils {
     /**
      * Set tags for the document resolving default tags, document tags and remote specific tags.
      *
+     * @see Context#getTagsForDocument(Config.DocumentMetadata)
+     *
      * @param context  Current Alexandria context
      * @param metadata  document metadata to get tags for
      * @return  list of tags to add to the request or empty list if none are set
      */
     protected static List<String> getTagsForDocument(Context context, Config.DocumentMetadata metadata){
-        List<String> tags = new ArrayList();
-        if(context.config().defaultTags().isPresent()){
-            tags.addAll(context.config().defaultTags().get());
-        }
-        if(metadata.tags().isPresent()){
-            tags.addAll(metadata.tags().get());
-        }
+        List<String> tags = context.getTagsForDocument(metadata);
         if(metadata.hasExtraProperty(JiveRemote.JIVE_TRACKING_TAG)) {
             tags.add(metadata.getExtraProperty(JiveRemote.JIVE_TRACKING_TAG));
         }
@@ -109,7 +104,8 @@ public class JiveUtils {
      * @param metadata  document to check for parent information
      * @return  true if document has a parent but no {@value JiveRemote#JIVE_PARENT_API_URI}, false if no parent or {@value JiveRemote#JIVE_PARENT_API_URI} already set
      */
-    public static boolean needsParentPlaceUri(Config.DocumentMetadata metadata){
-        return metadata.hasExtraProperty(JiveRemote.JIVE_PARENT_URI) && !metadata.hasExtraProperty(JiveRemote.JIVE_PARENT_API_URI);
+    public static boolean needsParentPlaceUri(Context context, Config.DocumentMetadata metadata){
+        return context.getExtraPropertiesForDocument(metadata).containsKey(JiveRemote.JIVE_PARENT_URI) &&
+                !context.getExtraPropertiesForDocument(metadata).containsKey(JiveRemote.JIVE_PARENT_API_URI);
     }
 }

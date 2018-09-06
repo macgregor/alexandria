@@ -72,26 +72,38 @@ public class JiveUtilsTest {
 
     @Test
     public void testJiveDoesntNeedParentPlaceUriWhenNoExtraProps(){
+        Context context = new Context();
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.extraProps(Optional.empty());
-        assertThat(JiveUtils.needsParentPlaceUri(metadata)).isFalse();
+        assertThat(JiveUtils.needsParentPlaceUri(context, metadata)).isFalse();
     }
 
     @Test
     public void testJiveNeedsParentPlaceUriWhenNoJiveParentApiUriIsPresent(){
+        Context context = new Context();
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
-        metadata.extraProps(Optional.of(Collections.singletonMap("jiveParentUri", "foo")));
-        assertThat(JiveUtils.needsParentPlaceUri(metadata)).isTrue();
+        metadata.extraProps(Optional.of(Collections.singletonMap(JiveRemote.JIVE_PARENT_URI, "foo")));
+        assertThat(JiveUtils.needsParentPlaceUri(context, metadata)).isTrue();
     }
 
     @Test
     public void testJiveDoesntNeedParentPlaceUriWhenJiveParentApiUriIsPresent(){
+        Context context = new Context();
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         Map<String, String> extraProps = new HashMap<>();
-        extraProps.put("jiveParentApiUri", "foo");
-        extraProps.put("jiveParentApiUri", "foo");
+        extraProps.put(JiveRemote.JIVE_PARENT_API_URI, "foo");
+        extraProps.put(JiveRemote.JIVE_PARENT_PLACE_ID, "foo");
         metadata.extraProps(Optional.of(extraProps));
-        assertThat(JiveUtils.needsParentPlaceUri(metadata)).isFalse();
+        assertThat(JiveUtils.needsParentPlaceUri(context, metadata)).isFalse();
+    }
+
+    @Test
+    public void testJiveInheritsDefaultParentUri(){
+        Context context = new Context();
+        context.config().remote().defaultExtraProps(Optional.of(Collections.singletonMap(JiveRemote.JIVE_PARENT_URI, "foo")));
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        metadata.extraProps(Optional.empty());
+        assertThat(JiveUtils.needsParentPlaceUri(context, metadata)).isTrue();
     }
 
     @Test

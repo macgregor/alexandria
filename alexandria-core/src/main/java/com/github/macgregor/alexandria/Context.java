@@ -170,6 +170,40 @@ public class Context {
     }
 
     /**
+     * Get tags for the document resolving default tags and document tags.
+     *
+     * @param metadata  document metadata to get tags for
+     * @return  list of tags to add to the request or empty list if none are set
+     */
+    public List<String> getTagsForDocument(Config.DocumentMetadata metadata){
+        List<String> tags = new ArrayList();
+        if(config.defaultTags().isPresent()){
+            tags.addAll(config.defaultTags().get());
+        }
+        if(metadata.tags().isPresent()){
+            tags.addAll(metadata.tags().get());
+        }
+        return tags;
+    }
+
+    /**
+     * Get extra properties for a document, resolving default remote extra props and document extra props.
+     *
+     * @param metadata  document metadata to get extra properties for
+     * @return  map containing extra properties to use for processing a request
+     */
+    public Map<String, String> getExtraPropertiesForDocument(Config.DocumentMetadata metadata){
+        Map<String, String> extraProps = new HashMap<>();
+        if(config.remote().defaultExtraProps().isPresent()){
+            extraProps.putAll(config.remote().defaultExtraProps().get());
+        }
+        if(metadata.extraProps().isPresent()){
+            extraProps.putAll(metadata.extraProps().get());
+        }
+        return extraProps;
+    }
+
+    /**
      * Initialize Alexandria's {@link Context}, loading the {@link Config} from the given file path.
      *
      * Required context paths will be set to the directory of {@code filePath} and should be appropriately
