@@ -5,7 +5,7 @@
 
     <groupId>com.github.macgregor</groupId>
     <artifactId>alexandria-parent</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>alexandria-parent</name>
     <description>Convert and publish project documentation from markdown to hosted html.</description>
