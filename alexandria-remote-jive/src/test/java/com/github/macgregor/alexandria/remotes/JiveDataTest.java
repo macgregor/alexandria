@@ -1,9 +1,8 @@
-package com.github.macgregor.alexandria.remotes.jive;
+package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.Resources;
-import com.github.macgregor.alexandria.TestData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;

@@ -24,8 +24,9 @@ public class MarkdownTest {
         File f = new File(subDir, "readme.md");
         Resources.save(f.getPath(), "# Header");
         File outDir = folder.newFolder("output");
+        Context context = TestData.minimalContext(folder);
 
-        Markdown.toHtml(f.toPath(), Paths.get(outDir.toString(), "readme.html"));
+        Markdown.toHtml(context, f.toPath(), Paths.get(outDir.toString(), "readme.html"));
         assertThat(Resources.load(Paths.get(outDir.toString(), "readme.html").toString())).isEqualTo("<h1>Header</h1>\n");
     }
 
@@ -35,9 +36,9 @@ public class MarkdownTest {
         File f = new File(subDir, "readme.md");
         Resources.save(f.getPath(), "~~strikethrough~~");
         File outDir = folder.newFolder("output");
+        Context context = TestData.minimalContext(folder);
 
-
-        Markdown.toHtml(f.toPath(), Paths.get(outDir.toString(), "readme.html"));
+        Markdown.toHtml(context, f.toPath(), Paths.get(outDir.toString(), "readme.html"));
         assertThat(Resources.load(Paths.get(outDir.toString(), "readme.html").toString())).isEqualTo("<p><del>strikethrough</del></p>\n");
     }
 }

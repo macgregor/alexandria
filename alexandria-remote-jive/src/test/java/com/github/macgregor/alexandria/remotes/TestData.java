@@ -1,5 +1,9 @@
-package com.github.macgregor.alexandria;
+package com.github.macgregor.alexandria.remotes;
 
+import com.github.macgregor.alexandria.Config;
+import com.github.macgregor.alexandria.Context;
+import com.github.macgregor.alexandria.Markdown;
+import com.github.macgregor.alexandria.Resources;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.rules.TemporaryFolder;
@@ -44,6 +48,12 @@ public class TestData {
         return context;
     }
 
+    public static Context minimalJiveContext(TemporaryFolder temporaryFolder) throws IOException {
+        Context context = minimalContext(temporaryFolder);
+        minimalJiveConfig(context, temporaryFolder);
+        return context;
+    }
+
     public static Config completeConfig(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
         Config config = new Config();
         context.config(config);
@@ -65,6 +75,12 @@ public class TestData {
         config.remote(minimalRemoteConfig());
         config.metadata(Optional.of(new ArrayList<>()));
         minimalDocumentMetadata(context, temporaryFolder);
+        return config;
+    }
+
+    public static Config minimalJiveConfig(Context context, TemporaryFolder temporaryFolder) throws IOException {
+        Config config = minimalConfig(context, temporaryFolder);
+        config.remote(minimalJiveRemoteConfig());
         return config;
     }
 
@@ -180,6 +196,15 @@ public class TestData {
         remoteConfig.username(Optional.empty());
         remoteConfig.baseUrl(Optional.empty());
 
+        return remoteConfig;
+    }
+
+    public static Config.RemoteConfig minimalJiveRemoteConfig(){
+        Config.RemoteConfig remoteConfig = minimalRemoteConfig();
+        remoteConfig.clazz("com.github.macgregor.alexandria.remotes.JiveRemote");
+        remoteConfig.password(Optional.of(""));
+        remoteConfig.username(Optional.of(""));
+        remoteConfig.baseUrl(Optional.of(""));
         return remoteConfig;
     }
 }

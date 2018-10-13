@@ -1,11 +1,10 @@
-package com.github.macgregor.alexandria.remotes.jive;
+package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.HttpException;
-import com.github.macgregor.alexandria.remotes.Remote;
-import com.github.macgregor.alexandria.remotes.RemoteDocument;
+import com.vladsch.flexmark.html.HtmlRenderer;
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +56,7 @@ import java.util.concurrent.TimeUnit;
  * }
  * </pre>
  *
- * {@link com.github.macgregor.alexandria.Config.RemoteConfig#defaultExtraProps} and {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}:
+ * {@link Config.RemoteConfig#defaultExtraProps} and {@link Config.DocumentMetadata#extraProps}:
  * <ul>
  *  <li><b>USER DEFINED</b> {@value #JIVE_PARENT_URI} - the uri used to access a parent place for the document. Setting this is how you link a
  *  Jive document with the place where it will live. This will not be used for the api calls as the api needs a different URI
@@ -65,7 +64,7 @@ import java.util.concurrent.TimeUnit;
  *  needed by the content api.
  *  See {@link #findParentPlace(Context, Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_CONTENT_ID} - the identifier Jive uses for a document, hard for the user to get themselves. We either
- *  set it when we create the document or look it up from {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}.
+ *  set it when we create the document or look it up from {@link Config.DocumentMetadata#remoteUri}.
  *  See {@link #findDocument(Context, Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_PARENT_PLACE_ID} - the identifier Jive uses for a place. Set when we lookup the parent place from the
  *  user defined {@value #JIVE_PARENT_URI}.
@@ -75,7 +74,7 @@ import java.util.concurrent.TimeUnit;
  *  See {@link #findParentPlace(Context, Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_TRACKING_TAG} - this is a tag set to help Alexandria track documents created or updated in case it needs
  *  to find them later. Poor performance on the Jive instance can easily lead to state like the create request timing out
- *  but still going through server side. We need to be able to locate documents easily without knowing the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
+ *  but still going through server side. We need to be able to locate documents easily without knowing the {@link Config.DocumentMetadata#remoteUri}
  *  or {@value JIVE_CONTENT_ID}</li>
  * </ul>
  *
@@ -98,7 +97,7 @@ public class JiveRemote implements Remote {
     /**
      * Create {@link JiveRemote} with a default {@link OkHttpClient}.
      *
-     * @param config  remote configuration with at least {@link com.github.macgregor.alexandria.Config.RemoteConfig#clazz} set.
+     * @param config  remote configuration with at least {@link Config.RemoteConfig#clazz} set.
      */
     public JiveRemote(Config.RemoteConfig config){
         client = new OkHttpClient.Builder()
@@ -122,14 +121,19 @@ public class JiveRemote implements Remote {
         this.config = config;
     }
 
+    @Override
+    public Optional<HtmlRenderer.HtmlRendererExtension> htmlRenderer(){
+        return Optional.of(new JiveFlexmarkExtension());
+    }
+
     /**
      * {@inheritDoc}
      *
      * Requires:
      * <ul>
-     *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#baseUrl}</li>
-     *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#username}</li>
-     *  <li>{@link com.github.macgregor.alexandria.Config.RemoteConfig#password}</li>
+     *  <li>{@link Config.RemoteConfig#baseUrl}</li>
+     *  <li>{@link Config.RemoteConfig#username}</li>
+     *  <li>{@link Config.RemoteConfig#password}</li>
      * </ul>
      *
      * @throws IllegalStateException  Username, password and/or baseUrl are not set.
@@ -272,7 +276,7 @@ public class JiveRemote implements Remote {
     /**
      * Find a document's api identifiers from the human accessible uri.
      *
-     * The uri a human uses to access a document ({@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri})
+     * The uri a human uses to access a document ({@link Config.DocumentMetadata#remoteUri})
      * is not the uri we need to make rest requests. There is an sort of identifier in this uri, but we have to extract it
      * and then run a search for it to get the {@value JIVE_CONTENT_ID} which we can use to modify the document.
      *

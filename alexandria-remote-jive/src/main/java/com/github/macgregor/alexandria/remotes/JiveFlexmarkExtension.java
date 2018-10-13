@@ -1,4 +1,4 @@
-package com.github.macgregor.alexandria.remotes.jive;
+package com.github.macgregor.alexandria.remotes;
 
 import com.vladsch.flexmark.ast.*;
 import com.vladsch.flexmark.ext.tables.TableBlock;

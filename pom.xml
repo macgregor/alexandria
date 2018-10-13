@@ -41,9 +41,10 @@
     </properties>
 
     <modules>
+        <module>alexandria-cli</module>
         <module>alexandria-core</module>
         <module>alexandria-maven-plugin</module>
-        <module>alexandria-cli</module>
+        <module>alexandria-remote-jive</module>
         <module>alexandria-reports</module>
     </modules>
 
@@ -73,6 +74,11 @@
             <dependency>
                 <groupId>com.github.macgregor</groupId>
                 <artifactId>alexandria-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.macgregor</groupId>
+                <artifactId>alexandria-remote-jive</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

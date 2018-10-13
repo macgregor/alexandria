@@ -95,7 +95,7 @@ public class AlexandriaConvert {
         try {
             Path convertedPath = convertedPath(context, metadata);
             Path sourcePath = metadata.sourcePath();
-            Markdown.toHtml(sourcePath, convertedPath);
+            Markdown.toHtml(context, sourcePath, convertedPath);
             metadata.convertedChecksum(Optional.of(FileUtils.checksumCRC32(convertedPath.toFile())));
             context.convertedPath(metadata, convertedPath);
         } catch (Exception e) {
