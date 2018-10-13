@@ -78,6 +78,14 @@ public class TestData {
         return metadata;
     }
 
+    public static Config.DocumentMetadata documentForCreate(Context context, Path documentPath) throws IOException, URISyntaxException {
+        Config.DocumentMetadata metadata = completeDocumentMetadata(context, documentPath);
+        metadata.remoteUri(Optional.empty());
+        metadata.deletedOn(Optional.empty());
+        metadata.sourceChecksum(Optional.empty());
+        return metadata;
+    }
+
     public static Config.DocumentMetadata documentForUpdate(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
         context.configPath(Paths.get(temporaryFolder.getRoot().toPath().toAbsolutePath().toString(), ".alexandria"));
         Config.DocumentMetadata metadata = completeDocumentMetadata(context, temporaryFolder);
@@ -98,7 +106,27 @@ public class TestData {
     public static Config.DocumentMetadata minimalDocumentMetadata(TemporaryFolder temporaryFolder) throws IOException {
         String fileName = UUID.randomUUID().toString() + ".md";
         Path path = temporaryFolder.newFile(fileName).toPath().toAbsolutePath();
+        return minimalDocumentMetadata(path);
+    }
 
+    public static Config.DocumentMetadata minimalDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException {
+        Config.DocumentMetadata metadata = minimalDocumentMetadata(temporaryFolder);
+        context.addMetadata(metadata);
+        return metadata;
+    }
+
+    public static Config.DocumentMetadata minimalDocumentMetadata(Context context, Path documentPath) throws IOException {
+        Config.DocumentMetadata metadata = minimalDocumentMetadata(documentPath);
+        context.addMetadata(metadata);
+        return metadata;
+    }
+
+    public static Config.DocumentMetadata minimalDocumentMetadata(Path documentPath) throws IOException {
+        Path path = documentPath.toAbsolutePath();
+        if(!path.toFile().exists()){
+            path.toFile().createNewFile();
+        }
+        String fileName = path.toFile().getName();
         Resources.save(path.toString(), String.format("# %s\n\nHello", fileName));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
@@ -117,16 +145,14 @@ public class TestData {
         return metadata;
     }
 
-    public static Config.DocumentMetadata minimalDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException {
-        Config.DocumentMetadata metadata = minimalDocumentMetadata(temporaryFolder);
-        context.addMetadata(metadata);
-        return metadata;
-    }
-
-    public static Config.DocumentMetadata completeDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
-        String fileName = UUID.randomUUID().toString() + ".md";
-        Path path = temporaryFolder.newFile(fileName).toPath().toAbsolutePath();
-        Path converted = Paths.get(path.getParent().toString(), FilenameUtils.getBaseName(path.toFile().getName()) + ".html");
+    public static Config.DocumentMetadata completeDocumentMetadata(Context context, Path documentPath) throws IOException, URISyntaxException {
+        Path path = documentPath.toAbsolutePath();
+        if(!path.toFile().exists()){
+            path.toFile().createNewFile();
+        }
+        String fileName = path.toFile().getName();
+        String convertedFileName = String.format("%s-%s.html", FilenameUtils.getBaseName(fileName), path.getParent().toString().hashCode());
+        Path converted = Paths.get(context.outputPath().orElse(path.getParent()).toString(), convertedFileName);
         Resources.save(path.toString(), String.format("# %s\n\nHello", fileName));
         Markdown.toHtml(context, path, converted);
         long sourceCheckSum = FileUtils.checksumCRC32(path.toFile());
@@ -145,7 +171,6 @@ public class TestData {
 
         Map<String, String> extraProps = new HashMap<>();
         extraProps.put("convertedPath", converted.toString());
-        extraProps.put("delete", "true");
         metadata.extraProps(Optional.of(extraProps));
 
         context.convertedPath(metadata, converted);
@@ -153,6 +178,12 @@ public class TestData {
         context.addMetadata(metadata);
 
         return metadata;
+    }
+
+    public static Config.DocumentMetadata completeDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
+        String fileName = UUID.randomUUID().toString() + ".md";
+        Path path = temporaryFolder.newFile(fileName).toPath().toAbsolutePath();
+        return completeDocumentMetadata(context, path);
     }
 
     public static Config.RemoteConfig completeRemoteConfig(){

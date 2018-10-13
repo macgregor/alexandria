@@ -47,8 +47,10 @@ public class AlexandriaConvertTest {
 
         AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
         alexandriaConvert.convert();
-        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(subdir.getPath(), FilenameUtils.getBaseName(metadata.sourceFileName()) + ".html"));
-        assertThat(Paths.get(subdir.getPath(), FilenameUtils.getBaseName(metadata.sourceFileName()) + ".html")).exists();
+
+        String convertedFileName = String.format("%s-%s.html", FilenameUtils.getBaseName(metadata.sourceFileName()), metadata.sourcePath().getParent().toAbsolutePath().toString().hashCode());
+        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(subdir.getPath(), convertedFileName));
+        assertThat(Paths.get(subdir.getPath(), convertedFileName)).exists();
     }
 
     @Test
@@ -57,8 +59,10 @@ public class AlexandriaConvertTest {
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
         alexandriaConvert.convert();
-        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), FilenameUtils.getBaseName(metadata.sourceFileName()) + ".html"));
-        assertThat(Paths.get(folder.getRoot().toString(), FilenameUtils.getBaseName(metadata.sourceFileName()) + ".html")).exists();
+
+        String convertedFileName = String.format("%s-%s.html", FilenameUtils.getBaseName(metadata.sourceFileName()), folder.getRoot().toString().hashCode());
+        assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), convertedFileName));
+        assertThat(Paths.get(folder.getRoot().toString(), convertedFileName)).exists();
     }
 
     @Test
@@ -104,5 +108,24 @@ public class AlexandriaConvertTest {
         metadata.deletedOn(Optional.empty());
         AlexandriaConvert convert = new AlexandriaConvert(context);
         convert.convert();
+    }
+
+    @Test
+    public void testConvertHandlesMultipleFilesWithSameName() throws Exception {
+        Context context = TestData.minimalContext(folder);
+        context.config().metadata(Optional.of(new ArrayList<>()));
+        Path readmeInBaseDir = Paths.get(folder.getRoot().toPath().toAbsolutePath().toString(), "readme.md");
+        folder.newFolder("subdir");
+        Path readmeInSubdir = Paths.get(folder.getRoot().toPath().toAbsolutePath().toString(), "subdir", "readme.md");
+        File out = folder.newFolder("out");
+        context.outputPath(Optional.of(out.toPath()));
+        Config.DocumentMetadata readmeInBaseDirMetadata = TestData.minimalDocumentMetadata(context, readmeInBaseDir);
+        Config.DocumentMetadata readmeInSubdirMetadata = TestData.minimalDocumentMetadata(context, readmeInSubdir);
+        AlexandriaConvert convert = new AlexandriaConvert(context);
+        convert.convert();
+
+        Resources.PathFinder pathFinder = new Resources.PathFinder();
+        pathFinder.startingInPath(out.toPath());
+        assertThat(pathFinder.files()).hasSize(2);
     }
 }
