@@ -84,17 +84,25 @@ public class AlexandriaSync {
                     break;
                 case CREATE:
                     convertAsNeeded(context, metadata);
-                    remote.create(context, metadata);
-                    currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
-                    metadata.sourceChecksum(Optional.of(currentChecksum));
-                    log.info(String.format("%s (remote: %s) created on remote", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
+                    if(Resources.fileContentsAreBlank(metadata.sourcePath().toString())){
+                        log.info(String.format("%s has no contents, not creating on remote", metadata.sourceFileName()));
+                    } else{
+                        remote.create(context, metadata);
+                        currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
+                        metadata.sourceChecksum(Optional.of(currentChecksum));
+                        log.info(String.format("%s (remote: %s) created on remote", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
+                    }
                     break;
                 case UPDATE:
                     convertAsNeeded(context, metadata);
-                    remote.update(context, metadata);
-                    currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
-                    metadata.sourceChecksum(Optional.of(currentChecksum));
-                    log.info(String.format("%s (remote: %s) updated on remote.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
+                    if(Resources.fileContentsAreBlank(metadata.sourcePath().toString())){
+                        log.info(String.format("%s has no contents, not updating on remote", metadata.sourceFileName()));
+                    } else {
+                        remote.update(context, metadata);
+                        currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
+                        metadata.sourceChecksum(Optional.of(currentChecksum));
+                        log.info(String.format("%s (remote: %s) updated on remote.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
+                    }
                     break;
                 case DELETED:
                 case CURRENT:

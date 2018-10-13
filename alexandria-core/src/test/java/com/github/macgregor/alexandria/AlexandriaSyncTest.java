@@ -77,6 +77,17 @@ public class AlexandriaSyncTest {
     }
 
     @Test
+    public void testSyncDoesntCreateDocumentWhenContentsBlank() throws BatchProcessException, IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        Resources.save(metadata.sourcePath().toString(), "");
+        Remote remote = mock(NoopRemote.class);
+        AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
+        alexandriaSync.syncWithRemote();
+        verify(remote, times(0)).create(context, metadata);
+    }
+
+    @Test
     public void testSyncDeletesDocument() throws BatchProcessException, IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         context.config().metadata(Optional.of(new ArrayList<>()));
@@ -97,6 +108,19 @@ public class AlexandriaSyncTest {
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
         verify(remote, times(1)).update(context, metadata);
+    }
+
+    @Test
+    public void testSyncDoesntUpdateDocumentWhenContentsBlank() throws BatchProcessException, IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        Resources.save(metadata.sourcePath().toString(), "");
+        metadata.remoteUri(Optional.of(new URI("foo")));
+        metadata.sourceChecksum(Optional.of(-1L));
+        Remote remote = mock(NoopRemote.class);
+        AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
+        alexandriaSync.syncWithRemote();
+        verify(remote, times(0)).update(context, metadata);
     }
 
     @Test

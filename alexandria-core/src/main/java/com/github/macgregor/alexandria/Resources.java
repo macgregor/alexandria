@@ -2,6 +2,7 @@ package com.github.macgregor.alexandria;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -246,6 +247,10 @@ public class Resources {
      */
     public static String load(String filePath) throws IOException {
         return FileUtils.readFileToString(Paths.get(filePath).toFile(), (String) null);
+    }
+
+    public static boolean fileContentsAreBlank(String filePath) throws IOException {
+        return StringUtils.isBlank(load(filePath));
     }
 
     /**
