@@ -78,8 +78,9 @@ public class AlexandriaConvert {
     protected static Path convertedPath(Context context, Config.DocumentMetadata metadata){
         Path sourceDir =  metadata.sourcePath().getParent();
         String convertedDir = context.outputPath().orElse(sourceDir).toString();
-        String convertedFileName = FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()) + ".html";
-        return Paths.get(convertedDir, convertedFileName);
+        String convertedFileName = String.format("%s-%s.html", FilenameUtils.getBaseName(metadata.sourcePath().toFile().getName()), sourceDir.toString().hashCode());
+        Path convertedPath = Paths.get(convertedDir, convertedFileName);
+        return convertedPath;
     }
 
     /**
