@@ -1,4 +1,4 @@
-package com.github.macgregor.alexandria.remotes.jive;
+package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
@@ -15,10 +15,10 @@ import java.util.regex.Pattern;
 public class JiveUtils {
 
     /**
-     * Extract the pseudo-identifier used in the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
+     * Extract the pseudo-identifier used in the {@link Config.DocumentMetadata#remoteUri}
      * for use in a search request to retrieve the actual {@value JiveRemote#JIVE_CONTENT_ID}.
      *
-     * @param remoteDoc  {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
+     * @param remoteDoc  {@link Config.DocumentMetadata#remoteUri}
      * @return  jive object id extracted from the uri
      */
     protected static String jiveObjectId(URI remoteDoc){
@@ -35,7 +35,7 @@ public class JiveUtils {
      * Extract the parent place name from the user defined {@value JiveRemote#JIVE_PARENT_URI} for use in a search request for the
      * actual {@value JiveRemote#JIVE_PARENT_API_URI}.
      *
-     * @param parentPlaceUrl  {@value JiveRemote#JIVE_PARENT_URI} value from {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
+     * @param parentPlaceUrl  {@value JiveRemote#JIVE_PARENT_URI} value from {@link Config.DocumentMetadata#extraProps}
      * @return  the extracted parent place name
      */
     protected static String jiveParentPlaceName(String parentPlaceUrl){

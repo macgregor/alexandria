@@ -1,7 +1,6 @@
 package com.github.macgregor.alexandria;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.macgregor.alexandria.remotes.jive.JiveRemote;
 import lombok.*;
 import lombok.experimental.Accessors;
 import org.apache.commons.io.FileUtils;
@@ -148,8 +147,7 @@ public class Config {
          *
          * Remotes may or may not use this URI exactly to interact with the remote. For example, Jive has different
          * addresses for documents you interact with in a browser than documents you interact with through rest, so it
-         * has to convert this human URI to a computer one. The URI the {@link JiveRemote}
-         * cares about is stored in {@link #extraProps}.
+         * has to convert this human URI to a computer one.
          * */
         @JsonProperty
         @EqualsAndHashCode.Exclude

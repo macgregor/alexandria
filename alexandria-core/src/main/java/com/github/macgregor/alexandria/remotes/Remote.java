@@ -3,12 +3,13 @@ package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
-import com.github.macgregor.alexandria.remotes.jive.JiveRemote;
+import com.vladsch.flexmark.html.HtmlRenderer;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
- * Defines an interface for interacting with a remote document source. See {@link JiveRemote} for an example.
+ * Defines an interface for interacting with a remote document source.
  */
 public interface Remote {
 
@@ -79,4 +80,15 @@ public interface Remote {
      * @throws IOException  Errors with local files or any requests made to the remote.
      */
     void delete(Context context, Config.DocumentMetadata metadata) throws IOException;
+
+    /**
+     * Optional Flexmark extension to implement remote specific HTML
+     * <p>
+     * For example, adding custom styling to code blocks or injecting code for custom features a platform provides.
+     *
+     * @return  Optional which may contain a {@link HtmlRenderer.HtmlRendererExtension} implementation
+     */
+    default Optional<HtmlRenderer.HtmlRendererExtension> htmlRenderer(){
+        return Optional.empty();
+    }
 }

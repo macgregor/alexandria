@@ -1,5 +1,7 @@
 package com.github.macgregor.alexandria;
 
+import com.github.macgregor.alexandria.exceptions.AlexandriaException;
+import com.github.macgregor.alexandria.remotes.Remote;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -52,6 +54,8 @@ public class Context {
 
     /** Cache for tracking absolute converted file paths for indexed metadata. Default: empty map. */
     private Map<Config.DocumentMetadata, Path> convertedPaths = new HashMap<>();
+
+    private Optional<Remote> remote = Optional.empty();
 
     /**
      * Sets the path to the Alexandria config file. <b>Must be an absolute path</b>.
@@ -201,6 +205,41 @@ public class Context {
             extraProps.putAll(metadata.extraProps().get());
         }
         return extraProps;
+    }
+
+    /**
+     * Instantiate a {@link Remote} implementation based on the {@link Config#remote}.
+     *
+     * The class instantiation logic is very simple, but should be adequate for this simple use case. Essentially we just
+     * pick the right class using the fully qualified class name in {@link com.github.macgregor.alexandria.Config.RemoteConfig#clazz}.
+     * Implementation specific configuration and validation is delegated to the implementing class by calling
+     * {@link Remote#configure(Config.RemoteConfig)} and {@link Remote#validateRemoteConfig()}.
+     *
+     * Only instantiates the remote implementation once, future calls to this method will return the value of {@link #remote}.
+     *
+     * @see com.github.macgregor.alexandria.remotes.NoopRemote
+     *
+     * @return  configured remote ready for use
+     * @throws AlexandriaException  Exception wrapping any exception thrown instantiation, configuring or validating the remote
+     */
+    protected Remote configureRemote() throws AlexandriaException {
+        if(this.remote.isPresent()){
+            return this.remote.get();
+        }
+
+        try {
+            Class remoteClass = Class.forName(config().remote().clazz());
+            Remote remote = (Remote) remoteClass.newInstance();
+            remote.configure(config().remote());
+            remote.validateRemoteConfig();
+            this.remote = Optional.of(remote);
+            return remote;
+        } catch(Exception e){
+            throw new AlexandriaException.Builder()
+                    .withMessage("Unable to instantiate remote class " + config().remote().clazz())
+                    .causedBy(e)
+                    .build();
+        }
     }
 
     /**

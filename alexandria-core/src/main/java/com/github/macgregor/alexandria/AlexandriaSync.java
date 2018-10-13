@@ -2,7 +2,6 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.remotes.Remote;
-import com.github.macgregor.alexandria.remotes.jive.JiveRemote;
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,6 @@ import java.util.Optional;
  * the remote implementation as it is dependent on information from the rest response.
  *
  * @see Remote
- * @see JiveRemote
  * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState()
  */
 @Slf4j
@@ -35,14 +33,14 @@ public class AlexandriaSync {
     /**
      * Instantiate from the context and configure a remote given the {@link Config#remote}.
      *
-     * @see AlexandriaSync#configureRemote(Context)
+     * @see Context#configureRemote()
      *
      * @param context  Alexandria context containing the remote config and indexed documents to sync
      * @throws AlexandriaException  Exception wrapping all exceptions thrown configuring the remote
      */
     public AlexandriaSync(Context context) throws AlexandriaException {
         this.context = context;
-        this.remote = configureRemote(context);
+        this.remote = context.configureRemote();
     }
 
     /**
@@ -63,7 +61,6 @@ public class AlexandriaSync {
      * the {@code remoteUri} would cause Alexandria to create a new document on the remote on the next run.
      *
      * @see Remote
-     * @see JiveRemote
      * @see com.github.macgregor.alexandria.Config.DocumentMetadata#determineState()
      *
      * @throws AlexandriaException  Exception wrapping all exceptions thrown while syncing documents
@@ -112,36 +109,6 @@ public class AlexandriaSync {
             Context.save(context);
             return BatchProcess.EXCEPTIONS_UNHANDLED;
         });
-    }
-
-    /**
-     * Instantiate a {@link Remote} implementation based on the {@link Config#remote}.
-     *
-     * The class instantiation logic is very simple, but should be adequate for this simple use case. Essentially we just
-     * pick the right class using the fully qualified class name in {@link com.github.macgregor.alexandria.Config.RemoteConfig#clazz}.
-     * Implementation specific configuration and validation is delegated to the implementing class by calling
-     * {@link Remote#configure(Config.RemoteConfig)} and {@link Remote#validateRemoteConfig()}.
-     *
-     * @see com.github.macgregor.alexandria.remotes.NoopRemote
-     * @see JiveRemote
-     *
-     * @param context  Alexandria context containing the remote configuration
-     * @return  configured remote ready for use
-     * @throws AlexandriaException  Exception wrapping any exception thrown instantiation, configuring or validating the remote
-     */
-    protected Remote configureRemote(Context context) throws AlexandriaException {
-        try {
-            Class remoteClass = Class.forName(context.config().remote().clazz());
-            Remote remote = (Remote) remoteClass.newInstance();
-            remote.configure(context.config().remote());
-            remote.validateRemoteConfig();
-            return remote;
-        } catch(Exception e){
-            throw new AlexandriaException.Builder()
-                    .withMessage("Unable to instantiate remote class " + context.config().remote().clazz())
-                    .causedBy(e)
-                    .build();
-        }
     }
 
     /**

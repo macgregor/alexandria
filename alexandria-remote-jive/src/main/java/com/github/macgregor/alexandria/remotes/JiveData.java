@@ -1,4 +1,4 @@
-package com.github.macgregor.alexandria.remotes.jive;
+package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class JiveData{
 
     /**
-     * Create the post body for a create or update request from the given {@link com.github.macgregor.alexandria.Config.DocumentMetadata}.
+     * Create the post body for a create or update request from the given {@link Config.DocumentMetadata}.
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/DocumentEntity.html">Jive REST API - Document Entity</a>
      *

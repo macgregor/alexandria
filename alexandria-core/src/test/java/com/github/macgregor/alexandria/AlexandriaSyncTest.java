@@ -27,23 +27,6 @@ public class AlexandriaSyncTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testSyncWithJiveRemote() throws AlexandriaException {
-        Config config = new Config();
-        config.remote().clazz("com.github.macgregor.alexandria.remotes.jive.JiveRemote");
-        config.remote().baseUrl(Optional.of(""));
-        config.remote().username(Optional.of(""));
-        config.remote().password(Optional.of(""));
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
-        Alexandria alexandria = new Alexandria();
-        alexandria.context(context);
-        alexandria.syncWithRemote();
-    }
-
-    @Test
     public void testSyncWithNoopRemote() throws AlexandriaException {
         Config config = new Config();
         config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");

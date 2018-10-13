@@ -1,6 +1,7 @@
 package com.github.macgregor.alexandria;
 
-import com.github.macgregor.alexandria.remotes.jive.JiveFlexmarkExtension;
+import com.github.macgregor.alexandria.remotes.Remote;
+import com.vladsch.flexmark.Extension;
 import com.vladsch.flexmark.ast.Node;
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
@@ -15,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.*;
 
 import static com.vladsch.flexmark.parser.Parser.FENCED_CODE_CONTENT_BLOCK;
 
@@ -25,55 +26,66 @@ import static com.vladsch.flexmark.parser.Parser.FENCED_CODE_CONTENT_BLOCK;
 @Slf4j
 public class Markdown {
 
-    private static Parser parser;
-    private static HtmlRenderer renderer;
-    public static MutableDataSet options;
+    private static Map<Remote, HtmlRenderer> renderers = new HashMap<>();
+    private static Map<Remote, Parser> parsers = new HashMap<>();
 
     /**
      * Configure common Flexmark options to be used by both the {@link Parser} and {@link HtmlRenderer} instances.
      *
+     * The remote is used to add custom rendering/parsing logic for remotes.
+     *
+     * @see Remote#htmlRenderer()
+     *
+     * @param remote  Remote implementation which may or may not have custom Flexmark extensions to add.
      * @return  flexmark options
      */
-    public static MutableDataSet options(){
-        if(options == null){
-            options = new MutableDataSet();
-            options.set(Parser.EXTENSIONS, Arrays.asList(
-                    AutolinkExtension.create(),
-                    StrikethroughExtension.create(),
-                    TaskListExtension.create(),
-                    TablesExtension.create(),
-                    JiveFlexmarkExtension.create()));
+    public static MutableDataSet options(Remote remote){
+        MutableDataSet options = new MutableDataSet();
 
-            options.setFrom(ParserEmulationProfile.GITHUB_DOC);
-            options.set(FENCED_CODE_CONTENT_BLOCK, true)
-                    .set(Parser.CODE_SOFT_LINE_BREAKS, true);
-                    //.set(HtmlRenderer.SOFT_BREAK, "<br />\n"); this doesnt do what you want, stop setting it.
+        List<Extension> extensions = new ArrayList<>();
+        extensions.add(AutolinkExtension.create());
+        extensions.add(StrikethroughExtension.create());
+        extensions.add(TaskListExtension.create());
+        extensions.add(TablesExtension.create());
+
+        if(remote.htmlRenderer().isPresent()){
+            extensions.add(remote.htmlRenderer().get());
         }
+        options.set(Parser.EXTENSIONS, extensions);
+
+        options.setFrom(ParserEmulationProfile.GITHUB_DOC);
+        options.set(FENCED_CODE_CONTENT_BLOCK, true)
+                .set(Parser.CODE_SOFT_LINE_BREAKS, true);
+                //.set(HtmlRenderer.SOFT_BREAK, "<br />\n"); this doesnt do what you want, stop setting it.
         return options;
     }
 
     /**
-     * Retrieve the {@link Parser}, creating it if it doesnt exist
+     * Retrieve the {@link Parser} for a given {@link Remote}, creating it if it doesnt exist
      *
+     * @param remote
      * @return  flexmark parser
      */
-    public static Parser parser(){
-        if(parser == null){
-            parser = Parser.builder(options()).build();
+    public static Parser parser(Remote remote){
+        if(!parsers.containsKey(remote)){
+            parsers.put(remote, Parser.builder(options(remote)).build());
         }
-        return parser;
+        return parsers.get(remote);
     }
 
     /**
-     * Retrieve the {@link HtmlRenderer}, creating it if it doesnt exist
+     * Retrieve the {@link HtmlRenderer} for a given {@link Remote}, creating it if it doesnt exist
      *
+     * @see Remote#htmlRenderer()
+     *
+     * @param remote
      * @return  flexmark html renderer
      */
-    public  static HtmlRenderer renderer(){
-        if(renderer == null){
-            renderer = HtmlRenderer.builder(options()).build();
+    public  static HtmlRenderer renderer(Remote remote){
+        if(!renderers.containsKey(remote)){
+            renderers.put(remote, HtmlRenderer.builder(options(remote)).build());
         }
-        return renderer;
+        return renderers.get(remote);
     }
 
     /**
@@ -86,9 +98,10 @@ public class Markdown {
      * @param converted  Absolute path to output the converted html file to
      * @throws IOException  file system errors
      */
-    public static void toHtml(Path source, Path converted) throws IOException {
-        Node document = parser().parseReader(new FileReader(source.toFile()));
-        Resources.save(converted.toString(), renderer().render(document));
+    public static void toHtml(Context context, Path source, Path converted) throws IOException {
+        Remote remote = context.configureRemote();
+        Node document = parser(remote).parseReader(new FileReader(source.toFile()));
+        Resources.save(converted.toString(), renderer(remote).render(document));
         log.debug(String.format("Converted %s to %s.",
                 source.toAbsolutePath().toString(),
                 converted.toAbsolutePath().toString()));

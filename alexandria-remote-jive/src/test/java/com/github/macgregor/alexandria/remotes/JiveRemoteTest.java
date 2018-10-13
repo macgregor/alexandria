@@ -1,10 +1,10 @@
-package com.github.macgregor.alexandria.remotes.jive;
+package com.github.macgregor.alexandria.remotes;
 
+import com.github.macgregor.alexandria.Alexandria;
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Config.RemoteConfig;
 import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.Resources;
-import com.github.macgregor.alexandria.TestData;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.HttpException;
 import lombok.EqualsAndHashCode;
@@ -24,8 +24,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.LogManager;
 
-import static com.github.macgregor.alexandria.remotes.jive.JiveRemote.JIVE_TRACKING_TAG;
-import static org.assertj.core.api.Assertions.*;
+import static com.github.macgregor.alexandria.remotes.JiveRemote.JIVE_TRACKING_TAG;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class JiveRemoteTest {
 
@@ -35,6 +36,23 @@ public class JiveRemoteTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+
+    @Test
+    public void testSyncWithJiveRemote() throws AlexandriaException {
+        Config config = new Config();
+        config.remote().clazz("com.github.macgregor.alexandria.remotes.JiveRemote");
+        config.remote().baseUrl(Optional.of(""));
+        config.remote().username(Optional.of(""));
+        config.remote().password(Optional.of(""));
+
+        Context context = new Context();
+        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
+        context.config(config);
+
+        Alexandria alexandria = new Alexandria();
+        alexandria.context(context);
+        alexandria.syncWithRemote();
+    }
 
     @Test
     public void testFindDocumentUpdatesMetadataFromResponse() throws IOException, URISyntaxException {
