@@ -1,6 +1,8 @@
 package com.github.macgregor.alexandria.remotes;
 
-import com.vladsch.flexmark.ast.*;
+import com.vladsch.flexmark.ast.CodeBlock;
+import com.vladsch.flexmark.ast.FencedCodeBlock;
+import com.vladsch.flexmark.ast.IndentedCodeBlock;
 import com.vladsch.flexmark.ext.tables.TableBlock;
 import com.vladsch.flexmark.ext.tables.TableCell;
 import com.vladsch.flexmark.ext.tables.TableHead;
@@ -8,6 +10,8 @@ import com.vladsch.flexmark.ext.tables.TableRow;
 import com.vladsch.flexmark.html.*;
 import com.vladsch.flexmark.html.renderer.*;
 import com.vladsch.flexmark.parser.Parser;
+import com.vladsch.flexmark.util.ast.Block;
+import com.vladsch.flexmark.util.ast.Node;
 import com.vladsch.flexmark.util.html.Attributes;
 import com.vladsch.flexmark.util.options.DataHolder;
 import com.vladsch.flexmark.util.options.MutableDataHolder;
@@ -211,7 +215,8 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
             C++
              */
             if(node instanceof FencedCodeBlock){
-                if(part == AttributablePart.NODE) {
+                //new AttributablePart("FENCED_CODE_CONTENT")
+                if(part ==  AttributablePart.NODE) {
                     String language = "none";
                     if (!((FencedCodeBlock) node).getInfo().isBlank()) {
                         language = ((FencedCodeBlock) node).getInfo().toString();
@@ -223,7 +228,7 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
                     }
                     attributes.replaceValue("class", String.format("language-%s line-numbers", language));
                 } else{
-                    attributes.replaceValue("class", null);
+                    attributes.remove("class");
                 }
             }
             if(node instanceof TableBlock){
