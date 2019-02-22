@@ -1,5 +1,4 @@
 # Alexandria
-##### Integrate markdown docs with antiquated html document hosting platforms using standard build tools.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![GitHub version](https://badge.fury.io/gh/macgregor%2Falexandria.svg)](https://badge.fury.io/gh/macgregor%2Falexandria)
@@ -13,6 +12,8 @@
 ![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/https/oss.sonatype.org/com.google.guava/guava.svg)
 -->
 
+#### Integrate markdown docs with antiquated html document hosting platforms using standard Java build tools.
+
 Alexandria bring CI concepts to document hosting platforms which dont integrate with the tools and processes 
 we have grown reliant on. Keep your documents with your source code in friendly markdown and let Alexandria convert and
 sync them as part of your project's build process. 
@@ -21,7 +22,7 @@ Any platform which offers a rest API can be added to the project by
 implementing an interface for creating, updating and deleting documents. Alexandria handles the rest.
 
 ```text
-# mvn deploy
+$ mvn deploy
 [INFO] Scanning for projects...
 [INFO]
 [INFO] ----------------< com.github.macgregor:alexandria-demo >----------------
