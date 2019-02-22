@@ -2,7 +2,6 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.remotes.Remote;
 import com.vladsch.flexmark.Extension;
-import com.vladsch.flexmark.ast.Node;
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
 import com.vladsch.flexmark.ext.gfm.tasklist.TaskListExtension;
@@ -10,13 +9,17 @@ import com.vladsch.flexmark.ext.tables.TablesExtension;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.parser.ParserEmulationProfile;
+import com.vladsch.flexmark.util.ast.Document;
 import com.vladsch.flexmark.util.options.MutableDataSet;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.vladsch.flexmark.parser.Parser.FENCED_CODE_CONTENT_BLOCK;
 
@@ -100,7 +103,7 @@ public class Markdown {
      */
     public static void toHtml(Context context, Path source, Path converted) throws IOException {
         Remote remote = context.configureRemote();
-        Node document = parser(remote).parseReader(new FileReader(source.toFile()));
+        Document document = parser(remote).parseReader(new FileReader(source.toFile()));
         Resources.save(converted.toString(), renderer(remote).render(document));
         log.debug(String.format("Converted %s to %s.",
                 source.toAbsolutePath().toString(),
