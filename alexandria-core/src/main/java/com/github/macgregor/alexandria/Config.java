@@ -35,15 +35,15 @@ public class Config {
 
     /** Configuration properties for {@link com.github.macgregor.alexandria.remotes.Remote}. Default: {@link com.github.macgregor.alexandria.remotes.NoopRemote}. */
     @JsonProperty
-    private RemoteConfig remote = new RemoteConfig();
+    protected RemoteConfig remote = new RemoteConfig();
 
     /** List of indexed documents and metadata to keep them in sync with remote. Default: empty list. */
     @JsonProperty
-    private Optional<List<DocumentMetadata>> metadata = Optional.of(new ArrayList<>());
+    protected Optional<List<DocumentMetadata>> metadata = Optional.of(new ArrayList<>());
 
     /** default tags added to all documents. Default: empty list. */
     @JsonProperty
-    private Optional<List<String>> defaultTags = Optional.of(new ArrayList<>());
+    protected Optional<List<String>> defaultTags = Optional.of(new ArrayList<>());
 
     /**
      * Configuration properties for instantiating and configuring a {@link com.github.macgregor.alexandria.remotes.Remote}.
@@ -55,35 +55,35 @@ public class Config {
     public static class RemoteConfig{
         /** Fully qualified class name of remote implementation to use. Default: "com.github.macgregor.alexandria.remotes.NoopRemote" */
         @JsonProperty("class")
-        private String clazz = "com.github.macgregor.alexandria.remotes.NoopRemote";
+        protected String clazz = "com.github.macgregor.alexandria.remotes.NoopRemote";
 
         /** Base url to use for rest api calls. Default: none. */
         @JsonProperty
-        private Optional<String> baseUrl = Optional.empty();
+        protected Optional<String> baseUrl = Optional.empty();
 
         /** Username to use for rest api calls. Default: none. */
         @JsonProperty
-        private Optional<String> username = Optional.empty();
+        protected Optional<String> username = Optional.empty();
 
         /** Password to use for rest api calls. Default: none. */
         @JsonProperty
-        private Optional<String> password = Optional.empty();
+        protected Optional<String> password = Optional.empty();
 
         /** Whether the remote supports markdown documents natively, skipping the conversion phase. Default: false. */
         @JsonProperty
-        private Boolean supportsNativeMarkdown = false;
+        protected Boolean supportsNativeMarkdown = false;
 
         /** Format used to convert datetime strings in rest responses from the remote. Default: {@value Config#ALEXANDRIA_DATETIME_PATTERN}  */
         @JsonProperty
-        private String datetimeFormat = ALEXANDRIA_DATETIME_PATTERN;
+        protected String datetimeFormat = ALEXANDRIA_DATETIME_PATTERN;
 
         /** Timeout in seconds for each rest call to the remote. Default: 30 seconds. */
         @JsonProperty
-        private Integer requestTimeout = 30;
+        protected Integer requestTimeout = 30;
 
         /** Defaults extra properties to add to metadata. Metadata set values take precedent */
         @JsonProperty
-        private Optional<Map<String, String>> defaultExtraProps = Optional.empty();
+        protected Optional<Map<String, String>> defaultExtraProps = Optional.empty();
 
         /**
          * Returns the remote username, interpolating the variable if it follows the appropriate pattern (e.g. ${env.foo}).
@@ -132,11 +132,11 @@ public class Config {
          * @see Context#makePathsRelative()
          * */
         @JsonProperty
-        @NonNull private Path sourcePath;
+        @NonNull protected Path sourcePath;
 
         /** Title of the document. The indexing phase will default this to the file name. */
         @JsonProperty
-        @NonNull private String title;
+        @NonNull protected String title;
 
         /**
          * Remote address of the document if it already exists on the remote. Default: none. (this will trigger a create)
@@ -151,42 +151,42 @@ public class Config {
          * */
         @JsonProperty
         @EqualsAndHashCode.Exclude
-        private Optional<URI> remoteUri = Optional.empty();
+        protected Optional<URI> remoteUri = Optional.empty();
 
         /** Tags to add to the document. Default: empty list.*/
         @JsonProperty
         @EqualsAndHashCode.Exclude
-        private Optional<List<String>> tags = Optional.of(new ArrayList<>());
+        protected Optional<List<String>> tags = Optional.of(new ArrayList<>());
 
         /** Simple file checksum on the source file path used to trigger updates. Default: none. */
         @JsonProperty
         @EqualsAndHashCode.Exclude
-        private Optional<Long> sourceChecksum = Optional.empty();
+        protected Optional<Long> sourceChecksum = Optional.empty();
 
         /** Simple file checksum on the converted file path used to trigger conversion. Default: none. */
         @JsonProperty
         @EqualsAndHashCode.Exclude
-        private Optional<Long> convertedChecksum = Optional.empty();
+        protected Optional<Long> convertedChecksum = Optional.empty();
 
         /** Datetime when file was created on the remote. Remote implementation is responsible for managing. Default: none. */
         @JsonProperty
         @EqualsAndHashCode.Exclude
-        private Optional<ZonedDateTime> createdOn = Optional.empty();
+        protected Optional<ZonedDateTime> createdOn = Optional.empty();
 
         /** Datetime when file was updated on the remote. Remote implementation is responsible for managing. Default: none. */
         @JsonProperty
         @EqualsAndHashCode.Exclude
-        private Optional<ZonedDateTime> lastUpdated = Optional.empty();
+        protected Optional<ZonedDateTime> lastUpdated = Optional.empty();
 
         /** Datetime when file was deleted on the remote. Remote implementation is responsible for managing. Default: none. */
         @JsonProperty
         @EqualsAndHashCode.Exclude
-        private Optional<ZonedDateTime> deletedOn = Optional.empty();
+        protected Optional<ZonedDateTime> deletedOn = Optional.empty();
 
         /** Extra properties needed by the remote implementation. Default: empty map. */
         @JsonProperty
         @EqualsAndHashCode.Exclude
-        private Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
+        protected Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
 
         /**
          * Convenience method for checking if a document has an optional property in {@link #extraProps}.

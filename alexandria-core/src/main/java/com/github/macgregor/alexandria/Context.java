@@ -29,33 +29,33 @@ import java.util.*;
 public class Context {
 
     /** Absolute path to the Alexandria {@link Config} file to load/save to. */
-    @NonNull private Path configPath;
+    @NonNull protected Path configPath;
 
     /** Absolute path to the project base where Alexandria is being executed */
-    @NonNull private Path projectBase;
+    @NonNull protected Path projectBase;
 
     /** Absolute paths to use when searching for documents to index  */
-    @NonNull private List<Path> searchPath;
+    @NonNull protected List<Path> searchPath;
 
     /** Absolute path to output converted documents to. If not set, documents are converted in place where they are found. Default: none. */
-    private Optional<Path> outputPath = Optional.empty();
+    protected Optional<Path> outputPath = Optional.empty();
 
-    /** File include patterns to use when searching for documents to index. See {@link Resources.PathFinder}. Default: *.md */
-    private List<String> include = new ArrayList<>(Arrays.asList("*.md"));
+    /** File include patterns to use when searching for documents to index. See {@link PathFinder}. Default: *.md */
+    protected List<String> include = new ArrayList<>(Arrays.asList("*.md"));
 
-    /** File exclude patterns to use when searching for documents to index. See {@link Resources.PathFinder}. Default: none */
-    private List<String> exclude = new ArrayList<>();
+    /** File exclude patterns to use when searching for documents to index. See {@link PathFinder}. Default: none */
+    protected List<String> exclude = new ArrayList<>();
 
     /** Aleandria config containing document index and remote config. */
-    @NonNull private Config config = new Config();
+    @NonNull protected Config config = new Config();
 
     /** Alexandria config originally loaded from the file system. */
-    @NonNull private Config originalConfig = new Config();
+    @NonNull protected Config originalConfig = new Config();
 
     /** Cache for tracking absolute converted file paths for indexed metadata. Default: empty map. */
-    private Map<Config.DocumentMetadata, Path> convertedPaths = new HashMap<>();
+    protected Map<Config.DocumentMetadata, Path> convertedPaths = new HashMap<>();
 
-    private Optional<Remote> remote = Optional.empty();
+    protected Optional<Remote> remote = Optional.empty();
 
     /**
      * Sets the path to the Alexandria config file. <b>Must be an absolute path</b>.
