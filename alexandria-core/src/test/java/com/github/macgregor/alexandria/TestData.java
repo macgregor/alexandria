@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -212,5 +213,20 @@ public class TestData {
         remoteConfig.baseUrl(Optional.empty());
 
         return remoteConfig;
+    }
+
+    public static Path newFile(File parent, String path) throws IOException {
+        if(path.startsWith("/")){
+            path = path.replaceFirst("/", path);
+        }
+        String[] segments = path.split("/");
+        Path p = Paths.get(parent.getAbsolutePath(), segments);
+        return newFile(p);
+    }
+
+    public static Path newFile(Path path) throws IOException {
+        path.getParent().toFile().mkdirs();
+        path.toFile().createNewFile();
+        return path;
     }
 }

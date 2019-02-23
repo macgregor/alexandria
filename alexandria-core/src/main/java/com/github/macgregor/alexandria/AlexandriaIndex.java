@@ -55,7 +55,7 @@ public class AlexandriaIndex {
     /**
      * Find all files on {@link Context#searchPath} that match the configured include and exclude patterns.
      *
-     * @see com.github.macgregor.alexandria.Resources.PathFinder
+     * @see com.github.macgregor.alexandria.PathFinder
      *
      * @param context  Alexandria context containing information necessary to match files
      * @return  All matching files resolved as absolute using {@link Context#configPath}
@@ -64,7 +64,7 @@ public class AlexandriaIndex {
     protected static Collection<Path> documentsMatched(Context context) throws AlexandriaException {
         try {
             return Resources.absolutePath(context.configPath().getParent(),
-                    new Resources.PathFinder()
+                    new PathFinder()
                             .startingInPaths(context.searchPath())
                             .including(context.include())
                             .excluding(context.exclude())

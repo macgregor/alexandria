@@ -124,7 +124,7 @@ public class AlexandriaConvertTest {
         AlexandriaConvert convert = new AlexandriaConvert(context);
         convert.convert();
 
-        Resources.PathFinder pathFinder = new Resources.PathFinder();
+        PathFinder pathFinder = new PathFinder();
         pathFinder.startingInPath(out.toPath());
         assertThat(pathFinder.files()).hasSize(2);
     }
