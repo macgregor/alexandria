@@ -49,24 +49,24 @@ jobs:
   include:
     - stage: build
       name: "Build Project"
-      install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+      install: mvn -P quick-build -B -V
       script: skip
     - stage: test
       name: "Testing and Code Analysis"
       install: skip
-      script: mvn verify coveralls:report -Dmaven.javadoc.skip=true -B
+      script: mvn -P test -B -V
     - stage: deploy
       name: "Deploy to Maven Central"
       install: skip
       script: skip
       deploy:
       - provider: script
-        script: mvn deploy -PreleaseNexus,createJavadocs --settings ci/.maven.xml -Dmaven.test.skip=true
+        script: mvn -P releaseNexus --settings ci/.maven.xml
         on:
           all_branches: true
     - stage: deploy
       name: "Deploy to Github"
-      install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+      install: mvn -P quick-build -B -V
       script: skip
       deploy:
       - provider: releases
@@ -76,19 +76,21 @@ jobs:
         - alexandria-maven-plugin/target/alexandria-maven-plugin-$project_version.jar
         - alexandria-core/target/alexandria-core-$project_version.jar
         - alexandria-cli/target/alexandria-cli-$project_version.jar
+        - alexandria-cli/target/alexandria-remote-jive-$project_version.jar
         skip_cleanup: true
         on:
           all_branches: true
     - stage: deploy
       name: "Deploy Javadocs"
-      install: mvn install -PcreateJavadocs -Dmaven.test.skip=true
+      install: mvn -P stage-site-release -B -V
       script: skip
       before_deploy:
       - cd $TRAVIS_BUILD_DIR/gh-pages
       - git rm -rf *
-      - cp -Rf $TRAVIS_BUILD_DIR/alexandria-core/target/apidocs/* ./
+      - rm -rf $TRAVIS_BUILD_DIR/target/stage/alexandria-reports/jacoco-aggregate
+      - cp -Rf $TRAVIS_BUILD_DIR/target/stage/* ./
       - git add -f .
-      - git commit -m "Releasing $project_version javadocs [ci skip]"
+      - git commit -m "Releasing $project_version site and javadocs [ci skip]"
       deploy:
       - provider: script
         script: git push -f origin gh-pages

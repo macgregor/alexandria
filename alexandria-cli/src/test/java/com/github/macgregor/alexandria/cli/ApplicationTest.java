@@ -1,6 +1,9 @@
-package com.github.macgregor.alexandria;
+package com.github.macgregor.alexandria.cli;
 
+import com.github.macgregor.alexandria.Alexandria;
+import com.github.macgregor.alexandria.Context;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import static org.mockito.Mockito.*;
 
@@ -8,7 +11,7 @@ public class ApplicationTest {
 
     @Test
     public void testSyncIsCalled() throws Exception {
-        Application application = spy(new Application());
+        Application application = Mockito.spy(new Application());
         Alexandria alexandria = alexandriaSpy(application);
         application.call();
         verify(alexandria, times(1)).syncWithRemote();
@@ -16,7 +19,7 @@ public class ApplicationTest {
 
     @Test
     public void testIndexIsCalled() throws Exception {
-        Application application = spy(new Application());
+        Application application = Mockito.spy(new Application());
         Alexandria alexandria = alexandriaSpy(application);
         application.call();
         verify(alexandria, times(1)).index();
@@ -24,7 +27,7 @@ public class ApplicationTest {
 
     @Test
     public void testConvertIsCalled() throws Exception {
-        Application application = spy(new Application());
+        Application application = Mockito.spy(new Application());
         Alexandria alexandria = alexandriaSpy(application);
         application.call();
         verify(alexandria, times(1)).convert();
