@@ -10,6 +10,10 @@ env:
   - secure: c06pQn4uXrAlegtf7P5+efhROII7lE2LDmWs5JlglbP4Jdbl54rA/TYMdVbn2bZ66YwASSqpsnyQcN0ION2LISf0MpKaC5J1osGdZ9QBqwz8nt0uvwMkiBLXfw21VecWRVlFvo/lUHfGdx2wNGTt+mUNtzfvBgC12TdHGJ570/TPpW6lFUbFsXxwDzCpy1K0dwWWJv88ms3aeBX71F9NG1cKv1ceR8xroLmAJL4/+bZRM1BbQyuvVYu9qhzkSfCyw/lK4g2z9u1eb3yU6O+nDEkAykNLROde7dQGFtYW4DIR+NRHO2LTLGXRUA1c3cNJhNZtfz3xEf+n1Uc6bV5EB8TW+QtUkdal9ekjZRaGwlx5TIGbvswjLiy8p6GAEqoHbDzWy0sFiY+lCwANw04CFcRnDzmh+LQsp0S9j55Ts5e7BDL9OOP7qNGj0e5CIX6hw4tI7PGqwyP+xWBFFLcUVPiULXPqlgRngofRrviG+aEkQDKflOSwDyT2flvPA0VsUJ9avJ3IWsERYCGiz8uQ23x2cH6eMkZC1MKnMJAnd7EcdHRS7lIadSseykKAGWXzjhORvfVAeeKFKCfTs/czSlSjf7TDoGn8DzkSHB8pSursiWxjWOoOJC2CmcmKNE7TW7QARUjt52MGyakhz4Qq/8S+SrOFhNCjxQwqBwGlKRY=
   - secure: vAC37ngk7dcXhil0H18wP3XOLNwE8LvlZvhLXGV5NrOhVTCuaeTEJfaeDTtdCSzYIx95hgDHbYVO6AETvnvzSRriyEbsOJpdyRvdgD71LhcfQpdHut+z1QFrDa928imwiW4MJXrt9tSZpX6JisPOVWeJfT40DZHrF+mXV4ra8z3xMhRB9v3SEDPZd/GBih2syiTK6JDEzKC8ocMJ6FKPrpTBa+nEooqBXw/gdodE+p1gl5alpGcoNHLIpKxcOKYnqOPhlTJozQTHG4FH+jhSKRCgRo3TRtdr/jwd025WTvb/hwBz2BJAAa7mdO0jsGTLTTr1+vU635Maz8HaIGsF2iCrliPSnufOc9sGNWmFqa7x3Y9Ik9z3H4xh9dU83q33152LT8h667c0WIwlfJDsiDdZk+MJNnPrnqZjk/bJbKsQxzPsZTVydTpX7M7O4XpXu3q6UMdIXizALWGnRxpI2SMph8V/VymWxkGynUjlKXpzsAiNiRXLGZ875Oxy2MnD+i/AOtOkenHnD8gKghOM41qkOloLfJzAxy3wjqXbUCkUXm52TN0bLj7ZE5rzaRJyCbrCYYjJWv59ujF4u/jY1LFY6AGbyE+YoRe39YFGfHq1LmQ3dZXmYLfN6kBNFZdpuS4SteqIqOqjKnnhHGXFQ0xJbphjDvhjoa7gdjkHiSA=
 
+# Handle git submodules manually to avoid errors, https://github.com/algolia/examples/issues/24
+git:
+    submodules: false
+
 branches:
   only:
   - master
@@ -23,11 +27,13 @@ notifications:
   email: false
 
 before_install:
-  - openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d
+  - openssl aes-256-cbc -K $encrypted_ef5931cef2b6_key -iv $encrypted_ef5931cef2b6_iv -in ci/signing_key.gpg.enc -out signing_key.gpg -d # maven artifact signing key
   - gpg --fast-import signing_key.gpg
   - export project_version=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
   - git config --global user.email "builds@travis-ci.com"
   - git config --global user.name "Travis CI"
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules # switch submodules to public github url
+  - git submodule update --init --recursive # manually pull submodules
   - git clone --branch=gh-pages https://${GH_TOKEN}@github.com/macgregor/alexandria.git $TRAVIS_BUILD_DIR/gh-pages
   - git clone --branch=master https://${GH_TOKEN}@github.com/macgregor/alexandria.git $TRAVIS_BUILD_DIR/master
 
