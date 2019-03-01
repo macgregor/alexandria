@@ -1,5 +1,8 @@
-package com.github.macgregor.alexandria;
+package com.github.macgregor.alexandria.maven;
 
+import com.github.macgregor.alexandria.Alexandria;
+import com.github.macgregor.alexandria.Context;
+import com.github.macgregor.alexandria.maven.AlexandriaMojo;
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -27,7 +30,7 @@ public class AlexandriaMojoTest {
     private Alexandria alexandria = spy(new Alexandria());
     private TestAlexandriaMojo testAlexandriaMojo = new TestAlexandriaMojo();
 
-    public static class TestAlexandriaMojo extends AlexandriaMojo{
+    public static class TestAlexandriaMojo extends AlexandriaMojo {
         @Override
         public void execute() throws MojoExecutionException, MojoFailureException {
             return;

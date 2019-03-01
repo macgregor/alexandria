@@ -10,7 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alexandria-maven-plugin</artifactId>
-    <name>alexandria-maven-plugin</name>
+    <name>Alexandria Maven Plugin</name>
+    <description>Maven plugin allowing users to integrate Alexandria into their project build tools.</description>
     <packaging>maven-plugin</packaging>
 
     <dependencies>
@@ -119,8 +120,23 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-component-metadata</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <configuration>
+                    <skip>${skip.site}</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -9,7 +9,8 @@
     <packaging>pom</packaging>
     <name>alexandria-parent</name>
     <description>Convert and publish project documentation from markdown to hosted html.</description>
-    <url>https://github.com/macgregor/alexandria</url>
+    <url>https://macgregor.github.io/alexandria</url>
+    <inceptionYear>2018</inceptionYear>
     <scm>
         <url>https://github.com/macgregor/alexandria.git</url>
         <connection>scm:git:git://github.com/macgregor/alexandria.git</connection>
@@ -30,6 +31,15 @@
             <email>matthew.m.stratton@gmail.com</email>
         </developer>
     </developers>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/macgregor/alexandria/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>Travis CI</system>
+        <url>https://travis-ci.com/macgregor/alexandria</url>
+        <notifiers />
+    </ciManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -38,6 +48,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
         <jackson.version>2.9.8</jackson.version>
+        <jackson.docs.version>2.9</jackson.docs.version>
         <flexmark.version>0.40.16</flexmark.version>
         <picocli.version>3.9.5</picocli.version>
         <apache-commons.version>3.7</apache-commons.version>
@@ -46,12 +57,21 @@
         <maven-project.version>2.2.1</maven-project.version>
         <maven-core.version>3.3.9</maven-core.version>
         <okhttp.version>3.11.0</okhttp.version>
+        <okhttp.docs.version>3.X</okhttp.docs.version>
+        <okhttp.mockserver.docs.version>3.13.1</okhttp.mockserver.docs.version>
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <lombok.version>1.18.2</lombok.version>
         <junit.version>4.12</junit.version>
         <assertj.version>3.10.0</assertj.version>
-        <mockito.version>2.21.0</mockito.version>
+        <mockito.version>2.24.5</mockito.version>
+
+        <skip.coverage>false</skip.coverage>
+        <skip.javadocs.jar>false</skip.javadocs.jar>
+        <skip.tests>false</skip.tests>
+        <skip.site>false</skip.site>
+        <skip.sources>false</skip.sources>
+        <skip.delombok>false</skip.delombok>
     </properties>
 
     <modules>
@@ -71,6 +91,10 @@
             <id>ossrh</id>
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
+        <site>
+            <id>${project.artifactId}-site</id>
+            <url>${project.url}</url>
+        </site>
     </distributionManagement>
 
     <dependencyManagement>
@@ -225,6 +249,13 @@
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <skip>${skip.tests}</skip>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>3.1.0</version>
                     <configuration>
@@ -238,6 +269,9 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>3.0.1</version>
+                    <configuration>
+                        <skipSource>${skip.sources}</skipSource>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>attach-sources</id>
@@ -302,6 +336,9 @@
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>0.8.1</version>
+                    <configuration>
+                        <skip>${skip.coverage}</skip>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>prepare-agent</id>
@@ -316,6 +353,7 @@
                     <artifactId>coveralls-maven-plugin</artifactId>
                     <version>4.3.0</version>
                     <configuration>
+                        <skip>${skip.coverage}</skip>
                         <repoToken>${env.COVERALLS_TOKEN}</repoToken>
                         <failOnServiceError>false</failOnServiceError>
                         <jacocoReports>
@@ -325,9 +363,79 @@
                     </configuration>
                 </plugin>
                 <plugin>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok-maven-plugin</artifactId>
+                    <version>1.18.0.0</version>
+                    <configuration>
+                        <skip>${skip.delombok}</skip>
+                        <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+                        <addOutputDirectory>false</addOutputDirectory>
+                        <outputDirectory>${project.build.directory}/delombok</outputDirectory>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>delombok</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.7.1</version>
+                    <configuration>
+                        <skip>${skip.site}</skip>
+                        <stagingDirectory>${session.executionRootDirectory}/target/stage</stagingDirectory>
+                        <skipDeploy>true</skipDeploy>
+                        <siteDirectory>${session.executionRootDirectory}</siteDirectory>
+                        <topSiteURL>${project.url}</topSiteURL>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.doxia</groupId>
+                            <artifactId>doxia-module-markdown</artifactId>
+                            <version>1.8</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>3.0.0</version>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>3.0.1</version>
+                    <configuration>
+                        <skip>${skip.javadocs}</skip>
+                        <sourcepath>${project.build.directory}/delombok</sourcepath>
+                        <additionalJOptions>
+                            <additionalJOption>-J-Dhttp.agent=maven-javadoc-plugin </additionalJOption>
+                            <additionalJOption>-Xdoclint:none</additionalJOption>
+                        </additionalJOptions>
+                        <includeDependencySources>true</includeDependencySources>
+                        <includeTransitiveDependencySources>true</includeTransitiveDependencySources>
+                        <detectJavaApiLink>true</detectJavaApiLink>
+                        <detectLinks>false</detectLinks>
+                        <links>
+                            <link>https://www.javadoc.io/doc/com.vladsch.flexmark/flexmark/${flexmark.version}/</link>
+                            <link>https://square.github.io/okhttp/${okhttp.docs.version}/okhttp/</link>
+                            <link>https://fasterxml.github.io/jackson-core/javadoc/${jackson.docs.version}/</link>
+                            <link>https://fasterxml.github.io/jackson-databind/javadoc/${jackson.docs.version}/</link>
+                            <link>https://fasterxml.github.io/jackson-dataformat-yaml/javadoc/${jackson.docs.version}.pr1/</link>
+                            <link>https://fasterxml.github.io/jackson-modules-java8/javadoc/datatypes/${jackson.docs.version}/</link>
+                            <link>https://fasterxml.github.io/jackson-modules-java8/javadoc/datetime/${jackson.docs.version}/</link>
+                            <link>https://www.javadoc.io/doc/org.slf4j/slf4j-api/${slf4j.version}/</link>
+                            <link>https://junit.org/junit4/javadoc/${junit.version}/</link>
+                            <link>http://javadoc.io/doc/com.squareup.okhttp3/mockwebserver/${okhttp.mockserver.docs.version}/</link>
+                            <link>https://projectlombok.org/api/</link>
+                            <link>https://logback.qos.ch/apidocs/</link>
+                            <link>https://static.javadoc.io/org.mockito/mockito-core/${mockito.version}/</link>
+                        </links>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>attach-javadocs</id>
@@ -338,11 +446,205 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.8</version>
+                    <extensions>true</extensions>
+                </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <!--
+                For some reason the site stagging naturally wants submodules to be two layers deep, e.g.
+                alexandria-core/alexandria-core/index.html. Which I and the javadocs dont like, but if I fix the actual
+                directory structure generated links are incorrect and I cant figure out the magic combination to make it work.
+
+                Lets jut rewrite those links as the last step instead...
+                 -->
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <id>default-cli</id>
+                        <phase>post-site</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>true</skip>
+                    <basedir>${user.dir}/target/stage</basedir>
+                    <ignoreErrors>false</ignoreErrors>
+                    <unescape>false</unescape>
+                    <regex>true</regex>
+                    <regexFlags>
+                        <regexFlag>MULTILINE</regexFlag>
+                    </regexFlags>
+                    <includes>
+                        <include>**/**.html</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/apidocs/**</exclude>
+                        <exclude>**/jacoco-aggregate/**</exclude>
+                    </excludes>
+                    <replacements>
+                        <replacement>
+                            <token>^(.*href="\.?/?alexandria-.*)(/alexandria-.*)(/index.html".*)$</token>
+                            <value>$1$3</value>
+                        </replacement>
+                        <replacement>
+                            <token>../../index.html</token>
+                            <value>../index.html</value>
+                        </replacement>
+                    </replacements>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <inherited>true</inherited>
+                <configuration>
+                    <skip>${skip.site}</skip>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>index</report>
+                            <report>ci-management</report>
+                            <report>dependencies</report>
+                            <report>dependency-info</report>
+                            <report>dependency-management</report>
+                            <report>distribution-management</report>
+                            <report>issue-management</report>
+                            <report>licenses</report>
+                            <report>plugin-management</report>
+                            <report>scm</report>
+                            <report>summary</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <inherited>true</inherited>
+                <configuration>
+                    <skip>${skip.site}</skip>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>javadoc</report>
+                        </reports>
+                    </reportSet>
+                    <reportSet>
+                        <id>aggregate</id>
+                        <reports>
+                            <report>aggregate</report>
+                        </reports>
+                        <inherited>false</inherited>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
+
     <profiles>
+        <profile>
+            <id>quick-build</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <skip.coverage>true</skip.coverage>
+                <skip.javadocs>true</skip.javadocs>
+                <skip.tests>true</skip.tests>
+                <skip.site>true</skip.site>
+                <skip.sources>true</skip.sources>
+                <skip.delombok>true</skip.delombok>
+            </properties>
+            <modules>
+                <module>alexandria-cli</module>
+                <module>alexandria-core</module>
+                <module>alexandria-maven-plugin</module>
+                <module>alexandria-remote-jive</module>
+            </modules>
+            <build>
+                <defaultGoal>clean install</defaultGoal>
+            </build>
+        </profile>
+        <profile>
+            <id>full-build</id>
+            <activation>
+                <property>
+                    <name>full-build</name>
+                </property>
+            </activation>
+            <properties>
+                <skip.coverage>false</skip.coverage>
+                <skip.javadocs>false</skip.javadocs>
+                <skip.tests>false</skip.tests>
+                <skip.site>false</skip.site>
+                <skip.sources>false</skip.sources>
+                <skip.delombok>false</skip.delombok>
+            </properties>
+            <build>
+                <defaultGoal>clean package site site:stage com.google.code.maven-replacer-plugin:replacer:replace</defaultGoal>
+            </build>
+        </profile>
+        <profile>
+            <id>test</id>
+            <activation>
+                <property>
+                    <name>test</name>
+                </property>
+            </activation>
+            <properties>
+                <skip.coverage>false</skip.coverage>
+                <skip.javadocs>true</skip.javadocs>
+                <skip.tests>false</skip.tests>
+                <skip.site>true</skip.site>
+                <skip.sources>true</skip.sources>
+                <skip.delombok>true</skip.delombok>
+            </properties>
+            <build>
+                <defaultGoal>verify coveralls:report</defaultGoal>
+            </build>
+        </profile>
+        <profile>
+            <id>stage-site-release</id>
+            <activation>
+                <property>
+                    <name>stage-site-release</name>
+                </property>
+            </activation>
+            <properties>
+                <skip.coverage>true</skip.coverage>
+                <skip.javadocs>false</skip.javadocs>
+                <skip.tests>true</skip.tests>
+                <skip.site>false</skip.site>
+                <skip.sources>true</skip.sources>
+                <skip.delombok>false</skip.delombok>
+            </properties>
+            <build>
+                <defaultGoal>package site site:stage com.google.code.maven-replacer-plugin:replacer:replace</defaultGoal>
+            </build>
+        </profile>
         <profile>
             <id>releaseNexus</id>
             <activation>
@@ -350,12 +652,20 @@
                     <name>releaseNexus</name>
                 </property>
             </activation>
+            <properties>
+                <skip.coverage>true</skip.coverage>
+                <skip.javadocs>false</skip.javadocs>
+                <skip.tests>true</skip.tests>
+                <skip.site>true</skip.site>
+                <skip.sources>false</skip.sources>
+                <skip.delombok>false</skip.delombok>
+            </properties>
             <build>
+                <defaultGoal>deploy</defaultGoal>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -369,8 +679,6 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.8</version>
-                        <extensions>true</extensions>
                         <configuration>
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
@@ -382,54 +690,6 @@
                                 <phase>deploy</phase>
                                 <goals>
                                     <goal>deploy</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>createJavadocs</id>
-            <activation>
-                <property>
-                    <name>createJavadocs</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.projectlombok</groupId>
-                        <artifactId>lombok-maven-plugin</artifactId>
-                        <version>1.18.0.0</version>
-                        <configuration>
-                            <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
-                            <outputDirectory>${project.build.directory}/delombok</outputDirectory>
-                            <addOutputDirectory>false</addOutputDirectory>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>delombok</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <configuration>
-                            <sourcepath>${project.build.directory}/delombok</sourcepath>
-                            <additionalJOption>-Xdoclint:none</additionalJOption>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
                                 </goals>
                             </execution>
                         </executions>

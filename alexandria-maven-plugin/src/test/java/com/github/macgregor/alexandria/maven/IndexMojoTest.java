@@ -1,7 +1,10 @@
-package com.github.macgregor.alexandria;
+package com.github.macgregor.alexandria.maven;
 
+import com.github.macgregor.alexandria.Alexandria;
+import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import com.github.macgregor.alexandria.maven.IndexMojo;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;

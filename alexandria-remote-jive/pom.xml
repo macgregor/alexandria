@@ -10,7 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alexandria-remote-jive</artifactId>
-    <name>alexandria-remote-jive</name>
+    <name>Alexandria Jive Remote</name>
+    <description>Alexandria remote implementation for the jive api (https://developer.jivesoftware.com/).</description>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -68,8 +69,23 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <configuration>
+                    <skip>${skip.site}</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

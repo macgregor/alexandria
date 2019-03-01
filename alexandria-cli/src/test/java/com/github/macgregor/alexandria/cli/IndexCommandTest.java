@@ -1,14 +1,16 @@
-package com.github.macgregor.alexandria;
+package com.github.macgregor.alexandria.cli;
 
+import com.github.macgregor.alexandria.Alexandria;
+import com.github.macgregor.alexandria.Context;
 import org.junit.Test;
 
 import static org.mockito.Mockito.*;
 
-public class ConvertCommandTest {
+public class IndexCommandTest {
 
     @Test
-    public void testConvertIsCalled() throws Exception {
-        ConvertCommand testCommand = spy(new ConvertCommand());
+    public void testIndexIsCalled() throws Exception {
+        IndexCommand testCommand = spy(new IndexCommand());
         Alexandria alexandria = spy(new Alexandria());
         Context context = spy(new Context());
         alexandria.context(context);
@@ -17,6 +19,6 @@ public class ConvertCommandTest {
         doReturn(alexandria).when(alexandria).syncWithRemote();
         doReturn(alexandria).when(testCommand).alexandria();
         testCommand.call();
-        verify(alexandria, times(1)).convert();
+        verify(alexandria, times(1)).index();
     }
 }

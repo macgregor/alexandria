@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="Alexandria" xmlns="http://maven.apache.org/DECORATION/1.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.0 http://maven.apache.org/xsd/decoration-1.0.0.xsd">
+    <bannerLeft>
+        <name>Alexandria</name>
+        <src>./alexandria-icon.png</src>
+        <href>https://macgregor.github.io/alexandria/</href>
+    </bannerLeft>
+
+    <skin>
+        <groupId>org.apache.maven.skins</groupId>
+        <artifactId>maven-fluido-skin</artifactId>
+        <version>1.7</version>
+    </skin>
+    <custom>
+        <fluidoSkin>
+            <sideBarEnabled>false</sideBarEnabled>
+            <navBarStyle>navbar-inverse</navBarStyle>
+            <sourceLineNumbersEnabled>true</sourceLineNumbersEnabled>
+            <topBarEnabled>true</topBarEnabled>
+            <breadcrumbDivider>»</breadcrumbDivider>
+            <googleSearch>
+                <sitesearch>https://macgregor.github.io/alexandria/</sitesearch>
+            </googleSearch>
+            <gitHub>
+                <projectId>macgregor/alexandria</projectId>
+                <ribbonOrientation>right</ribbonOrientation>
+                <ribbonColor>darkblue</ribbonColor>
+            </gitHub>
+        </fluidoSkin>
+    </custom>
+
+
+    <body>
+        <links>
+            <item name="@macgregor" href="https://github.com/macgregor"/>
+            <item name="Code Climate" href="https://codeclimate.com/github/macgregor/alexandria"/>
+            <item name="Coveralls" href="https://coveralls.io/github/macgregor/alexandria"/>
+            <item name="Maven Artifacts" href="https://search.maven.org/search?q=g:com.github.macgregor%20AND%20a:alexandria-*"/>
+        </links>
+
+        <menu name="Javadocs">
+            <item name="Alexandria CLI" href="./alexandria-cli/apidocs/index.html"/>
+            <item name="Alexandria Core" href="./alexandria-core/apidocs/index.html"/>
+            <item name="Alexandria Jive Remote" href="./alexandria-remote-jive/apidocs/index.html"/>
+            <item name="Alexandria Maven Plugin" href="./alexandria-maven-plugin/apidocs/index.html"/>
+        </menu>
+
+        <menu ref="parent" />
+        <menu ref="modules" />
+        <menu ref="reports"/>
+    </body>
+</project>

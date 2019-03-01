@@ -1,7 +1,9 @@
-package com.github.macgregor.alexandria;
+package com.github.macgregor.alexandria.cli;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.github.macgregor.alexandria.Alexandria;
+import com.github.macgregor.alexandria.Context;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -16,7 +18,7 @@ import static org.mockito.Mockito.*;
 
 public class AlexandriaCommandTest {
 
-    public static class TestCommand extends AlexandriaCommand{
+    public static class TestCommand extends AlexandriaCommand {
         @Override
         public Void call() throws Exception {
             return null;

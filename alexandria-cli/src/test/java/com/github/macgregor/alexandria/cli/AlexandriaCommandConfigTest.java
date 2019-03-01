@@ -1,4 +1,4 @@
-package com.github.macgregor.alexandria;
+package com.github.macgregor.alexandria.cli;
 
 import org.junit.Test;
 import picocli.CommandLine;
@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AlexandriaCommandConfigTest {
 
-    public static class TestCommand extends AlexandriaCommand{
+    public static class TestCommand extends AlexandriaCommand {
         @Override
         public Void call() throws Exception {
             return null;

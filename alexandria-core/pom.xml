@@ -10,7 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alexandria-core</artifactId>
-    <name>alexandria-core</name>
+    <name>Alexandria Core</name>
+    <description>Alexandria project's Core library.</description>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -94,6 +95,21 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <configuration>
+                    <skip>${skip.site}</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

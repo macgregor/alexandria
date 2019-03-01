@@ -1,4 +1,4 @@
-package com.github.macgregor.alexandria;
+package com.github.macgregor.alexandria.cli;
 
 import picocli.CommandLine;
 

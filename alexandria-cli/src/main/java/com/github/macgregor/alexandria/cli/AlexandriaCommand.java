@@ -1,6 +1,8 @@
-package com.github.macgregor.alexandria;
+package com.github.macgregor.alexandria.cli;
 
 import ch.qos.logback.classic.Level;
+import com.github.macgregor.alexandria.Alexandria;
+import com.github.macgregor.alexandria.Context;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;

@@ -10,7 +10,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alexandria-reports</artifactId>
+    <name>Alexandria Jacoco Coverage Reports</name>
     <packaging>pom</packaging>
+    <description>Aggregator project needed to properly aggreaget Jacoco code coverage reports.</description>
 
     <properties>
         <code.coverage.project.folder>${basedir}/../</code.coverage.project.folder>
@@ -73,6 +75,31 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-maven-plugin</artifactId>
+                <version>1.18.0.0</version>
+                <configuration>
+                    <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+                    <outputDirectory>${project.build.directory}/delombok</outputDirectory>
+                    <addOutputDirectory>false</addOutputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>delombok</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <configuration>
+                    <skip>${skip.site}</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

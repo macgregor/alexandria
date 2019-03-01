@@ -10,7 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>alexandria-cli</artifactId>
-    <name>alexandria-cli</name>
+    <name>Alexandria Cli</name>
+    <description>Command line interface to Alexandria.</description>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -107,7 +108,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.github.macgregor.alexandria.Application</mainClass>
+                            <mainClass>com.github.macgregor.alexandria.cli.Application</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -117,10 +118,25 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
                 <configuration>
                     <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <configuration>
+                    <skip>${skip.site}</skip>
                 </configuration>
             </plugin>
         </plugins>
