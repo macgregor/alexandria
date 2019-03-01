@@ -40,6 +40,7 @@ before_install:
 stages:
   - build
   - test
+  - site
   - name: deploy
     if: tag IS present
   - name: version
@@ -80,7 +81,7 @@ jobs:
         skip_cleanup: true
         on:
           all_branches: true
-    - stage: deploy
+    - stage: site
       name: "Deploy Javadocs"
       install: mvn -P stage-site-release -B -V
       script: skip
