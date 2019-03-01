@@ -17,6 +17,8 @@ git:
 branches:
   only:
   - master
+  - feature/.*
+  - fix/.*
   - /^\d+\.\d+\.\d+?$/
 
 cache:
@@ -50,7 +52,7 @@ jobs:
   include:
     - stage: build
       name: "Build Project"
-      install: mvn -P quick-build -B -V
+      install: mvn -P quick-build -B -V 2>/dev/null
       script: skip
     - stage: test
       name: "Testing and Code Analysis"
@@ -62,7 +64,7 @@ jobs:
       script: skip
       deploy:
       - provider: script
-        script: mvn -P releaseNexus --settings ci/.maven.xml
+        script: mvn -P releaseNexus --settings ci/.maven.xml 2>/dev/null
         on:
           all_branches: true
     - stage: deploy
@@ -83,7 +85,7 @@ jobs:
           all_branches: true
     - stage: site
       name: "Deploy Javadocs"
-      install: mvn -P stage-site-release -B -V
+      install: mvn -P stage-site-release -B -V 2>/dev/null
       script: skip
       before_deploy:
       - cd $TRAVIS_BUILD_DIR/gh-pages

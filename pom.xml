@@ -66,7 +66,7 @@
         <mockito.version>2.21.0</mockito.version>
 
         <skip.coverage>false</skip.coverage>
-        <skip.javadocs>false</skip.javadocs>
+        <skip.javadocs.jar>false</skip.javadocs.jar>
         <skip.tests>false</skip.tests>
         <skip.site>false</skip.site>
         <skip.sources>false</skip.sources>
@@ -410,9 +410,26 @@
                     <configuration>
                         <skip>${skip.javadocs}</skip>
                         <sourcepath>${project.build.directory}/generated-sources/delombok</sourcepath>
-                        <additionalJOption>-Xdoclint:none</additionalJOption>
+                        <additionalJOptions>
+                            <additionalJOption>-J-Dhttp.agent=maven-javadoc-plugin </additionalJOption>
+                            <additionalJOption>-Xdoclint:none</additionalJOption>
+                        </additionalJOptions>
                         <detectJavaApiLink>true</detectJavaApiLink>
-                        <detectLinks>true</detectLinks>
+                        <detectLinks>false</detectLinks>
+                        <links>
+                            <link>https://github.com/vsch/flexmark-java/flexmark-all/apidocs/</link>
+                            <link>https://github.com/square/okhttp/okhttp/apidocs/</link>
+                            <link>https://github.com/FasterXML/jackson-dataformats-text/apidocs/</link>
+                            <link>https://github.com/FasterXML/jackson/apidocs/</link>
+                            <link>https://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jdk8/apidocs/</link>
+                            <link>https://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jsr310/apidocs/</link>
+                            <link>https://www.slf4j.org/apidocs/</link>
+                            <link>https://junit.org/apidocs/</link>
+                            <link>https://github.com/square/okhttp/mockwebserver/apidocs/</link>
+                            <link>https://projectlombok.org/apidocs/</link>
+                            <link>https://logback.qos.ch/logback-classic/apidocs/</link>
+                            <link>https://github.com/mockito/mockito/apidocs/</link>
+                        </links>
                     </configuration>
                     <executions>
                         <execution>
@@ -435,8 +452,13 @@
         </pluginManagement>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
                 <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
                 <inherited>true</inherited>
                 <executions>
                     <execution>
@@ -483,6 +505,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
+                <configuration>
+                    <skip>${skip.site}</skip>
+                </configuration>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -504,6 +529,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <skip>${skip.site}</skip>
+                </configuration>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -593,7 +621,7 @@
             </activation>
             <properties>
                 <skip.coverage>true</skip.coverage>
-                <skip.javadocs>false</skip.javadocs>
+                <skip.javadocs>true</skip.javadocs>
                 <skip.tests>true</skip.tests>
                 <skip.site>false</skip.site>
                 <skip.sources>true</skip.sources>
