@@ -58,12 +58,13 @@
         <maven-core.version>3.3.9</maven-core.version>
         <okhttp.version>3.11.0</okhttp.version>
         <okhttp.docs.version>3.X</okhttp.docs.version>
+        <okhttp.mockserver.docs.version>3.13.1</okhttp.mockserver.docs.version>
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <lombok.version>1.18.2</lombok.version>
         <junit.version>4.12</junit.version>
         <assertj.version>3.10.0</assertj.version>
-        <mockito.version>2.21.0</mockito.version>
+        <mockito.version>2.24.5</mockito.version>
 
         <skip.coverage>false</skip.coverage>
         <skip.javadocs.jar>false</skip.javadocs.jar>
@@ -369,6 +370,7 @@
                         <skip>${skip.delombok}</skip>
                         <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
                         <addOutputDirectory>false</addOutputDirectory>
+                        <outputDirectory>${project.build.directory}/delombok</outputDirectory>
                     </configuration>
                     <executions>
                         <execution>
@@ -409,26 +411,29 @@
                     <version>3.0.1</version>
                     <configuration>
                         <skip>${skip.javadocs}</skip>
-                        <sourcepath>${project.build.directory}/generated-sources/delombok</sourcepath>
+                        <sourcepath>${project.build.directory}/delombok</sourcepath>
                         <additionalJOptions>
                             <additionalJOption>-J-Dhttp.agent=maven-javadoc-plugin </additionalJOption>
                             <additionalJOption>-Xdoclint:none</additionalJOption>
                         </additionalJOptions>
+                        <includeDependencySources>true</includeDependencySources>
+                        <includeTransitiveDependencySources>true</includeTransitiveDependencySources>
                         <detectJavaApiLink>true</detectJavaApiLink>
                         <detectLinks>false</detectLinks>
                         <links>
-                            <link>https://github.com/vsch/flexmark-java/flexmark-all/apidocs/</link>
-                            <link>https://github.com/square/okhttp/okhttp/apidocs/</link>
-                            <link>https://github.com/FasterXML/jackson-dataformats-text/apidocs/</link>
-                            <link>https://github.com/FasterXML/jackson/apidocs/</link>
-                            <link>https://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jdk8/apidocs/</link>
-                            <link>https://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jsr310/apidocs/</link>
-                            <link>https://www.slf4j.org/apidocs/</link>
-                            <link>https://junit.org/apidocs/</link>
-                            <link>https://github.com/square/okhttp/mockwebserver/apidocs/</link>
-                            <link>https://projectlombok.org/apidocs/</link>
-                            <link>https://logback.qos.ch/logback-classic/apidocs/</link>
-                            <link>https://github.com/mockito/mockito/apidocs/</link>
+                            <link>https://www.javadoc.io/doc/com.vladsch.flexmark/flexmark/${flexmark.version}/</link>
+                            <link>https://square.github.io/okhttp/${okhttp.docs.version}/okhttp/</link>
+                            <link>https://fasterxml.github.io/jackson-core/javadoc/${jackson.docs.version}/</link>
+                            <link>https://fasterxml.github.io/jackson-databind/javadoc/${jackson.docs.version}/</link>
+                            <link>https://fasterxml.github.io/jackson-dataformat-yaml/javadoc/${jackson.docs.version}.pr1/</link>
+                            <link>https://fasterxml.github.io/jackson-modules-java8/javadoc/datatypes/${jackson.docs.version}/</link>
+                            <link>https://fasterxml.github.io/jackson-modules-java8/javadoc/datetime/${jackson.docs.version}/</link>
+                            <link>https://www.javadoc.io/doc/org.slf4j/slf4j-api/${slf4j.version}/</link>
+                            <link>https://junit.org/junit4/javadoc/${junit.version}/</link>
+                            <link>http://javadoc.io/doc/com.squareup.okhttp3/mockwebserver/${okhttp.mockserver.docs.version}/</link>
+                            <link>https://projectlombok.org/api/</link>
+                            <link>https://logback.qos.ch/apidocs/</link>
+                            <link>https://static.javadoc.io/org.mockito/mockito-core/${mockito.version}/</link>
                         </links>
                     </configuration>
                     <executions>
@@ -441,20 +446,27 @@
                         </execution>
                     </executions>
                 </plugin>
-                <!--
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.8</version>
+                    <extensions>true</extensions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <!--
                 For some reason the site stagging naturally wants submodules to be two layers deep, e.g.
                 alexandria-core/alexandria-core/index.html. Which I and the javadocs dont like, but if I fix the actual
                 directory structure generated links are incorrect and I cant figure out the magic combination to make it work.
 
                 Lets jut rewrite those links as the last step instead...
                  -->
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>properties-maven-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
                 <artifactId>replacer</artifactId>
@@ -505,6 +517,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
+                <inherited>true</inherited>
                 <configuration>
                     <skip>${skip.site}</skip>
                 </configuration>
@@ -529,6 +542,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <inherited>true</inherited>
                 <configuration>
                     <skip>${skip.site}</skip>
                 </configuration>
@@ -621,7 +635,7 @@
             </activation>
             <properties>
                 <skip.coverage>true</skip.coverage>
-                <skip.javadocs>true</skip.javadocs>
+                <skip.javadocs>false</skip.javadocs>
                 <skip.tests>true</skip.tests>
                 <skip.site>false</skip.site>
                 <skip.sources>true</skip.sources>
@@ -652,7 +666,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -666,8 +679,6 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.8</version>
-                        <extensions>true</extensions>
                         <configuration>
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
