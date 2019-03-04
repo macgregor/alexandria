@@ -2,6 +2,7 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
+import com.github.macgregor.alexandria.markdown.MarkdownConverter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.Rule;
@@ -14,6 +15,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,16 +30,6 @@ public class AlexandriaConvertTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testConvertDoesntConvertWhenRemoteSupportsMarkdown() throws IOException {
-        Context context = TestData.minimalContext(folder);
-        context.config().remote().supportsNativeMarkdown(true);
-
-        AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
-        alexandriaConvert.convert();
-        assertThat(Paths.get(folder.getRoot().toString(), "readme.html")).doesNotExist();
-    }
-
-    @Test
     public void testConvertSetsConvertedPathPreferringConfigOverride() throws IOException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
@@ -48,7 +40,7 @@ public class AlexandriaConvertTest {
         AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
         alexandriaConvert.convert();
 
-        String convertedFileName = String.format("%s-%s.html", FilenameUtils.getBaseName(metadata.sourceFileName()), metadata.sourcePath().getParent().toAbsolutePath().toString().hashCode());
+        String convertedFileName = String.format("%s-%s.md", FilenameUtils.getBaseName(metadata.sourceFileName()), metadata.sourcePath().getParent().toAbsolutePath().toString().hashCode());
         assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(subdir.getPath(), convertedFileName));
         assertThat(Paths.get(subdir.getPath(), convertedFileName)).exists();
     }
@@ -60,7 +52,7 @@ public class AlexandriaConvertTest {
         AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
         alexandriaConvert.convert();
 
-        String convertedFileName = String.format("%s-%s.html", FilenameUtils.getBaseName(metadata.sourceFileName()), folder.getRoot().toString().hashCode());
+        String convertedFileName = String.format("%s-%s.md", FilenameUtils.getBaseName(metadata.sourceFileName()), folder.getRoot().toString().hashCode());
         assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), convertedFileName));
         assertThat(Paths.get(folder.getRoot().toString(), convertedFileName)).exists();
     }
@@ -77,8 +69,9 @@ public class AlexandriaConvertTest {
     public void testConvertWrapsIOExceptionAsAlexandriaException() throws IOException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        MarkdownConverter converter = context.remote().get().markdownConverter();
         metadata.sourcePath(Paths.get("foo"));
-        assertThatThrownBy(() -> AlexandriaConvert.convert(context, metadata)).isInstanceOf(AlexandriaException.class);
+        assertThatThrownBy(() -> AlexandriaConvert.convert(context, metadata, converter)).isInstanceOf(AlexandriaException.class);
     }
 
     @Test
@@ -98,6 +91,18 @@ public class AlexandriaConvertTest {
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
         AlexandriaConvert convert = new AlexandriaConvert(context);
         convert.convert();
+    }
+
+    @Test
+    public void testConvertRethrowsAlexandriaExceptionFromMarkdownConverterDelegate() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.config().metadata(Optional.of(new ArrayList<>()));
+        Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
+        MarkdownConverter markdownConverter = spy(context.remote.get().markdownConverter());
+        AlexandriaException exception = new AlexandriaException("Yo");
+        doThrow(exception).when(markdownConverter).convert(any(), any(), any());
+        context.remote.get().markdownConverter(markdownConverter);
+        assertThatThrownBy(() -> AlexandriaConvert.convert(context, metadata, markdownConverter)).isEqualTo(exception);
     }
 
     @Test
@@ -127,5 +132,59 @@ public class AlexandriaConvertTest {
         PathFinder pathFinder = new PathFinder();
         pathFinder.startingInPath(out.toPath());
         assertThat(pathFinder.files()).hasSize(2);
+    }
+
+    @Test
+    public void testConvertNeedsConversionTrueWhenConvertedCacheHitButFileMissing() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        MarkdownConverter converter = context.remote().get().markdownConverter();
+        context.convertedPath(metadata, AlexandriaConvert.convertedPath(context, metadata, converter));
+        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isTrue();
+    }
+
+    @Test
+    public void testConvertNeedsConversionFalseWhenConvertedCacheHitAndFileExists() throws IOException, URISyntaxException {
+        Context context = TestData.completeContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        MarkdownConverter converter = context.remote().get().markdownConverter();
+        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isFalse();
+    }
+
+    @Test
+    public void testConvertNeedsConversionTrueWhenConvertedCacheHitAndFileExistsButWrongChecksum() throws IOException, URISyntaxException {
+        Context context = TestData.completeContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        MarkdownConverter converter = context.remote().get().markdownConverter();
+        metadata.convertedChecksum(Optional.of(-1l));
+        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isTrue();
+    }
+
+    @Test
+    public void testConvertNeedsConversionTrueWhenConvertedCacheMissAndFileMissing() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        MarkdownConverter converter = context.remote().get().markdownConverter();
+        context.convertedPaths(new HashMap<>());
+        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isTrue();
+    }
+
+    @Test
+    public void testConvertNeedsConversionFalseWhenConvertedCacheMissAndFileExists() throws IOException, URISyntaxException {
+        Context context = TestData.completeContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        MarkdownConverter converter = context.remote().get().markdownConverter();
+        context.convertedPaths(new HashMap<>());
+        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isFalse();
+    }
+
+    @Test
+    public void testConvertNeedsConversionTrueWhenConvertedCacheMissAndFileExistsWithWrongChecksum() throws IOException, URISyntaxException {
+        Context context = TestData.completeContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        MarkdownConverter converter = context.remote().get().markdownConverter();
+        context.convertedPaths(new HashMap<>());
+        metadata.convertedChecksum(Optional.of(-1l));
+        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isTrue();
     }
 }

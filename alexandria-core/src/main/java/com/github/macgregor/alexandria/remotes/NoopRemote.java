@@ -1,7 +1,8 @@
 package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
-import com.github.macgregor.alexandria.Context;
+import com.github.macgregor.alexandria.markdown.MarkdownConverter;
+import com.github.macgregor.alexandria.markdown.NoopMarkdownConverter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,6 +18,8 @@ import java.io.IOException;
 @NoArgsConstructor
 public class NoopRemote implements Remote {
 
+    private MarkdownConverter markdownConverter;
+
     /**
      * {@inheritDoc}
      */
@@ -30,7 +33,7 @@ public class NoopRemote implements Remote {
      * {@inheritDoc}
      */
     @Override
-    public void create(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public void create(Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Noop - Creating %s on remote.", metadata.sourcePath().toAbsolutePath().toString()));
         return;
     }
@@ -39,7 +42,7 @@ public class NoopRemote implements Remote {
      * {@inheritDoc}
      */
     @Override
-    public void update(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public void update(Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Noop - Updating %s on remote.", metadata.sourcePath().toAbsolutePath().toString()));
         return;
     }
@@ -48,8 +51,20 @@ public class NoopRemote implements Remote {
      * {@inheritDoc}
      */
     @Override
-    public void delete(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public void delete(Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Noop - Deleting %s on remote.", metadata.sourcePath().toAbsolutePath().toString()));
         return;
+    }
+
+    @Override
+    public MarkdownConverter markdownConverter() {
+        log.debug("Noop - Creating Noop markdown converted.");
+        return new NoopMarkdownConverter();
+    }
+
+    @Override
+    public void markdownConverter(MarkdownConverter markdownConverter) {
+        log.debug("Noop - Setting Markdown converter to {}.", markdownConverter.getClass().getSimpleName());
+        this.markdownConverter = markdownConverter;
     }
 }

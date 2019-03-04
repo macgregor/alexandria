@@ -2,21 +2,25 @@ package com.github.macgregor.alexandria.remotes;
 
 
 import com.github.macgregor.alexandria.Config;
-import com.github.macgregor.alexandria.Context;
-import com.vladsch.flexmark.html.HtmlRenderer;
+import com.github.macgregor.alexandria.markdown.MarkdownConverter;
 
 import java.io.IOException;
-import java.util.Optional;
 
 /**
  * Defines an interface for interacting with a remote document source.
  */
 public interface Remote {
 
+    /**
+     * Called after instantiating the {@link Remote} and before {@link Remote#validateRemoteConfig()} so that the
+     * implementation can configure itself.
+     * @param config
+     */
     void configure(Config.RemoteConfig config);
 
     /**
-     * Called after instantiating the Remote to validate the configuration has all information required to use the remote.
+     * Called after instantiating the {@link Remote} and configuring it with {@link Remote#validateRemoteConfig()} to
+     * validate the configuration has all information required to use the remote.
      *
      * @throws IllegalStateException  The remote configuration is invalid.
      */
@@ -43,11 +47,10 @@ public interface Remote {
      *  <li>any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
      * </ul>
      *
-     * @param context  current Alexandria context
      * @param metadata  document to create
      * @throws IOException  Errors with local files or any requests made to the remote.
      */
-    void create(Context context, Config.DocumentMetadata metadata) throws IOException;
+    void create(Config.DocumentMetadata metadata) throws IOException;
 
     /**
      * Called to update an existing document on the remote.
@@ -60,11 +63,10 @@ public interface Remote {
      *  <li>any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
      * </ul>
      *
-     * @param context  current Alexandria context
      * @param metadata  document to update
      * @throws IOException  Errors with local files or any requests made to the remote.
      */
-    void update(Context context, Config.DocumentMetadata metadata) throws IOException;
+    void update(Config.DocumentMetadata metadata) throws IOException;
 
     /**
      * Called to delete an existing document on the remote.
@@ -75,20 +77,22 @@ public interface Remote {
      *  <li>any remote specific metadata in {@link com.github.macgregor.alexandria.Config.DocumentMetadata#extraProps}
      * </ul>
      *
-     * @param context  current Alexandria context
      * @param metadata  document to delete
      * @throws IOException  Errors with local files or any requests made to the remote.
      */
-    void delete(Context context, Config.DocumentMetadata metadata) throws IOException;
+    void delete(Config.DocumentMetadata metadata) throws IOException;
 
     /**
-     * Optional Flexmark extension to implement remote specific HTML
-     * <p>
-     * For example, adding custom styling to code blocks or injecting code for custom features a platform provides.
+     * Retrieve the {@link Remote} {@link MarkdownConverter} implementation.
      *
-     * @return  Optional which may contain a {@link HtmlRenderer.HtmlRendererExtension} implementation
+     * @return
      */
-    default Optional<HtmlRenderer.HtmlRendererExtension> htmlRenderer(){
-        return Optional.empty();
-    }
+    MarkdownConverter markdownConverter();
+
+    /**
+     * Called after instantiating the {@link Remote} to provide the remote with the {@link MarkdownConverter}
+     * implementation configured in {@link com.github.macgregor.alexandria.Config.RemoteConfig#converterClazz}
+     * @param markdownConverter
+     */
+    void markdownConverter(MarkdownConverter markdownConverter);
 }

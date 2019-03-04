@@ -7,8 +7,6 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -79,26 +77,26 @@ public class AlexandriaSync {
             Config.DocumentMetadata.State state = metadata.determineState();
             switch(state){
                 case DELETE:
-                    remote.delete(context, metadata);
+                    remote.delete(metadata);
                     log.info(String.format("%s (remote: %s) deleted from remote. Local file will not be removed by Alexandria.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
                     break;
                 case CREATE:
-                    convertAsNeeded(context, metadata);
+                    AlexandriaConvert.convertAsNeeded(context, metadata, remote.markdownConverter());
                     if(Resources.fileContentsAreBlank(metadata.sourcePath().toString())){
                         log.info(String.format("%s has no contents, not creating on remote", metadata.sourceFileName()));
                     } else{
-                        remote.create(context, metadata);
+                        remote.create(metadata);
                         currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
                         metadata.sourceChecksum(Optional.of(currentChecksum));
                         log.info(String.format("%s (remote: %s) created on remote", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
                     }
                     break;
                 case UPDATE:
-                    convertAsNeeded(context, metadata);
+                    AlexandriaConvert.convertAsNeeded(context, metadata, remote.markdownConverter());
                     if(Resources.fileContentsAreBlank(metadata.sourcePath().toString())){
                         log.info(String.format("%s has no contents, not updating on remote", metadata.sourceFileName()));
                     } else {
-                        remote.update(context, metadata);
+                        remote.update(metadata);
                         currentChecksum = FileUtils.checksumCRC32(metadata.sourcePath().toFile());
                         metadata.sourceChecksum(Optional.of(currentChecksum));
                         log.info(String.format("%s (remote: %s) updated on remote.", metadata.sourceFileName(), metadata.remoteUri().orElse(null)));
@@ -117,68 +115,5 @@ public class AlexandriaSync {
             Context.save(context);
             return BatchProcess.EXCEPTIONS_UNHANDLED;
         });
-    }
-
-    /**
-     * Determine if the document needs to be converted to html. Doesnt actually do the conversion or update {@link Context}.
-     *
-     * If the remote supports native markdown, we dont need to convert. Otherwise we get the converted file path from
-     * {@link Context#convertedPath(Config.DocumentMetadata)} or calculate what it should be if the path isnt present.
-     * Once we have a path, we calculate the current checksum of the converted document and compare it to
-     * {@link com.github.macgregor.alexandria.Config.DocumentMetadata#convertedChecksum} and only convert if it is different.
-     *
-     * @see AlexandriaConvert#convert(Context, Config.DocumentMetadata)
-     *
-     * TODO: move to {@link AlexandriaConvert}
-     *
-     * @param context  Alexandria context containing the converted path cache
-     * @param metadata  Indexed document being synced
-     * @return  False if remote supports native markdown or the converted file path exists and is up to date, otherwise true.
-     * @throws IOException  Error calculating checksum
-     */
-    protected static boolean needsConversion(Context context, Config.DocumentMetadata metadata) throws IOException {
-        if(context.config().remote().supportsNativeMarkdown()){
-            return false;
-        }
-
-        //look for converted file in the context cache or recalculate the path if its not there
-        Path convertedPathGuess = context.convertedPath(metadata)
-                .orElse(AlexandriaConvert.convertedPath(context, metadata));
-
-        //if the file exists, check if it matches the stored checksum
-        if(convertedPathGuess.toFile().exists()){
-            long currentChecksum = FileUtils.checksumCRC32(convertedPathGuess.toFile());
-            if(metadata.convertedChecksum().isPresent() && metadata.convertedChecksum().get().equals(currentChecksum)){
-                context.convertedPath(metadata, convertedPathGuess);
-                return false;
-            }
-        }
-
-        //remote needs conversion and the file doesnt exist
-        return true;
-    }
-
-    /**
-     * Converts an indexed document to html if needed.
-     *
-     * When Alexandria is run with its full lifecycle (index, convert, sync) this should be a noop, but if a user is running
-     * individual phases we could find ourselves in a position where the files havent been converted yet, or they have been
-     * converted but the file path isnt in the {@link Context#convertedPaths} cache. Instead of throwing an error, we
-     * simply reconvert the file on the fly and add it to the context.
-     *
-     * If the remote supports native markdown, this is a noop.
-     *
-     * @see AlexandriaConvert#convert(Context, Config.DocumentMetadata)
-     *
-     * TODO: move to {@link AlexandriaConvert}
-     *
-     * @param context  Alexandria context containing the converted path cache
-     * @param metadata  Indexed document being synced
-     * @throws IOException  Errors calculating checksums or general file IO problems
-     */
-    protected static void convertAsNeeded(Context context, Config.DocumentMetadata metadata) throws IOException {
-        if(needsConversion(context, metadata)) {
-            AlexandriaConvert.convert(context, metadata);
-        }
     }
 }

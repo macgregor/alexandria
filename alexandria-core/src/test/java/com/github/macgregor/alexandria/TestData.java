@@ -1,5 +1,9 @@
 package com.github.macgregor.alexandria;
 
+import com.github.macgregor.alexandria.markdown.MarkdownConverter;
+import com.github.macgregor.alexandria.markdown.NoopMarkdownConverter;
+import com.github.macgregor.alexandria.remotes.NoopRemote;
+import com.github.macgregor.alexandria.remotes.Remote;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.rules.TemporaryFolder;
@@ -28,6 +32,11 @@ public class TestData {
         context.searchPath(Collections.singletonList(base));
         context.makePathsAbsolute();
         completeConfig(context, temporaryFolder);
+
+        Remote remote = new NoopRemote();
+        remote.markdownConverter(new NoopMarkdownConverter());
+        context.remote(Optional.of(remote));
+
         return context;
     }
 
@@ -42,6 +51,11 @@ public class TestData {
         context.exclude(Collections.emptyList());
         minimalConfig(context, temporaryFolder);
         context.makePathsAbsolute();
+
+        Remote remote = new NoopRemote();
+        remote.markdownConverter(new NoopMarkdownConverter());
+        context.remote(Optional.of(remote));
+
         return context;
     }
 
@@ -152,12 +166,10 @@ public class TestData {
             path.toFile().createNewFile();
         }
         String fileName = path.toFile().getName();
-        String convertedFileName = String.format("%s-%s.html", FilenameUtils.getBaseName(fileName), path.getParent().toString().hashCode());
+        String convertedFileName = String.format("%s-%s.md", FilenameUtils.getBaseName(fileName), path.getParent().toString().hashCode());
         Path converted = Paths.get(context.outputPath().orElse(path.getParent()).toString(), convertedFileName);
         Resources.save(path.toString(), String.format("# %s\n\nHello", fileName));
-        Markdown.toHtml(context, path, converted);
         long sourceCheckSum = FileUtils.checksumCRC32(path.toFile());
-        long convertedCheckSum = FileUtils.checksumCRC32(converted.toFile());
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(path);
@@ -168,6 +180,10 @@ public class TestData {
         metadata.createdOn(Optional.of(ZonedDateTime.now()));
         metadata.lastUpdated(Optional.of(ZonedDateTime.now()));
         metadata.deletedOn(Optional.of(ZonedDateTime.now()));
+
+        MarkdownConverter markdownConverter = new NoopMarkdownConverter();
+        markdownConverter.convert(metadata, path, converted);
+        long convertedCheckSum = FileUtils.checksumCRC32(converted.toFile());
         metadata.convertedChecksum(Optional.of(convertedCheckSum));
 
         Map<String, String> extraProps = new HashMap<>();
@@ -190,9 +206,9 @@ public class TestData {
     public static Config.RemoteConfig completeRemoteConfig(){
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
+        remoteConfig.converterClazz("com.github.macgregor.alexandria.markdown.NoopMarkdownConverter");
         remoteConfig.datetimeFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         remoteConfig.requestTimeout(1);
-        remoteConfig.supportsNativeMarkdown(false);
 
         remoteConfig.password(Optional.of("password"));
         remoteConfig.username(Optional.of("username"));
@@ -204,9 +220,9 @@ public class TestData {
     public static Config.RemoteConfig minimalRemoteConfig(){
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
+        remoteConfig.converterClazz("com.github.macgregor.alexandria.markdown.NoopMarkdownConverter");
         remoteConfig.datetimeFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         remoteConfig.requestTimeout(1);
-        remoteConfig.supportsNativeMarkdown(false);
 
         remoteConfig.password(Optional.empty());
         remoteConfig.username(Optional.empty());

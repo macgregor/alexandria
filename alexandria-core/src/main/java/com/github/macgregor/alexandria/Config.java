@@ -53,9 +53,13 @@ public class Config {
     @NoArgsConstructor @AllArgsConstructor
     @ToString
     public static class RemoteConfig{
-        /** Fully qualified class name of remote implementation to use. Default: "com.github.macgregor.alexandria.remotes.NoopRemote" */
+        /** Fully qualified class name of the {@link com.github.macgregor.alexandria.remotes.Remote} implementation to use. Default: "com.github.macgregor.alexandria.remotes.NoopRemote" */
         @JsonProperty("class")
         protected String clazz = "com.github.macgregor.alexandria.remotes.NoopRemote";
+
+        /** Fully qualified class name of the {@link com.github.macgregor.alexandria.markdown.MarkdownConverter} implementation to use. Default: "com.github.macgregor.alexandria.markdown.NoopMarkdownConverter" */
+        @JsonProperty
+        protected String converterClazz = "com.github.macgregor.alexandria.markdown.NoopMarkdownConverter";
 
         /** Base url to use for rest api calls. Default: none. */
         @JsonProperty
@@ -68,10 +72,6 @@ public class Config {
         /** Password to use for rest api calls. Default: none. */
         @JsonProperty
         protected Optional<String> password = Optional.empty();
-
-        /** Whether the remote supports markdown documents natively, skipping the conversion phase. Default: false. */
-        @JsonProperty
-        protected Boolean supportsNativeMarkdown = false;
 
         /** Format used to convert datetime strings in rest responses from the remote. Default: {@value Config#ALEXANDRIA_DATETIME_PATTERN}  */
         @JsonProperty

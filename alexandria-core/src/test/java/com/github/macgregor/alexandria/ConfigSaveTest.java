@@ -67,15 +67,6 @@ public class ConfigSaveTest {
     }
 
     @Test
-    public void testDontSaveRemoteSupportNativeMarkdown() throws IOException, URISyntaxException {
-        Context context = TestData.minimalContext(folder);
-        context.config().remote().supportsNativeMarkdown(expected().remote().supportsNativeMarkdown());
-
-        Config reloaded = saveAndReload(context.config());
-        assertThat(reloaded.remote().supportsNativeMarkdown()).isFalse();
-    }
-
-    @Test
     public void testSaveRemoteDateTimeFormat() throws IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         context.config().remote().datetimeFormat(expected().remote().datetimeFormat());
@@ -211,7 +202,6 @@ public class ConfigSaveTest {
         remoteConfig.baseUrl(Optional.of("http://www.google.com"));
         remoteConfig.username(Optional.of("matt"));
         remoteConfig.password(Optional.of("password"));
-        remoteConfig.supportsNativeMarkdown(true);
         remoteConfig.datetimeFormat("yyyy-MM-dd'override'HH:mm:ss.SSSZ");
         config.remote(remoteConfig);
 
