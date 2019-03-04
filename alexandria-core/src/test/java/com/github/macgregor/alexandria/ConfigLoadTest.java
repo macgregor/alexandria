@@ -53,12 +53,6 @@ public class ConfigLoadTest {
     }
 
     @Test
-    public void testLoadRemoteSupportNativeMarkdown() throws IOException, URISyntaxException {
-        Config.RemoteConfig loaded = Context.load("src/test/resources/config.yaml").config().remote();
-        assertThat(loaded.supportsNativeMarkdown()).isEqualTo(expected().remote().supportsNativeMarkdown());
-    }
-
-    @Test
     public void testLoadRemoteDateTimeFormat() throws IOException, URISyntaxException {
         Config.RemoteConfig loaded = Context.load("src/test/resources/config.yaml").config().remote();
         assertThat(loaded.datetimeFormat()).isEqualTo(expected().remote().datetimeFormat());
@@ -144,7 +138,6 @@ public class ConfigLoadTest {
         remoteConfig.baseUrl(Optional.of("http://www.google.com"));
         remoteConfig.username(Optional.of("matt"));
         remoteConfig.password(Optional.of("password"));
-        remoteConfig.supportsNativeMarkdown(true);
         remoteConfig.datetimeFormat("yyyy-MM-dd'override'HH:mm:ss.SSSZ");
         config.remote(remoteConfig);
 

@@ -1,6 +1,7 @@
 package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
+import com.github.macgregor.alexandria.markdown.MarkdownConverter;
 import com.github.macgregor.alexandria.remotes.Remote;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -132,6 +133,35 @@ public class Context {
     }
 
     /**
+     * Return the matching {@link Config.DocumentMetadata} for a {@link Path} if it exists.
+     *
+     * @param path  path to the potential document, will be made absolute as needed
+     * @return  the matching {@link com.github.macgregor.alexandria.Config.DocumentMetadata} if it exists or
+     *      Optional.empty() if it doesnt
+     */
+    public Optional<Config.DocumentMetadata> isIndexed(Path path){
+        Path absolutePath = Resources.absolutePath(configPath().getParent(), path);
+        if(config.metadata().isPresent()){
+            for(Config.DocumentMetadata metadata : config.metadata().get()){
+                if(metadata.sourcePath().equals(absolutePath)){
+                    return Optional.of(metadata);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Convenience method for making a path relative to the {@link Context#configPath} absolute.
+     *
+     * @param path  relative path to be made absolute. It is assumed to be relative to {@link Context#configPath}
+     * @return  absolute representation of the provided {@link Path}
+     */
+    public Path absolutePath(Path path){
+        return Resources.absolutePath(configPath().getParent(), path);
+    }
+
+    /**
      * Make all {@link Config} and {@link Context} paths absolute relative to {@link #configPath}.
      *
      * @return  Alexandria context.
@@ -227,19 +257,19 @@ public class Context {
             return this.remote.get();
         }
 
-        try {
-            Class remoteClass = Class.forName(config().remote().clazz());
-            Remote remote = (Remote) remoteClass.newInstance();
-            remote.configure(config().remote());
-            remote.validateRemoteConfig();
-            this.remote = Optional.of(remote);
-            return remote;
-        } catch(Exception e){
-            throw new AlexandriaException.Builder()
-                    .withMessage("Unable to instantiate remote class " + config().remote().clazz())
-                    .causedBy(e)
-                    .build();
-        }
+        Remote remote = Reflection.create(config().remote().clazz());
+        Reflection.maybeImplementsInterface(remote, ContextAware.class)
+                .ifPresent(r -> r.alexandriaContext(this));
+
+        MarkdownConverter converter = Reflection.create(config().remote().converterClazz());
+        Reflection.maybeImplementsInterface(converter, ContextAware.class)
+                .ifPresent(c -> c.alexandriaContext(this));
+
+        remote.markdownConverter(converter);
+        remote.configure(config().remote());
+        remote.validateRemoteConfig();
+        this.remote = Optional.of(remote);
+        return remote;
     }
 
     /**
@@ -290,5 +320,30 @@ public class Context {
         Jackson.yamlMapper().writeValue(context.configPath().toFile(), toSave);
         context.makePathsAbsolute();
         log.debug(String.format("Saved configuration to %s", context.configPath().toString()));
+    }
+
+    /**
+     * Interface indicating that a class needs the Alexandria {@link Context}.
+     *
+     * This is mostly an informational class as there is no Dependency Injection framework to
+     * automatically add context but {@link Context#configureRemote()} will examine the {@link Remote}
+     * and {@link MarkdownConverter} classes to see if they implment this interface, providing the
+     * {@link Context} to them if it is found.
+     */
+    public interface ContextAware {
+        /**
+         * Provides the {@link Context} to the implementing class.
+         *
+         * @param context  initialized Alexandria {@link Context}
+         */
+        void alexandriaContext(Context context);
+
+        /**
+         * Return the configured Alexandria {@link Context}.
+         *
+         * May return null if called before {@link ContextAware#alexandriaContext(Context)} has been called.
+         * @return  Alexandria {@link Context}, nullable
+         */
+        Context alexandriaContext();
     }
 }

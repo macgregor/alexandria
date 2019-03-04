@@ -4,7 +4,7 @@ import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.HttpException;
-import com.vladsch.flexmark.html.HtmlRenderer;
+import com.github.macgregor.alexandria.markdown.MarkdownConverter;
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
@@ -62,16 +62,16 @@ import java.util.concurrent.TimeUnit;
  *  Jive document with the place where it will live. This will not be used for the api calls as the api needs a different URI
  *  (of course). This is the link a human can easily find in their browser, we have to search for the place to get the details
  *  needed by the content api.
- *  See {@link #findParentPlace(Context, Config.DocumentMetadata)}</li>
+ *  See {@link #findParentPlace(Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_CONTENT_ID} - the identifier Jive uses for a document, hard for the user to get themselves. We either
  *  set it when we create the document or look it up from {@link Config.DocumentMetadata#remoteUri}.
- *  See {@link #findDocument(Context, Config.DocumentMetadata)}</li>
+ *  See {@link #findDocument(Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_PARENT_PLACE_ID} - the identifier Jive uses for a place. Set when we lookup the parent place from the
  *  user defined {@value #JIVE_PARENT_URI}.
- *  See {@link #findParentPlace(Context, Config.DocumentMetadata)}</li>
+ *  See {@link #findParentPlace(Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_PARENT_API_URI} - this is the actual api uri for a parent place. Set when we lookup the parent place
  *  from the user defined {@value #JIVE_PARENT_URI}.
- *  See {@link #findParentPlace(Context, Config.DocumentMetadata)}</li>
+ *  See {@link #findParentPlace(Config.DocumentMetadata)}</li>
  *  <li>{@value #JIVE_TRACKING_TAG} - this is a tag set to help Alexandria track documents created or updated in case it needs
  *  to find them later. Poor performance on the Jive instance can easily lead to state like the create request timing out
  *  but still going through server side. We need to be able to locate documents easily without knowing the {@link Config.DocumentMetadata#remoteUri}
@@ -84,7 +84,7 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @Getter @Setter @Accessors(fluent = true)
 @NoArgsConstructor
-public class JiveRemote implements Remote {
+public class JiveRemote implements Remote, Context.ContextAware {
     public static final String JIVE_CONTENT_ID = "jiveContentId";
     public static final String JIVE_PARENT_URI = "jiveParentUri";
     public static final String JIVE_PARENT_API_URI = "jiveParentApiUri";
@@ -93,6 +93,8 @@ public class JiveRemote implements Remote {
 
     @NonNull protected OkHttpClient client;
     @NonNull protected Config.RemoteConfig config;
+    @NonNull protected MarkdownConverter markdownConverter;
+    @NonNull protected Context context;
 
     /**
      * Create {@link JiveRemote} with a default {@link OkHttpClient}.
@@ -119,11 +121,6 @@ public class JiveRemote implements Remote {
                 .readTimeout(config.requestTimeout(), TimeUnit.SECONDS)
                 .build();
         this.config = config;
-    }
-
-    @Override
-    public Optional<HtmlRenderer.HtmlRendererExtension> htmlRenderer(){
-        return Optional.of(new JiveFlexmarkExtension());
     }
 
     /**
@@ -164,14 +161,14 @@ public class JiveRemote implements Remote {
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#createContent(String,%20String,%20String,%20String)">Jive REST API - Create Content</a>
      * @see JiveUtils#needsParentPlaceUri(Context, Config.DocumentMetadata)
-     * @see #findParentPlace(Context, Config.DocumentMetadata)
+     * @see #findParentPlace(Config.DocumentMetadata)
      */
     @Override
-    public void create(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public void create(Config.DocumentMetadata metadata) throws IOException {
         JiveUtils.setTrackingTagAsNeeded(context, metadata);
         boolean found = false;
         try {
-            JiveData.JiveContent content = findDocument(context, metadata);
+            JiveData.JiveContent content = findDocument(metadata);
             if(content != null){
                 found = true;
             }
@@ -189,7 +186,7 @@ public class JiveRemote implements Remote {
         }
 
         if(JiveUtils.needsParentPlaceUri(context, metadata)){
-            findParentPlace(context, metadata);
+            findParentPlace(metadata);
         }
 
         RemoteDocument<JiveData.JiveContent> jiveContent = remoteJiveContentBuilder()
@@ -207,18 +204,18 @@ public class JiveRemote implements Remote {
      *
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#updateContent(String,%20String,%20String,%20boolean,%20String,%20boolean)">Jive REST API - Update Content</a>
      * @see JiveUtils#needsContentId(Config.DocumentMetadata)
-     * @see #findDocument(Context, Config.DocumentMetadata)
+     * @see #findDocument(Config.DocumentMetadata)
      */
     @Override
-    public void update(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public void update(Config.DocumentMetadata metadata) throws IOException {
         JiveUtils.setTrackingTagAsNeeded(context, metadata);
         if(JiveUtils.needsContentId(metadata)){
-            findDocument(context, metadata);
+            findDocument(metadata);
         }
         String contentId = context.getExtraPropertiesForDocument(metadata).get(JIVE_CONTENT_ID);
 
         if(JiveUtils.needsParentPlaceUri(context, metadata)){
-            findParentPlace(context, metadata);
+            findParentPlace(metadata);
         }
 
         RemoteDocument<JiveData.JiveContent> jiveContent = remoteJiveContentBuilder()
@@ -241,13 +238,13 @@ public class JiveRemote implements Remote {
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#getContent(String,%20String,%20boolean,%20List%3CString%3E)">Jive REST API - Get Content</a>
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#deleteContent(String,%20Boolean)">Jive REST API - Delete Content</a>
      * @see JiveUtils#needsContentId(Config.DocumentMetadata)
-     * @see #findDocument(Context, Config.DocumentMetadata)
+     * @see #findDocument(Config.DocumentMetadata)
      */
     @Override
-    public void delete(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public void delete(Config.DocumentMetadata metadata) throws IOException {
         boolean deleted = false;
         try{
-            JiveData.JiveContent content = findDocument(context, metadata);
+            JiveData.JiveContent content = findDocument(metadata);
             if(content == null){
                 deleted = true;
             }
@@ -283,12 +280,11 @@ public class JiveRemote implements Remote {
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/ContentService.html#getContents(List%3CString%3E,%20String,%20int,%20int,%20String,%20boolean,%20boolean)">Jive REST API - Get Contents</a>
      * @see <a href="https://community.jivesoftware.com/docs/DOC-153931">Finding the Content ID and Place ID using Jive v3 API</a>
      *
-     * @param context  current Alexandria context
      * @param metadata  metadata to find on remote
      * @throws IOException  there was a problem with the request
      * @return the matching {@link JiveData.JiveContent} or null if it wasnt found
      */
-    public JiveData.JiveContent findDocument(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public JiveData.JiveContent findDocument(Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Missing jive content id for %s, attempting to retrieve from remote.", metadata.sourceFileName()));
 
         String filter;
@@ -334,11 +330,10 @@ public class JiveRemote implements Remote {
      * @see <a href="https://developers.jivesoftware.com/api/v3/cloud/rest/PlaceService.html#getPlaces(List%3CString%3E,%20String,%20int,%20int,%20String)">Jive REST API - Get Places</a>
      * @see <a href="https://community.jivesoftware.com/docs/DOC-153931">Finding the Content ID and Place ID using Jive v3 API</a>
      *
-     * @param context  current Alexandria context
      * @param metadata  document that needs parent details
      * @throws IOException  there was a problem with the request
      */
-    public void findParentPlace(Context context, Config.DocumentMetadata metadata) throws IOException {
+    public void findParentPlace(Config.DocumentMetadata metadata) throws IOException {
         log.debug(String.format("Jive parent place detected, attempting to retrieve from remote."));
 
         String parentPlaceUrl = context.getExtraPropertiesForDocument(metadata).get(JIVE_PARENT_URI);
@@ -461,5 +456,37 @@ public class JiveRemote implements Remote {
                 .entity(JiveData.JiveContent.class)
                 .header("Authorization", Credentials.basic(config.username().get(), config.password().get()))
                 .queryParameter("fields", JiveData.JiveContent.FIELDS);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MarkdownConverter markdownConverter() {
+        return markdownConverter;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void markdownConverter(MarkdownConverter markdownConverter) {
+        this.markdownConverter = markdownConverter;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void alexandriaContext(Context context) {
+        this.context = context;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Context alexandriaContext() {
+        return context;
     }
 }

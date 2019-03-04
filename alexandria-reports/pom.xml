@@ -40,6 +40,11 @@
             <artifactId>alexandria-remote-jive</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.macgregor</groupId>
+            <artifactId>alexandria-flexmark</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

@@ -6,7 +6,6 @@ import okhttp3.*;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -253,7 +252,9 @@ public class RemoteDocumentTest {
         Response response = mock(Response.class);
         ResponseBody responseBody = mock(ResponseBody.class);
         when(response.body()).thenReturn(responseBody);
-        when(responseBody.charStream()).thenReturn(new StringReader("{\"name\": \"foo\",\n\"id\": 1\n}"));
+        String body = "{\"name\": \"foo\",\n\"id\": 1\n}";
+        when(responseBody.contentLength()).thenReturn(new Long(body.length()));
+        when(responseBody.charStream()).thenReturn(new StringReader(body));
         assertThat(minimalBuilder().build().parseResponse(response)).isEqualTo(expected());
     }
 
@@ -270,7 +271,9 @@ public class RemoteDocumentTest {
         Response response = mock(Response.class);
         ResponseBody responseBody = mock(ResponseBody.class);
         when(response.body()).thenReturn(responseBody);
-        when(responseBody.charStream()).thenReturn(new StringReader("{\"name\" \"foo\""));
+        String body = "{\"name\" \"foo\"";
+        when(responseBody.contentLength()).thenReturn(new Long(body.length()));
+        when(responseBody.charStream()).thenReturn(new StringReader(body));
         assertThatThrownBy(() -> minimalBuilder().build().parseResponse(response))
                 .isInstanceOf(HttpException.class);
     }
@@ -292,7 +295,6 @@ public class RemoteDocumentTest {
         assertThatThrownBy(() -> test.get()).isInstanceOf(HttpException.class);
     }
 
-    @Ignore
     @Test
     public void testDoRequestConsidersExpectedResponseCodesAsSuccessful() throws IOException {
         MockWebServer server = setup(new MockResponse().setResponseCode(404));

@@ -2,12 +2,14 @@ package com.github.macgregor.alexandria.remotes;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
-import com.github.macgregor.alexandria.Markdown;
 import com.github.macgregor.alexandria.Resources;
+import com.github.macgregor.alexandria.markdown.JiveMarkdownConverter;
+import com.github.macgregor.alexandria.markdown.MarkdownConverter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,7 +33,36 @@ public class TestData {
         context.searchPath(Collections.singletonList(base));
         context.makePathsAbsolute();
         completeConfig(context, temporaryFolder);
+
+        Remote remote = new JiveRemote();
+        ((JiveRemote) remote).alexandriaContext(context);
+        remote.markdownConverter(new JiveMarkdownConverter());
+        ((JiveMarkdownConverter)remote.markdownConverter()).alexandriaContext(context);
+        context.remote(Optional.of(remote));
+
         return context;
+    }
+
+    public static Context minimalJiveContext(TemporaryFolder temporaryFolder) throws IOException {
+        Context context = minimalContext(temporaryFolder);
+        minimalJiveConfig(context, temporaryFolder);
+        return context;
+    }
+
+    public static Config minimalJiveConfig(Context context, TemporaryFolder temporaryFolder) throws IOException {
+        Config config = minimalConfig(context, temporaryFolder);
+        config.remote(minimalJiveRemoteConfig());
+        return config;
+    }
+
+    public static Config.RemoteConfig minimalJiveRemoteConfig(){
+        Config.RemoteConfig remoteConfig = minimalRemoteConfig();
+        remoteConfig.clazz("com.github.macgregor.alexandria.remotes.JiveRemote");
+        remoteConfig.converterClazz("com.github.macgregor.alexandria.markdown.JiveMarkdownConverter");
+        remoteConfig.password(Optional.of(""));
+        remoteConfig.username(Optional.of(""));
+        remoteConfig.baseUrl(Optional.of(""));
+        return remoteConfig;
     }
 
     public static Context minimalContext(TemporaryFolder temporaryFolder) throws IOException {
@@ -45,12 +76,14 @@ public class TestData {
         context.exclude(Collections.emptyList());
         minimalConfig(context, temporaryFolder);
         context.makePathsAbsolute();
-        return context;
-    }
 
-    public static Context minimalJiveContext(TemporaryFolder temporaryFolder) throws IOException {
-        Context context = minimalContext(temporaryFolder);
-        minimalJiveConfig(context, temporaryFolder);
+
+        Remote remote = new JiveRemote();
+        ((JiveRemote) remote).alexandriaContext(context);
+        remote.markdownConverter(new JiveMarkdownConverter());
+        ((JiveMarkdownConverter)remote.markdownConverter()).alexandriaContext(context);
+        context.remote(Optional.of(remote));
+
         return context;
     }
 
@@ -78,12 +111,6 @@ public class TestData {
         return config;
     }
 
-    public static Config minimalJiveConfig(Context context, TemporaryFolder temporaryFolder) throws IOException {
-        Config config = minimalConfig(context, temporaryFolder);
-        config.remote(minimalJiveRemoteConfig());
-        return config;
-    }
-
     public static Config.DocumentMetadata documentForCreate(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
         context.configPath(Paths.get(temporaryFolder.getRoot().toPath().toAbsolutePath().toString(), ".alexandria"));
         Config.DocumentMetadata metadata = completeDocumentMetadata(context, temporaryFolder);
@@ -91,6 +118,14 @@ public class TestData {
         metadata.deletedOn(Optional.empty());
         metadata.sourceChecksum(Optional.empty());
         metadata.extraProps().get().remove("delete");
+        return metadata;
+    }
+
+    public static Config.DocumentMetadata documentForCreate(Context context, Path documentPath) throws IOException, URISyntaxException {
+        Config.DocumentMetadata metadata = completeDocumentMetadata(context, documentPath);
+        metadata.remoteUri(Optional.empty());
+        metadata.deletedOn(Optional.empty());
+        metadata.sourceChecksum(Optional.empty());
         return metadata;
     }
 
@@ -114,7 +149,27 @@ public class TestData {
     public static Config.DocumentMetadata minimalDocumentMetadata(TemporaryFolder temporaryFolder) throws IOException {
         String fileName = UUID.randomUUID().toString() + ".md";
         Path path = temporaryFolder.newFile(fileName).toPath().toAbsolutePath();
+        return minimalDocumentMetadata(path);
+    }
 
+    public static Config.DocumentMetadata minimalDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException {
+        Config.DocumentMetadata metadata = minimalDocumentMetadata(temporaryFolder);
+        context.addMetadata(metadata);
+        return metadata;
+    }
+
+    public static Config.DocumentMetadata minimalDocumentMetadata(Context context, Path documentPath) throws IOException {
+        Config.DocumentMetadata metadata = minimalDocumentMetadata(documentPath);
+        context.addMetadata(metadata);
+        return metadata;
+    }
+
+    public static Config.DocumentMetadata minimalDocumentMetadata(Path documentPath) throws IOException {
+        Path path = documentPath.toAbsolutePath();
+        if (!path.toFile().exists()) {
+            path.toFile().createNewFile();
+        }
+        String fileName = path.toFile().getName();
         Resources.save(path.toString(), String.format("# %s\n\nHello", fileName));
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
@@ -133,20 +188,16 @@ public class TestData {
         return metadata;
     }
 
-    public static Config.DocumentMetadata minimalDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException {
-        Config.DocumentMetadata metadata = minimalDocumentMetadata(temporaryFolder);
-        context.addMetadata(metadata);
-        return metadata;
-    }
-
-    public static Config.DocumentMetadata completeDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
-        String fileName = UUID.randomUUID().toString() + ".md";
-        Path path = temporaryFolder.newFile(fileName).toPath().toAbsolutePath();
-        Path converted = Paths.get(path.getParent().toString(), FilenameUtils.getBaseName(path.toFile().getName()) + ".html");
+    public static Config.DocumentMetadata completeDocumentMetadata(Context context, Path documentPath) throws IOException, URISyntaxException {
+        Path path = documentPath.toAbsolutePath();
+        if (!path.toFile().exists()) {
+            path.toFile().createNewFile();
+        }
+        String fileName = path.toFile().getName();
+        String convertedFileName = String.format("%s-%s.html", FilenameUtils.getBaseName(fileName), path.getParent().toString().hashCode());
+        Path converted = Paths.get(context.outputPath().orElse(path.getParent()).toString(), convertedFileName);
         Resources.save(path.toString(), String.format("# %s\n\nHello", fileName));
-        Markdown.toHtml(context, path, converted);
         long sourceCheckSum = FileUtils.checksumCRC32(path.toFile());
-        long convertedCheckSum = FileUtils.checksumCRC32(converted.toFile());
 
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(path);
@@ -157,11 +208,15 @@ public class TestData {
         metadata.createdOn(Optional.of(ZonedDateTime.now()));
         metadata.lastUpdated(Optional.of(ZonedDateTime.now()));
         metadata.deletedOn(Optional.of(ZonedDateTime.now()));
+
+        MarkdownConverter markdownConverter = new JiveMarkdownConverter();
+        ((JiveMarkdownConverter) markdownConverter).alexandriaContext(context);
+        markdownConverter.convert(metadata, path, converted);
+        long convertedCheckSum = FileUtils.checksumCRC32(converted.toFile());
         metadata.convertedChecksum(Optional.of(convertedCheckSum));
 
         Map<String, String> extraProps = new HashMap<>();
         extraProps.put("convertedPath", converted.toString());
-        extraProps.put("delete", "true");
         metadata.extraProps(Optional.of(extraProps));
 
         context.convertedPath(metadata, converted);
@@ -171,12 +226,18 @@ public class TestData {
         return metadata;
     }
 
-    public static Config.RemoteConfig completeRemoteConfig(){
+    public static Config.DocumentMetadata completeDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
+        String fileName = UUID.randomUUID().toString() + ".md";
+        Path path = temporaryFolder.newFile(fileName).toPath().toAbsolutePath();
+        return completeDocumentMetadata(context, path);
+    }
+
+    public static Config.RemoteConfig completeRemoteConfig() {
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
+        remoteConfig.clazz("com.github.macgregor.alexandria.remotes.JiveRemote");
+        remoteConfig.converterClazz("com.github.macgregor.alexandria.markdown.JiveMarkdownConverter");
         remoteConfig.datetimeFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         remoteConfig.requestTimeout(1);
-        remoteConfig.supportsNativeMarkdown(false);
 
         remoteConfig.password(Optional.of("password"));
         remoteConfig.username(Optional.of("username"));
@@ -185,12 +246,12 @@ public class TestData {
         return remoteConfig;
     }
 
-    public static Config.RemoteConfig minimalRemoteConfig(){
+    public static Config.RemoteConfig minimalRemoteConfig() {
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
-        remoteConfig.clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
+        remoteConfig.clazz("com.github.macgregor.alexandria.remotes.JiveRemote");
+        remoteConfig.converterClazz("com.github.macgregor.alexandria.markdown.JiveMarkdownConverter");
         remoteConfig.datetimeFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         remoteConfig.requestTimeout(1);
-        remoteConfig.supportsNativeMarkdown(false);
 
         remoteConfig.password(Optional.empty());
         remoteConfig.username(Optional.empty());
@@ -199,12 +260,18 @@ public class TestData {
         return remoteConfig;
     }
 
-    public static Config.RemoteConfig minimalJiveRemoteConfig(){
-        Config.RemoteConfig remoteConfig = minimalRemoteConfig();
-        remoteConfig.clazz("com.github.macgregor.alexandria.remotes.JiveRemote");
-        remoteConfig.password(Optional.of(""));
-        remoteConfig.username(Optional.of(""));
-        remoteConfig.baseUrl(Optional.of(""));
-        return remoteConfig;
+    public static Path newFile(File parent, String path) throws IOException {
+        if (path.startsWith("/")) {
+            path = path.replaceFirst("/", path);
+        }
+        String[] segments = path.split("/");
+        Path p = Paths.get(parent.getAbsolutePath(), segments);
+        return newFile(p);
+    }
+
+    public static Path newFile(Path path) throws IOException {
+        path.getParent().toFile().mkdirs();
+        path.toFile().createNewFile();
+        return path;
     }
 }

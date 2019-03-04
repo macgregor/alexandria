@@ -43,10 +43,6 @@ import java.util.Optional;
  * }
  * </pre>
  *
- * TODO:
- * Errors thrown during batch processing are currently a bit hard to read. It can be hard to tell exactly where an exception
- * was thrown. This needs to be improved.
- *
  * @param <T> type of the object being processed
  */
 @Slf4j

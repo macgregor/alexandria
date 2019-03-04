@@ -77,6 +77,7 @@
     <modules>
         <module>alexandria-cli</module>
         <module>alexandria-core</module>
+        <module>alexandria-flexmark</module>
         <module>alexandria-maven-plugin</module>
         <module>alexandria-remote-jive</module>
         <module>alexandria-reports</module>
@@ -107,6 +108,11 @@
             <dependency>
                 <groupId>com.github.macgregor</groupId>
                 <artifactId>alexandria-cli</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.macgregor</groupId>
+                <artifactId>alexandria-flexmark</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -624,6 +630,25 @@
             </properties>
             <build>
                 <defaultGoal>verify coveralls:report</defaultGoal>
+            </build>
+        </profile>
+        <profile>
+            <id>test-coverage</id>
+            <activation>
+                <property>
+                    <name>full-build</name>
+                </property>
+            </activation>
+            <properties>
+                <skip.coverage>false</skip.coverage>
+                <skip.javadocs>true</skip.javadocs>
+                <skip.tests>false</skip.tests>
+                <skip.site>true</skip.site>
+                <skip.sources>true</skip.sources>
+                <skip.delombok>false</skip.delombok>
+            </properties>
+            <build>
+                <defaultGoal>verify jacoco:report</defaultGoal>
             </build>
         </profile>
         <profile>

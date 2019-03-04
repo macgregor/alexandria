@@ -1,4 +1,4 @@
-package com.github.macgregor.alexandria.remotes;
+package com.github.macgregor.alexandria.markdown;
 
 import com.vladsch.flexmark.ast.CodeBlock;
 import com.vladsch.flexmark.ast.FencedCodeBlock;
@@ -25,7 +25,10 @@ import static com.vladsch.flexmark.html.renderer.CoreNodeRenderer.CODE_CONTENT;
 /**
  * Provides parsing and rendering support for Jive styling eccentricities.
  */
-public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension{
+public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension {
+
+    public JiveFlexmarkExtension(){}
+
     @Override
     public void rendererOptions(final MutableDataHolder options) {
 
@@ -185,7 +188,7 @@ public class JiveFlexmarkExtension implements HtmlRenderer.HtmlRendererExtension
     /**
      * {@link AttributeProvider} to override simple styling markup.
      */
-    public static class JiveAttributeProvider implements AttributeProvider{
+    public static class JiveAttributeProvider implements AttributeProvider {
 
         /**
          * Called by Flexmark renderers to add attributes to nodes.

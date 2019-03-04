@@ -2,7 +2,6 @@ package com.github.macgregor.alexandria;
 
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
-import com.github.macgregor.alexandria.remotes.NoopRemote;
 import com.github.macgregor.alexandria.remotes.Remote;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,7 +13,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,10 +68,10 @@ public class AlexandriaSyncTest {
     public void testSyncCreatesDocument() throws BatchProcessException, IOException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        Remote remote = mock(NoopRemote.class);
+        Remote remote = spy(context.remote().get());
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
-        verify(remote, times(1)).create(context, metadata);
+        verify(remote, times(1)).create(metadata);
     }
 
     @Test
@@ -81,10 +79,10 @@ public class AlexandriaSyncTest {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         Resources.save(metadata.sourcePath().toString(), "");
-        Remote remote = mock(NoopRemote.class);
+        Remote remote = spy(context.remote().get());
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
-        verify(remote, times(0)).create(context, metadata);
+        verify(remote, times(0)).create(metadata);
     }
 
     @Test
@@ -92,10 +90,10 @@ public class AlexandriaSyncTest {
         Context context = TestData.minimalContext(folder);
         context.config().metadata(Optional.of(new ArrayList<>()));
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
-        Remote remote = mock(NoopRemote.class);
+        Remote remote = spy(context.remote().get());
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
-        verify(remote, times(1)).delete(context, metadata);
+        verify(remote, times(1)).delete(metadata);
     }
 
     @Test
@@ -104,10 +102,10 @@ public class AlexandriaSyncTest {
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         metadata.remoteUri(Optional.of(new URI("foo")));
         metadata.sourceChecksum(Optional.of(-1L));
-        Remote remote = mock(NoopRemote.class);
+        Remote remote = spy(context.remote().get());
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
-        verify(remote, times(1)).update(context, metadata);
+        verify(remote, times(1)).update(metadata);
     }
 
     @Test
@@ -117,10 +115,10 @@ public class AlexandriaSyncTest {
         Resources.save(metadata.sourcePath().toString(), "");
         metadata.remoteUri(Optional.of(new URI("foo")));
         metadata.sourceChecksum(Optional.of(-1L));
-        Remote remote = mock(NoopRemote.class);
+        Remote remote = spy(context.remote().get());
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
-        verify(remote, times(0)).update(context, metadata);
+        verify(remote, times(0)).update(metadata);
     }
 
     @Test
@@ -130,12 +128,12 @@ public class AlexandriaSyncTest {
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
         metadata.extraProps(Optional.empty());
         metadata.deletedOn(Optional.of(ZonedDateTime.now()));
-        Remote remote = mock(NoopRemote.class);
+        Remote remote = spy(context.remote().get());
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
-        verify(remote, times(0)).delete(context, metadata);
-        verify(remote, times(0)).update(context, metadata);
-        verify(remote, times(0)).create(context, metadata);
+        verify(remote, times(0)).delete(metadata);
+        verify(remote, times(0)).update(metadata);
+        verify(remote, times(0)).create(metadata);
     }
 
     @Test
@@ -145,67 +143,11 @@ public class AlexandriaSyncTest {
         Config.DocumentMetadata metadata = TestData.completeDocumentMetadata(context, folder);
         metadata.extraProps(Optional.empty());
         metadata.deletedOn(Optional.empty());
-        Remote remote = mock(NoopRemote.class);
+        Remote remote = spy(context.remote().get());
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
-        verify(remote, times(0)).delete(context, metadata);
-        verify(remote, times(0)).update(context, metadata);
-        verify(remote, times(0)).create(context, metadata);
-    }
-
-    @Test
-    public void testSyncNeedsConversionFalseWhenRemoteSuportsMarkdown() throws IOException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        context.config().remote().supportsNativeMarkdown(true);
-        assertThat(AlexandriaSync.needsConversion(context, metadata)).isFalse();
-    }
-
-    @Test
-    public void testSyncNeedsConversionTrueWhenConvertedCacheHitButFileMissing() throws IOException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        context.convertedPath(metadata, AlexandriaConvert.convertedPath(context, metadata));
-        assertThat(AlexandriaSync.needsConversion(context, metadata)).isTrue();
-    }
-
-    @Test
-    public void testSyncNeedsConversionFalseWhenConvertedCacheHitAndFileExists() throws IOException, URISyntaxException {
-        Context context = TestData.completeContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        assertThat(AlexandriaSync.needsConversion(context, metadata)).isFalse();
-    }
-
-    @Test
-    public void testSyncNeedsConversionTrueWhenConvertedCacheHitAndFileExistsButWrongChecksum() throws IOException, URISyntaxException {
-        Context context = TestData.completeContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        metadata.convertedChecksum(Optional.of(-1l));
-        assertThat(AlexandriaSync.needsConversion(context, metadata)).isTrue();
-    }
-
-    @Test
-    public void testSyncNeedsConversionTrueWhenConvertedCacheMissAndFileMissing() throws IOException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        context.convertedPaths(new HashMap<>());
-        assertThat(AlexandriaSync.needsConversion(context, metadata)).isTrue();
-    }
-
-    @Test
-    public void testSyncNeedsConversionFalseWhenConvertedCacheMissAndFileExists() throws IOException, URISyntaxException {
-        Context context = TestData.completeContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        context.convertedPaths(new HashMap<>());
-        assertThat(AlexandriaSync.needsConversion(context, metadata)).isFalse();
-    }
-
-    @Test
-    public void testSyncNeedsConversionTrueWhenConvertedCacheMissAndFileExistsWithWrongChecksum() throws IOException, URISyntaxException {
-        Context context = TestData.completeContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        context.convertedPaths(new HashMap<>());
-        metadata.convertedChecksum(Optional.of(-1l));
-        assertThat(AlexandriaSync.needsConversion(context, metadata)).isTrue();
+        verify(remote, times(0)).delete(metadata);
+        verify(remote, times(0)).update(metadata);
+        verify(remote, times(0)).create(metadata);
     }
 }

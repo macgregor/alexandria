@@ -256,7 +256,11 @@ public class RemoteDocument<T>{
      */
     protected T parseResponse(Response response) throws HttpException {
         try {
-            return Jackson.jsonMapper().readValue(response.body().charStream(), entity);
+            if(response.body().contentLength() > 0) {
+                return Jackson.jsonMapper().readValue(response.body().charStream(), entity);
+            } else {
+                return Jackson.jsonMapper().readValue("{}", entity);
+            }
         } catch (Exception e) {
             log.warn("Cannot parse response content", e);
             throw new HttpException.Builder()
