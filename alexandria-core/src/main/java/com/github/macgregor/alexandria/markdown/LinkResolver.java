@@ -33,7 +33,8 @@ public interface LinkResolver {
      * Resolves a parsed URL into the URL it should be in the final rendered document.
      *
      * It is not guaranteed that the link wont be altered by other parts of the {@link MarkdownConverter}
-     * or whatever conversion library it uses (i.e. Flexmark).
+     * or whatever conversion library it uses (i.e. Flexmark). No current way to indicate to {@link MarkdownConverter}
+     * that link processing should halt after resolving successfully.
      *
      * @param linkText  the text part of the parsed link e.g. "some text" in {@code [some text](./foo.md)}
      * @param link  the URL part of a parsed link, e.g. "./foo.md" in {@code [some text](./foo.md)}

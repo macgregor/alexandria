@@ -21,7 +21,7 @@ public class NoopMarkdownConverter implements MarkdownConverter {
      */
     @Override
     public void convert(Config.DocumentMetadata metadata, Path source, Path converted) throws AlexandriaException {
-        log.debug("Noop - Converting {} to {}.", source, converted);
+        log.debug("Noop - Copying {} to {}.", source, converted);
         try {
             Resources.save(converted.toString(), Resources.load(source.toString()));
         } catch(Exception e){

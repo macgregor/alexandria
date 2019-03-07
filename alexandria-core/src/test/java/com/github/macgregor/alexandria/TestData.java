@@ -189,6 +189,7 @@ public class TestData {
         Map<String, String> extraProps = new HashMap<>();
         extraProps.put("convertedPath", converted.toString());
         metadata.extraProps(Optional.of(extraProps));
+        metadata.convertedPath(Optional.of(converted));
 
         context.convertedPath(metadata, converted);
 
@@ -221,12 +222,12 @@ public class TestData {
         Config.RemoteConfig remoteConfig = new Config.RemoteConfig();
         remoteConfig.clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
         remoteConfig.converterClazz("com.github.macgregor.alexandria.markdown.NoopMarkdownConverter");
+        remoteConfig.baseUrl(Optional.of("https://www.jive.com"));
         remoteConfig.datetimeFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         remoteConfig.requestTimeout(1);
 
         remoteConfig.password(Optional.empty());
         remoteConfig.username(Optional.empty());
-        remoteConfig.baseUrl(Optional.empty());
 
         return remoteConfig;
     }

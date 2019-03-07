@@ -22,6 +22,12 @@ public class DocumentMetadataTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
+    public void getExtraPropertyReturnsNullOnMissingProperty(){
+        Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+        assertThat(metadata.getExtraProperty("foo")).isNull();
+    }
+
+    @Test
     public void testEquals(){
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
         metadata.sourcePath(Paths.get("foo"));
@@ -76,7 +82,7 @@ public class DocumentMetadataTest {
     }
 
     @Test
-    public void testSyncDeterminesStateDeleted() throws IOException, URISyntaxException {
+    public void determinesStateDeleted() throws IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
         metadata.deletedOn(Optional.of(ZonedDateTime.now()));
@@ -84,7 +90,7 @@ public class DocumentMetadataTest {
     }
 
     @Test
-    public void testSyncDeterminesStateCurrent() throws IOException, URISyntaxException {
+    public void determinesStateCurrent() throws IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         metadata.remoteUri(Optional.of(new URI("foo")));
@@ -93,7 +99,7 @@ public class DocumentMetadataTest {
     }
 
     @Test
-    public void testSyncDeterminesStateCreate() throws IOException, URISyntaxException {
+    public void determinesStateCreate() throws IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         metadata.remoteUri(Optional.empty());
@@ -101,7 +107,7 @@ public class DocumentMetadataTest {
     }
 
     @Test
-    public void testSyncDeterminesStateDelete() throws IOException, URISyntaxException {
+    public void determinesStateDelete() throws IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
         metadata.extraProps(Optional.of(Collections.singletonMap("delete", "true")));
@@ -109,7 +115,7 @@ public class DocumentMetadataTest {
     }
 
     @Test
-    public void testSyncDeterminesStateDeleteSourPathNotPresent() throws IOException, URISyntaxException {
+    public void determinesStateDeleteSourcePathNotPresent() throws IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
         metadata.extraProps(Optional.empty());
@@ -117,7 +123,7 @@ public class DocumentMetadataTest {
     }
 
     @Test
-    public void testSyncDeterminesStateUpdate() throws IOException, URISyntaxException {
+    public void determinesStateUpdateSourceChecksumDifference() throws IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         metadata.remoteUri(Optional.of(new URI("foo")));
@@ -126,13 +132,33 @@ public class DocumentMetadataTest {
     }
 
     @Test
-    public void testSyncDeterminesStateUpdateClearsConvertedChecksum() throws IOException, URISyntaxException {
+    public void determinesStateUpdateConvertedChecksumDifference() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata documentForUpdate = TestData.documentForUpdate(context, folder);
+        documentForUpdate.remoteUri(Optional.of(new URI("foo")));
+
+        documentForUpdate.sourceChecksum(Optional.of(FileUtils.checksumCRC32(documentForUpdate.sourcePath().toFile())));
+        documentForUpdate.convertedChecksum(Optional.of(-1L));
+        assertThat(documentForUpdate.determineState()).isEqualTo(Config.DocumentMetadata.State.UPDATE);
+    }
+
+    @Test
+    public void determinesStateCurrentConvertedPathMissing() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata documentForUpdate = TestData.documentForUpdate(context, folder);
+        documentForUpdate.remoteUri(Optional.of(new URI("foo")));
+
+        documentForUpdate.sourceChecksum(Optional.of(FileUtils.checksumCRC32(documentForUpdate.sourcePath().toFile())));
+        documentForUpdate.convertedPath(Optional.empty());
+        assertThat(documentForUpdate.determineState()).isEqualTo(Config.DocumentMetadata.State.CURRENT);
+    }
+
+    @Test
+    public void determinesStateCurrentSourceChecksumMissing() throws IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
         Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
         metadata.remoteUri(Optional.of(new URI("foo")));
-        metadata.sourceChecksum(Optional.of(-1L));
-        metadata.convertedChecksum(Optional.of(-1L));
-        metadata.determineState();
-        assertThat(metadata.convertedChecksum()).isEmpty();
+        metadata.sourceChecksum(Optional.empty());
+        assertThat(metadata.determineState()).isEqualTo(Config.DocumentMetadata.State.CURRENT);
     }
 }

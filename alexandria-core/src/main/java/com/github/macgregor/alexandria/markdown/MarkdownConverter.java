@@ -12,6 +12,8 @@ import java.nio.file.Path;
  * general processing while delegating the actual conversion details to other modules such
  * as the alexandria-remote-jive implementation which uses Flexmark and some custom extensions
  * to improve rendering on the Jive platform.
+ *
+ * @see NoopMarkdownConverter
  */
 public interface MarkdownConverter {
 
@@ -26,7 +28,8 @@ public interface MarkdownConverter {
     void convert(Config.DocumentMetadata metadata, Path source, Path converted) throws AlexandriaException;
 
     /**
-     * Type of documents the {@link MarkdownConverter} produces.
+     * Type of documents the {@link MarkdownConverter} produces. Used when determining what the converted path
+     * for a document should be.
      *
      * @return  converted document type
      */

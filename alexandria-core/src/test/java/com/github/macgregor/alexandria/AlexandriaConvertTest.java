@@ -15,7 +15,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -132,59 +131,5 @@ public class AlexandriaConvertTest {
         PathFinder pathFinder = new PathFinder();
         pathFinder.startingInPath(out.toPath());
         assertThat(pathFinder.files()).hasSize(2);
-    }
-
-    @Test
-    public void testConvertNeedsConversionTrueWhenConvertedCacheHitButFileMissing() throws IOException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        MarkdownConverter converter = context.remote().get().markdownConverter();
-        context.convertedPath(metadata, AlexandriaConvert.convertedPath(context, metadata, converter));
-        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isTrue();
-    }
-
-    @Test
-    public void testConvertNeedsConversionFalseWhenConvertedCacheHitAndFileExists() throws IOException, URISyntaxException {
-        Context context = TestData.completeContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        MarkdownConverter converter = context.remote().get().markdownConverter();
-        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isFalse();
-    }
-
-    @Test
-    public void testConvertNeedsConversionTrueWhenConvertedCacheHitAndFileExistsButWrongChecksum() throws IOException, URISyntaxException {
-        Context context = TestData.completeContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        MarkdownConverter converter = context.remote().get().markdownConverter();
-        metadata.convertedChecksum(Optional.of(-1l));
-        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isTrue();
-    }
-
-    @Test
-    public void testConvertNeedsConversionTrueWhenConvertedCacheMissAndFileMissing() throws IOException {
-        Context context = TestData.minimalContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        MarkdownConverter converter = context.remote().get().markdownConverter();
-        context.convertedPaths(new HashMap<>());
-        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isTrue();
-    }
-
-    @Test
-    public void testConvertNeedsConversionFalseWhenConvertedCacheMissAndFileExists() throws IOException, URISyntaxException {
-        Context context = TestData.completeContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        MarkdownConverter converter = context.remote().get().markdownConverter();
-        context.convertedPaths(new HashMap<>());
-        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isFalse();
-    }
-
-    @Test
-    public void testConvertNeedsConversionTrueWhenConvertedCacheMissAndFileExistsWithWrongChecksum() throws IOException, URISyntaxException {
-        Context context = TestData.completeContext(folder);
-        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
-        MarkdownConverter converter = context.remote().get().markdownConverter();
-        context.convertedPaths(new HashMap<>());
-        metadata.convertedChecksum(Optional.of(-1l));
-        assertThat(AlexandriaConvert.needsConversion(context, metadata, converter)).isTrue();
     }
 }
