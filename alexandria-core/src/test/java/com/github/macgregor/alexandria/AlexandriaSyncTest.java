@@ -10,7 +10,6 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -25,27 +24,18 @@ public class AlexandriaSyncTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testSyncWithNoopRemote() throws AlexandriaException {
-        Config config = new Config();
-        config.remote().clazz("com.github.macgregor.alexandria.remotes.NoopRemote");
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
-
+    public void testSyncWithNoopRemote() throws IOException {
+        Context context = TestData.minimalContext(folder);
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
         alexandria.syncWithRemote();
     }
 
     @Test
-    public void testSyncWithNonExistentClass() {
-        Config config = new Config();
-        config.remote().clazz("com.github.macgregor.alexandria.remotes.NotAThing");
-
-        Context context = new Context();
-        context.configPath(Paths.get(folder.getRoot().toString(), ".alexandria"));
-        context.config(config);
+    public void testSyncWithNonExistentClass() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        context.remote(Optional.empty());
+        context.config().remote().clazz("com.github.macgregor.alexandria.remotes.NotAThing");
 
         Alexandria alexandria = new Alexandria();
         alexandria.context(context);
@@ -71,7 +61,7 @@ public class AlexandriaSyncTest {
         Remote remote = spy(context.remote().get());
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
-        verify(remote, times(1)).create(metadata);
+        verify(remote, times(2)).create(metadata);
     }
 
     @Test
@@ -93,7 +83,7 @@ public class AlexandriaSyncTest {
         Remote remote = spy(context.remote().get());
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
-        verify(remote, times(1)).delete(metadata);
+        verify(remote, times(2)).delete(metadata);
     }
 
     @Test
@@ -103,6 +93,19 @@ public class AlexandriaSyncTest {
         metadata.remoteUri(Optional.of(new URI("foo")));
         metadata.sourceChecksum(Optional.of(-1L));
         Remote remote = spy(context.remote().get());
+        AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
+        alexandriaSync.syncWithRemote();
+        verify(remote, times(1)).update(metadata);
+    }
+
+    @Test
+    public void testSyncObeysTwoPassFlag() throws BatchProcessException, IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        Config.DocumentMetadata metadata = context.config().metadata().get().get(0);
+        metadata.remoteUri(Optional.of(new URI("foo")));
+        metadata.sourceChecksum(Optional.of(-1L));
+        Remote remote = spy(context.remote().get());
+        doReturn(false).when(remote).twoPassSync();
         AlexandriaSync alexandriaSync = new AlexandriaSync(context, remote);
         alexandriaSync.syncWithRemote();
         verify(remote, times(1)).update(metadata);

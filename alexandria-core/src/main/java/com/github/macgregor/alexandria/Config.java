@@ -188,6 +188,9 @@ public class Config {
         @EqualsAndHashCode.Exclude
         protected Optional<Map<String, String>> extraProps = Optional.of(new HashMap<>());
 
+        @EqualsAndHashCode.Exclude
+        protected Optional<Path> convertedPath = Optional.empty();
+
         /**
          * Convenience method for checking if a document has an optional property in {@link #extraProps}.
          *
@@ -256,13 +259,21 @@ public class Config {
                 return State.CREATE;
             }
 
-            long currentChecksum = FileUtils.checksumCRC32(sourcePath.toFile());
-            if(this.sourceChecksum().isPresent() && this.sourceChecksum().get().equals(currentChecksum)){
-                return State.CURRENT;
+            long currentSourceChecksum = FileUtils.checksumCRC32(sourcePath.toFile());
+            if(this.sourceChecksum().isPresent() && !this.sourceChecksum().get().equals(currentSourceChecksum)){
+                return State.UPDATE;
             }
 
-            this.convertedChecksum(Optional.empty());
-            return State.UPDATE;
+            // converters can modify rendered output meaning the output can change even when the source doesnt,
+            // so we need to check that the previous and current checksums match to know if we need to update or not
+            if(convertedPath().isPresent() && convertedChecksum().isPresent()){
+                long currentConvertedChecksum = FileUtils.checksumCRC32(convertedPath().get().toFile());
+                if(!this.convertedChecksum().get().equals(currentConvertedChecksum)){
+                    return State.UPDATE;
+                }
+            }
+
+            return State.CURRENT;
         }
 
         /**

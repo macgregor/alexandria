@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * {@link MarkdownConverter} implmentation to properly format HTML for Jive when custom styling
+ * {@link MarkdownConverter} implementation to properly format HTML for Jive when custom styling
  * is needed.
  */
 @Slf4j
