@@ -180,8 +180,9 @@ public abstract class AlexandriaMojo extends AbstractMojo {
         getLog().debug("Alexandria - outputPath directory: " + alexandria.context().outputPath());
         getLog().debug("Alexandria - disclaimer footer enabled : " + alexandria.context().disclaimerFooterEnabled());
         getLog().debug("Alexandria - disclaimer footer path : " +
-                alexandria.context().disclaimerFooterPath()
-                        .orElse(Paths.get("classpath:"+AlexandriaConvert.DEFAULT_DISCLAIMER_FOOTER_FILE)));
+                (alexandria.context().disclaimerFooterPath().isPresent() ?
+                        alexandria.context().disclaimerFooterPath().get().toString() :
+                        "default Alexandria disclaimer"));
         getLog().debug("Alexandria - includes files: " + alexandria.context().include());
         getLog().debug("Alexandria - excludes files: " + alexandria.context().exclude());
     }

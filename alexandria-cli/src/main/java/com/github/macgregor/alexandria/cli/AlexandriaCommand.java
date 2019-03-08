@@ -2,7 +2,6 @@ package com.github.macgregor.alexandria.cli;
 
 import ch.qos.logback.classic.Level;
 import com.github.macgregor.alexandria.Alexandria;
-import com.github.macgregor.alexandria.AlexandriaConvert;
 import com.github.macgregor.alexandria.Context;
 import lombok.Getter;
 import lombok.Setter;
@@ -102,8 +101,9 @@ public abstract class AlexandriaCommand implements Callable<Void> {
         log.info("Alexandria - outputPath directory: " + alexandria.context().outputPath());
         log.info("Alexandria - disclaimer footer enabled : " + alexandria.context().disclaimerFooterEnabled());
         log.info("Alexandria - disclaimer footer path : " +
-                alexandria.context().disclaimerFooterPath()
-                        .orElse(Paths.get("classpath:"+AlexandriaConvert.DEFAULT_DISCLAIMER_FOOTER_FILE)));
+                (alexandria.context().disclaimerFooterPath().isPresent() ?
+                alexandria.context().disclaimerFooterPath().get().toString() :
+                "default Alexandria disclaimer"));
         log.info("Alexandria - include files: " + alexandria.context().include());
         log.info("Alexandria - exclude files: " + alexandria.context().exclude());
     }
