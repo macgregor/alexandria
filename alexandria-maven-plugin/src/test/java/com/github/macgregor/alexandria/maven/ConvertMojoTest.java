@@ -4,7 +4,6 @@ import com.github.macgregor.alexandria.Alexandria;
 import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
-import com.github.macgregor.alexandria.maven.ConvertMojo;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -94,10 +93,11 @@ public class ConvertMojoTest {
     }
 
     @Test
-    public void testSyncDoesntThrowErrorWhenFailBuildsSetToFalse() throws AlexandriaException, MojoFailureException, MojoExecutionException {
+    public void testConvertDoesntThrowErrorWhenFailBuildsSetToFalse() throws AlexandriaException, MojoFailureException, MojoExecutionException {
         convertMojo.failBuild(false);
         convertMojo.project(parentProject);
-        doThrow(BatchProcessException.class).when(alexandria).syncWithRemote();
+        doThrow(BatchProcessException.class).when(alexandria).convert();
         convertMojo.execute();
+        verify(log, times(1)).warn(any(Exception.class));
     }
 }

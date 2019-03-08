@@ -254,6 +254,8 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
                         <skip>${skip.tests}</skip>
+                        <parallel>classesAndMethods</parallel>
+                        <perCoreThreadCount>4</perCoreThreadCount>
                     </configuration>
                 </plugin>
                 <plugin>

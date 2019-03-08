@@ -1,11 +1,13 @@
 package com.github.macgregor.alexandria;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -68,6 +70,15 @@ public class Resources {
      */
     public static String load(String filePath) throws IOException {
         return FileUtils.readFileToString(Paths.get(filePath).toFile(), (String) null);
+    }
+
+    public static String loadFromClasspath(String filePath) throws IOException {
+        ClassLoader classLoader = Resources.class.getClassLoader();
+        InputStream in = classLoader.getResourceAsStream(filePath);
+        if(in == null){
+            throw new IOException(String.format("Couldnt find file %s on classpath", filePath));
+        }
+        return IOUtils.toString(in, "UTF-8");
     }
 
     public static boolean fileContentsAreBlank(String filePath) throws IOException {

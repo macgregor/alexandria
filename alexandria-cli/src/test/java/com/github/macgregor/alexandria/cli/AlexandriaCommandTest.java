@@ -127,6 +127,33 @@ public class AlexandriaCommandTest {
     }
 
     @Test
+    public void testInitSetsDisclaimerFooterDisabledDefault() throws IOException {
+        TestCommand testCommand = new TestCommand();
+        assertThat(testCommand.init().context().disclaimerFooterEnabled()).isEqualTo(true);
+    }
+
+    @Test
+    public void testInitSetsDisclaimerFooterDisabled() throws IOException {
+        TestCommand testCommand = new TestCommand();
+        testCommand.disclaimerFooterDisabled(true);
+        assertThat(testCommand.init().context().disclaimerFooterEnabled()).isEqualTo(false);
+    }
+
+    @Test
+    public void testInitSetsDisclaimerFooterPathDefault() throws IOException {
+        TestCommand testCommand = new TestCommand();
+        assertThat(testCommand.init().context().disclaimerFooterPath()).isEmpty();
+    }
+
+    @Test
+    public void testInitSetsDisclaimerFooterPath() throws IOException {
+        TestCommand testCommand = new TestCommand();
+        testCommand.disclaimerFooterPath("foo");
+        assertThat(testCommand.init().context().disclaimerFooterPath()).isPresent();
+        assertThat(testCommand.init().context().disclaimerFooterPath().get()).isEqualTo(Paths.get("foo"));
+    }
+
+    @Test
     public void testLogContextLogsConfigPath(){
         Context context = spyContext();
         verify(context, times(1)).configPath();
@@ -160,6 +187,18 @@ public class AlexandriaCommandTest {
     public void testLogContextLogsExclude(){
         Context context = spyContext();
         verify(context, times(1)).exclude();
+    }
+
+    @Test
+    public void testLogContextLogsDisclaimerFooterDisabled(){
+        Context context = spyContext();
+        verify(context, times(1)).disclaimerFooterEnabled();
+    }
+
+    @Test
+    public void testLogContextLogsDisclaimerFooterPath(){
+        Context context = spyContext();
+        verify(context, times(1)).disclaimerFooterPath();
     }
 
     private Context spyContext(){

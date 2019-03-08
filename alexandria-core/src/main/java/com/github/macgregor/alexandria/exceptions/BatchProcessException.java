@@ -1,9 +1,6 @@
 package com.github.macgregor.alexandria.exceptions;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +17,7 @@ import java.util.Optional;
 @Slf4j
 @NoArgsConstructor @AllArgsConstructor
 @Getter @Setter @Accessors(fluent = true)
+@EqualsAndHashCode(callSuper = true)
 public class BatchProcessException extends AlexandriaException {
     private Collection<AlexandriaException> exceptions = new ArrayList<>();
 

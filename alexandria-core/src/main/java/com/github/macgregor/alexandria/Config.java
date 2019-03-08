@@ -191,6 +191,9 @@ public class Config {
         @EqualsAndHashCode.Exclude
         protected Optional<Path> convertedPath = Optional.empty();
 
+        @EqualsAndHashCode.Exclude
+        protected Optional<Path> intermediateConvertedPath = Optional.empty();
+
         /**
          * Convenience method for checking if a document has an optional property in {@link #extraProps}.
          *
