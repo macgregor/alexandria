@@ -133,9 +133,9 @@ public class AlexandriaCommandTest {
     }
 
     @Test
-    public void testInitSetsDisclaimerFooterDisabled() throws IOException {
+    public void testInitSetsDisclaimerFooterEnabled() throws IOException {
         TestCommand testCommand = new TestCommand();
-        testCommand.disclaimerFooterDisabled(true);
+        testCommand.disclaimerFooterEnabled(false);
         assertThat(testCommand.init().context().disclaimerFooterEnabled()).isEqualTo(false);
     }
 

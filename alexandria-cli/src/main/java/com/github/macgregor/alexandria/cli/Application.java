@@ -20,6 +20,8 @@ public class Application extends AlexandriaCommand {
 
     public static void main(String[] args) {
         CommandLine cmd = new CommandLine(new Application());
+        cmd.setToggleBooleanFlags(false);
+
         cmd.parseWithHandler(new CommandLine.RunLast(), System.err, args);
     }
 

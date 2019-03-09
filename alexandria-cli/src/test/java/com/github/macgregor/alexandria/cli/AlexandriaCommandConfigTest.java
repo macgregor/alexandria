@@ -6,6 +6,7 @@ import picocli.CommandLine;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AlexandriaCommandConfigTest {
 
@@ -221,16 +222,22 @@ public class AlexandriaCommandConfigTest {
     }
 
     @Test
-    public void testDisclaimerFooterDisabledDefaultsToFalse(){
+    public void testDisclaimerFooterEnabledDefaultsToTrue(){
         TestCommand command = CommandLine.populateCommand(new TestCommand(), new String[]{});
-        assertThat(command.disclaimerFooterDisabled()).isEqualTo(false);
+        assertThat(command.disclaimerFooterEnabled()).isEqualTo(true);
     }
 
     @Test
-    public void testDisclaimerFooterDisabledOverride(){
-        String[] args = {"--disclaimerFooterDisabled"};
+    public void testDisclaimerFooterEnabledDoesntAllowToggle(){
+        String[] args = {"--disclaimerFooterEnabled"};
+        assertThatThrownBy(() -> CommandLine.populateCommand(new TestCommand(), args)).isInstanceOf(CommandLine.MissingParameterException.class);
+    }
+
+    @Test
+    public void testDisclaimerFooterEnabledOverrideSet(){
+        String[] args = {"--disclaimerFooterEnabled", "false"};
         TestCommand command = CommandLine.populateCommand(new TestCommand(), args);
-        assertThat(command.disclaimerFooterDisabled()).isEqualTo(true);
+        assertThat(command.disclaimerFooterEnabled()).isEqualTo(false);
     }
 
     @Test
