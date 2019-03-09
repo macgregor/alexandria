@@ -16,23 +16,20 @@ import java.util.Set;
  * Used to delegate the resolution of links to the {@link LinkResolver}.
  */
 @Getter
-public class RelativeLinkResolver implements com.vladsch.flexmark.html.LinkResolver {
+public class LocalLinkResolver implements com.vladsch.flexmark.html.LinkResolver {
     private final LinkResolver alexandriaFlexmarkLinkResolver;
-    private final RelativeLinkOptions options;
 
-    public RelativeLinkResolver(LinkResolver alexandriaFlexmarkLinkResolver){
+    public LocalLinkResolver(LinkResolver alexandriaFlexmarkLinkResolver){
         this.alexandriaFlexmarkLinkResolver = alexandriaFlexmarkLinkResolver;
-        this.options = new RelativeLinkOptions();
     }
 
-    public RelativeLinkResolver(LinkResolverContext context, LinkResolver alexandriaFlexmarkLinkResolver) {
+    public LocalLinkResolver(LinkResolverContext context, LinkResolver alexandriaFlexmarkLinkResolver) {
         this.alexandriaFlexmarkLinkResolver = alexandriaFlexmarkLinkResolver;
-        this.options = new RelativeLinkOptions(context.getOptions());
     }
 
     @Override
     public ResolvedLink resolveLink(Node node, LinkResolverContext context, ResolvedLink link) {
-        if(RelativeLinkExtension.RELATIVE_LINK.equals(link.getLinkType())){
+        if(LocalLinkExtension.RELATIVE_LINK.equals(link.getLinkType())){
             LinkStatus status = delegateLinkStatus((Link) node);
             if(LinkStatus.VALID.equals(status)){
                 return delegateResolveLink((Link) node, link);
@@ -47,7 +44,7 @@ public class RelativeLinkResolver implements com.vladsch.flexmark.html.LinkResol
         try {
             URI resolved = alexandriaFlexmarkLinkResolver.resolve(
                     node.getText().toString(), node.getUrl().toString());
-            return new ResolvedLink(RelativeLinkExtension.RELATIVE_LINK, resolved.toString(), null, LinkStatus.VALID);
+            return new ResolvedLink(LocalLinkExtension.RELATIVE_LINK, resolved.toString(), null, LinkStatus.VALID);
         } catch(Exception e){
             link.withStatus(LinkStatus.UNKNOWN);
             return link;
@@ -86,7 +83,7 @@ public class RelativeLinkResolver implements com.vladsch.flexmark.html.LinkResol
 
         @Override
         public com.vladsch.flexmark.html.LinkResolver create(LinkResolverContext context) {
-            return new RelativeLinkResolver(context, alexandriaFlexmarkLinkResolver);
+            return new LocalLinkResolver(context, alexandriaFlexmarkLinkResolver);
         }
     }
 }

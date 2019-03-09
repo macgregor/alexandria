@@ -17,7 +17,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class RelativeLinkNodeRendererTest {
+public class LocalLinkNodeRendererTest {
 
     private Link node = spy(new Link(
             BasedSequenceImpl.of("[link text](https://www.google.com)")));
@@ -33,19 +33,19 @@ public class RelativeLinkNodeRendererTest {
         when(html.tag(any())).thenReturn(html);
         when(context.isDoNotRenderLinks()).thenReturn(false);
         when(context.resolveLink(any(), any(), any()))
-                .thenReturn(new ResolvedLink(RelativeLinkExtension.RELATIVE_LINK, "https://www.google.com"));
+                .thenReturn(new ResolvedLink(LocalLinkExtension.RELATIVE_LINK, "https://www.google.com"));
 
     }
 
     @Test
     public void testRelativeLinkNodeRendererFactoryCreatesRelativeLinkNodeRenderer(){
-        NodeRenderer nodeRenderer = new RelativeLinkNodeRenderer.Factory().create(document);
-        assertThat(nodeRenderer).isInstanceOf(RelativeLinkNodeRenderer.class);
+        NodeRenderer nodeRenderer = new LocalLinkNodeRenderer.Factory().create(document);
+        assertThat(nodeRenderer).isInstanceOf(LocalLinkNodeRenderer.class);
     }
 
     @Test
     public void testRelativeLinkNodeRendererRendersLink(){
-        RelativeLinkNodeRenderer nodeRenderer = new RelativeLinkNodeRenderer(document);
+        LocalLinkNodeRenderer nodeRenderer = new LocalLinkNodeRenderer();
         nodeRenderer.render(node, context, html);
         verify(context, times(1)).resolveLink(any(), any(), any());
         verify(html, times(1)).attr("href", "https://www.google.com");
@@ -54,39 +54,29 @@ public class RelativeLinkNodeRendererTest {
     }
 
     @Test
-    public void testRelativeLinkNodeRendererRendersRawTextWhenOptionsDisableRendering(){
-        when(document.get(any())).thenReturn(true);
-
-        RelativeLinkNodeRenderer nodeRenderer = new RelativeLinkNodeRenderer(document);
-        nodeRenderer.render(node, context, html);
-        verify(html, times(1)).text(any());
-        verify(node, times(1)).getChars();
-    }
-
-    @Test
     public void testRelativeLinkNodeRendererRendersNothingWhenContextDoNotRenderLinks(){
         when(context.isDoNotRenderLinks()).thenReturn(true);
 
-        RelativeLinkNodeRenderer nodeRenderer = new RelativeLinkNodeRenderer(document);
+        LocalLinkNodeRenderer nodeRenderer = new LocalLinkNodeRenderer();
         nodeRenderer.render(node, context, html);
         verify(context, times(0)).resolveLink(any(), any(), any());
     }
 
     @Test
     public void testRelativeLinkNodeRendererCreatesHandlers(){
-        RelativeLinkNodeRenderer relativeLinkNodeRenderer = spy(new RelativeLinkNodeRenderer());
+        LocalLinkNodeRenderer localLinkNodeRenderer = spy(new LocalLinkNodeRenderer());
         doAnswer(invocation -> {
             return null;
-        }).when(relativeLinkNodeRenderer)
+        }).when(localLinkNodeRenderer)
                 .render(any(), any(), any());
 
-        Set<NodeRenderingHandler<?>> handlers = relativeLinkNodeRenderer.getNodeRenderingHandlers();
+        Set<NodeRenderingHandler<?>> handlers = localLinkNodeRenderer.getNodeRenderingHandlers();
         assertThat(handlers.size()).isEqualTo(1);
         NodeRenderingHandler<?> handler = handlers.toArray(new NodeRenderingHandler<?>[]{})[0];
         assertThat(handler.getNodeType())
                 .isEqualTo(Link.class);
         handler.render(mock(Link.class), mock(NodeRendererContext.class), mock(HtmlWriter.class));
-        verify(relativeLinkNodeRenderer, times(1)).render(any(), any(), any());
+        verify(localLinkNodeRenderer, times(1)).render(any(), any(), any());
     }
 
 

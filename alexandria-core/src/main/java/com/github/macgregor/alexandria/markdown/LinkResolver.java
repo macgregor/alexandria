@@ -19,6 +19,8 @@ import java.net.URI;
  */
 public interface LinkResolver {
 
+    boolean wants(String rawLink);
+
     /**
      * Called before a call to {@link LinkResolver#resolve(String, String)} to ensure the resolver
      * can handle the link.

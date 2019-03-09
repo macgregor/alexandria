@@ -1,5 +1,7 @@
 package com.github.macgregor.alexandria.flexmark;
 
+import com.github.macgregor.alexandria.Context;
+import com.github.macgregor.alexandria.flexmark.links.LocalLinkExtension;
 import com.vladsch.flexmark.Extension;
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
@@ -24,14 +26,15 @@ import static com.vladsch.flexmark.parser.Parser.FENCED_CODE_CONTENT_BLOCK;
  */
 @Slf4j
 @NoArgsConstructor
-public class AlexandriaFlexmark {
+public class AlexandriaFlexmark implements Context.ContextAware {
 
     /** Default extensions added along with {@link AlexandriaFlexmark#registeredExtensions}. */
     public static final Extension[] DEFAULT_EXTENSIONS = new Extension[]{
             AutolinkExtension.create(),
             StrikethroughExtension.create(),
             TaskListExtension.create(),
-            TablesExtension.create()
+            TablesExtension.create(),
+            LocalLinkExtension.create(new AlexandriaRemoteUriLinkResolver())
     };
 
     /** Default options added along with {@link AlexandriaFlexmark#options}. */
@@ -51,6 +54,8 @@ public class AlexandriaFlexmark {
 
     /** Flexmark parser used to parse the markdown document. */
     protected Parser parser = null;
+
+    protected Context context;
 
     /**
      * Register a Flexmark {@link Extension} to customize HTML rendering or parsing.
@@ -79,7 +84,12 @@ public class AlexandriaFlexmark {
             for(Extension e : DEFAULT_EXTENSIONS){
                 registeredExtensions.add(e);
             }
+
         }
+        registeredExtensions.stream()
+                .filter(e -> e instanceof Context.ContextAware)
+                .map(e -> (Context.ContextAware)e)
+                .forEach(e -> e.alexandriaContext(context));
         return registeredExtensions;
     }
 
@@ -139,5 +149,15 @@ public class AlexandriaFlexmark {
         registeredExtensions = null;
         htmlRenderer = null;
         parser = null;
+    }
+
+    @Override
+    public void alexandriaContext(Context context) {
+        this.context = context;
+    }
+
+    @Override
+    public Context alexandriaContext() {
+        return this.context;
     }
 }

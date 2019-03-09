@@ -42,23 +42,15 @@ public class JiveMarkdownConverterTest {
     }
 
     @Test
-    public void testSettingAlexandriaContextAlsoSetsForLinkResolver(){
+    public void testSettingAlexandriaContextAlsoSetsForAlexandriaFlexmark(){
         assertThat(jiveMarkdownConverter.alexandriaContext()).isEqualTo(context);
-        assertThat(jiveMarkdownConverter.getRelativeLinkResolver().alexandriaContext()).isEqualTo(context);
+        assertThat(jiveMarkdownConverter.getFlexmark().alexandriaContext()).isEqualTo(context);
     }
 
     @Test
     public void testNewJiveMarkdownConverterAddsExtensionsToFlexmarkTest(){
         assertThat(jiveMarkdownConverter.getFlexmark().registeredExtensions())
                 .contains(jiveMarkdownConverter.getJiveFlexmarkExtension());
-        assertThat(jiveMarkdownConverter.getFlexmark().registeredExtensions())
-                .contains(jiveMarkdownConverter.getRelativeLinkExtension());
-    }
-
-    @Test
-    public void testNewJiveMarkdownConverterSetsJiveRelativeLinkResolver(){
-        assertThat(jiveMarkdownConverter.getRelativeLinkExtension().getAlexandriaFlexmarkLinkResolver())
-                .isEqualTo(jiveMarkdownConverter.getRelativeLinkResolver());
     }
 
     @Test
@@ -70,8 +62,8 @@ public class JiveMarkdownConverterTest {
     }
 
     @Test
-    public void testConvertBeforeContextOnLinkResolverSetThrowsException(){
-        jiveMarkdownConverter.getRelativeLinkResolver().alexandriaContext(null);
+    public void testConvertBeforeContextOnFlexmarkSetThrowsException(){
+        jiveMarkdownConverter.getFlexmark().alexandriaContext(null);
         assertThatThrownBy(() -> jiveMarkdownConverter.convert(
                 mock(Config.DocumentMetadata.class), mock(Path.class), mock(Path.class)))
                 .isInstanceOf(AlexandriaException.class);

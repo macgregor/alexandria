@@ -1,6 +1,7 @@
 package com.github.macgregor.alexandria.flexmark.links;
 
 import com.github.macgregor.alexandria.exceptions.UncheckedAlexandriaException;
+import com.github.macgregor.alexandria.markdown.LinkResolver;
 import com.vladsch.flexmark.ast.Link;
 import com.vladsch.flexmark.parser.LinkRefProcessor;
 import com.vladsch.flexmark.parser.LinkRefProcessorFactory;
@@ -10,6 +11,8 @@ import com.vladsch.flexmark.util.options.DataHolder;
 import com.vladsch.flexmark.util.sequence.BasedSequence;
 import com.vladsch.flexmark.util.sequence.Range;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -18,19 +21,15 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 
 /**
- * Checks whether a link is eligible for the {@link RelativeLinkResolver} to process.
+ * Checks whether a link is eligible for the {@link LocalLinkResolver} to process.
  */
-@Getter
-public class RelativeLinkRefProcessor implements LinkRefProcessor {
+@Getter @NoArgsConstructor
+public class LocalLinkRefProcessor implements LinkRefProcessor {
 
-    private final RelativeLinkOptions options;
+    private LinkResolver linkResolver;
 
-    public RelativeLinkRefProcessor(){
-        options = new RelativeLinkOptions();
-    }
-
-    public RelativeLinkRefProcessor(Document document) {
-        this.options = new RelativeLinkOptions(document);
+    public LocalLinkRefProcessor(LinkResolver linkResolver) {
+        this.linkResolver = linkResolver;
     }
 
     @Override
@@ -45,18 +44,7 @@ public class RelativeLinkRefProcessor implements LinkRefProcessor {
 
     @Override
     public boolean isMatch(BasedSequence nodeChars) {
-        Matcher matcher = RelativeLinkExtension.GITHUB_BASIC_LINK_PATTERN.matcher(nodeChars);
-        if(matcher.matches()){
-            BasedSequence link = nodeChars.subSequence(range(nodeChars, matcher.group(5)));
-            if(isUrl(link)){
-                return false;
-            }
-            if(isAbsolute(link)){
-                return false;
-            }
-            return true;
-        }
-        return false;
+        return linkResolver.wants(nodeChars.toString());
     }
 
     @Override
@@ -84,32 +72,16 @@ public class RelativeLinkRefProcessor implements LinkRefProcessor {
         return;
     }
 
-    protected boolean isUrl(BasedSequence link){
-        try {
-            URL url = new URL(link.toString());
-            return true;
-        } catch (MalformedURLException e) {}
-        return false;
-    }
-
-    protected boolean isAbsolute(BasedSequence link){
-        try{
-            return Paths.get(link.toString()).isAbsolute();
-        } catch (InvalidPathException | NullPointerException ex) {
-            return true;
-        }
-    }
-
-    protected static Range range(BasedSequence chars, CharSequence subSequence){
-        int start = chars.indexOf(subSequence);
-        int end = start + subSequence.length();
-        return new Range(start, end);
-    }
-
     public static class Factory implements LinkRefProcessorFactory {
+        private LinkResolver linkResolver;
+
+        public Factory(LinkResolver linkResolver){
+            this.linkResolver = linkResolver;
+        }
+
         @Override
         public LinkRefProcessor create(Document document) {
-            return new RelativeLinkRefProcessor(document);
+            return new LocalLinkRefProcessor(linkResolver);
         }
 
         @Override

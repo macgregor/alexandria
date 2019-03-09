@@ -19,14 +19,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class RelativeLinkResolverTest {
+public class LocalLinkResolverTest {
 
     private LinkResolver alexandriaResolver = mock(LinkResolver.class);
     private LinkResolverContext linkResolverContext = mock(LinkResolverContext.class);
     private Link node = mock(Link.class);
-    private RelativeLinkOptions relativeLinkOptions = new RelativeLinkOptions();
     private DataHolder contextOptions = mock(DataHolder.class);
-    private RelativeLinkResolver.Factory relativeLinkResolverFactory = new RelativeLinkResolver.Factory(alexandriaResolver);
+    private LocalLinkResolver.Factory relativeLinkResolverFactory = new LocalLinkResolver.Factory(alexandriaResolver);
 
     @Before
     public void setup() throws Exception{
@@ -41,42 +40,39 @@ public class RelativeLinkResolverTest {
 
     @Test
     public void testNewRelativeLinkResolverDefaultOptions() {
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        assertThat(relativeLinkResolver.getOptions()).isNotNull();
-        assertThat(relativeLinkResolver.getAlexandriaFlexmarkLinkResolver()).isEqualTo(alexandriaResolver);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        assertThat(localLinkResolver.getAlexandriaFlexmarkLinkResolver()).isEqualTo(alexandriaResolver);
     }
 
     @Test
     public void testNewRelativeLinkResolveWithOptions() {
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(linkResolverContext, alexandriaResolver);
-        assertThat(relativeLinkResolver.getOptions()).isEqualTo(relativeLinkOptions);
-        assertThat(relativeLinkResolver.getAlexandriaFlexmarkLinkResolver()).isEqualTo(alexandriaResolver);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(linkResolverContext, alexandriaResolver);
+        assertThat(localLinkResolver.getAlexandriaFlexmarkLinkResolver()).isEqualTo(alexandriaResolver);
     }
 
     @Test
     public void tesRelativeLinkResolverFactoryCreatesRelativeLinkResolver() {
         com.vladsch.flexmark.html.LinkResolver relativeLinkResolver = relativeLinkResolverFactory.create(linkResolverContext);
-        assertThat(relativeLinkResolver).isInstanceOf(RelativeLinkResolver.class);
+        assertThat(relativeLinkResolver).isInstanceOf(LocalLinkResolver.class);
 
-        assertThat(((RelativeLinkResolver)relativeLinkResolver).getOptions()).isEqualTo(relativeLinkOptions);
-        assertThat(((RelativeLinkResolver)relativeLinkResolver).getAlexandriaFlexmarkLinkResolver()).isEqualTo(alexandriaResolver);
+        assertThat(((LocalLinkResolver)relativeLinkResolver).getAlexandriaFlexmarkLinkResolver()).isEqualTo(alexandriaResolver);
     }
 
     @Test
     public void testRelativeLinkResolverFactoryDoesntAffectGlobalScope() {
-        RelativeLinkResolver.Factory relativeLinkResolverFactory = new RelativeLinkResolver.Factory(alexandriaResolver);
+        LocalLinkResolver.Factory relativeLinkResolverFactory = new LocalLinkResolver.Factory(alexandriaResolver);
         assertThat(relativeLinkResolverFactory.affectsGlobalScope()).isFalse();
     }
 
     @Test
     public void testRelativeLinkResolverFactoryHasNoBeforeDependents() {
-        RelativeLinkResolver.Factory relativeLinkResolverFactory = new RelativeLinkResolver.Factory(alexandriaResolver);
+        LocalLinkResolver.Factory relativeLinkResolverFactory = new LocalLinkResolver.Factory(alexandriaResolver);
         assertThat(relativeLinkResolverFactory.getBeforeDependents()).isNull();
     }
 
     @Test
     public void testRelativeLinkResolverFactoryHasNoAfterDependents() {
-        RelativeLinkResolver.Factory relativeLinkResolverFactory = new RelativeLinkResolver.Factory(alexandriaResolver);
+        LocalLinkResolver.Factory relativeLinkResolverFactory = new LocalLinkResolver.Factory(alexandriaResolver);
         assertThat(relativeLinkResolverFactory.getAfterDependents()).isNull();
     }
 
@@ -84,69 +80,69 @@ public class RelativeLinkResolverTest {
     public void testRelativeLinkResolverDelegatesLinkStatusValid() {
         when(alexandriaResolver.isValid(any(), any())).thenReturn(true);
 
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        assertThat(relativeLinkResolver.delegateLinkStatus(node)).isEqualTo(LinkStatus.VALID);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        assertThat(localLinkResolver.delegateLinkStatus(node)).isEqualTo(LinkStatus.VALID);
     }
 
     @Test
     public void testRelativeLinkResolverDelegatesLinkStatusInvalid() {
         when(alexandriaResolver.isValid(any(), any())).thenReturn(false);
 
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        assertThat(relativeLinkResolver.delegateLinkStatus(node)).isEqualTo(LinkStatus.INVALID);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        assertThat(localLinkResolver.delegateLinkStatus(node)).isEqualTo(LinkStatus.INVALID);
     }
 
     @Test
     public void testRelativeLinkResolverDelegatesLinkStatusException() {
         when(alexandriaResolver.isValid(any(), any())).thenThrow(new RuntimeException());
 
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        assertThat(relativeLinkResolver.delegateLinkStatus(node)).isEqualTo(LinkStatus.UNKNOWN);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        assertThat(localLinkResolver.delegateLinkStatus(node)).isEqualTo(LinkStatus.UNKNOWN);
     }
 
     @Test
     public void testRelativeLinkResolverDelegatesResolveLink() {
         ResolvedLink fallback = mock(ResolvedLink.class);
 
-        ResolvedLink expected = new ResolvedLink(RelativeLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.VALID);
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        assertThat(relativeLinkResolver.delegateResolveLink(node, fallback)).isEqualTo(expected);
+        ResolvedLink expected = new ResolvedLink(LocalLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.VALID);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        assertThat(localLinkResolver.delegateResolveLink(node, fallback)).isEqualTo(expected);
     }
 
     @Test
     public void testRelativeLinkResolverDelegatesResolveLinkExceptionFallsbackToCurrentLink() throws Exception {
-        ResolvedLink fallback = new ResolvedLink(RelativeLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.UNCHECKED);
+        ResolvedLink fallback = new ResolvedLink(LocalLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.UNCHECKED);
         when(alexandriaResolver.resolve(any(), any())).thenThrow(new AlexandriaException());
 
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        ResolvedLink actual = relativeLinkResolver.delegateResolveLink(node, fallback);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        ResolvedLink actual = localLinkResolver.delegateResolveLink(node, fallback);
         assertThat(actual).isEqualTo(fallback);
     }
 
     @Test
     public void testRelativeLinkResolverResolvesOnlyRelativeLinkTypes() {
         ResolvedLink fallback = new ResolvedLink(new LinkType("Foo"), "https://www.google.com", null, LinkStatus.UNCHECKED);
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        assertThat(relativeLinkResolver.resolveLink(node, linkResolverContext, fallback)).isEqualTo(fallback);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        assertThat(localLinkResolver.resolveLink(node, linkResolverContext, fallback)).isEqualTo(fallback);
     }
 
     @Test
     public void testRelativeLinkResolverResolveDelegatesStatusToAlexandriaLinkResolverValid() {
         when(alexandriaResolver.isValid(any(), any())).thenReturn(true);
 
-        ResolvedLink fallback = new ResolvedLink(RelativeLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.UNCHECKED);
-        ResolvedLink expected = new ResolvedLink(RelativeLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.VALID);
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        assertThat(relativeLinkResolver.resolveLink(node, linkResolverContext, fallback)).isEqualTo(expected);
+        ResolvedLink fallback = new ResolvedLink(LocalLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.UNCHECKED);
+        ResolvedLink expected = new ResolvedLink(LocalLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.VALID);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        assertThat(localLinkResolver.resolveLink(node, linkResolverContext, fallback)).isEqualTo(expected);
     }
 
     @Test
     public void testRelativeLinkResolverResolveDelegatesStatusToAlexandriaLinkResolverInvalid() {
         when(alexandriaResolver.isValid(any(), any())).thenReturn(false);
 
-        ResolvedLink fallback = new ResolvedLink(RelativeLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.INVALID);
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        assertThat(relativeLinkResolver.resolveLink(node, linkResolverContext, fallback)).isEqualTo(fallback);
+        ResolvedLink fallback = new ResolvedLink(LocalLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.INVALID);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        assertThat(localLinkResolver.resolveLink(node, linkResolverContext, fallback)).isEqualTo(fallback);
     }
 
     @Test
@@ -154,9 +150,9 @@ public class RelativeLinkResolverTest {
         when(alexandriaResolver.isValid(any(), any())).thenReturn(true);
         when(alexandriaResolver.resolve(any(), any())).thenThrow(new AlexandriaException());
 
-        ResolvedLink fallback = new ResolvedLink(RelativeLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.UNCHECKED);
-        ResolvedLink expected = new ResolvedLink(RelativeLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.UNKNOWN);
-        RelativeLinkResolver relativeLinkResolver = new RelativeLinkResolver(alexandriaResolver);
-        assertThat(relativeLinkResolver.resolveLink(node, linkResolverContext, fallback)).isEqualTo(fallback);
+        ResolvedLink fallback = new ResolvedLink(LocalLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.UNCHECKED);
+        ResolvedLink expected = new ResolvedLink(LocalLinkExtension.RELATIVE_LINK, "https://www.google.com", null, LinkStatus.UNKNOWN);
+        LocalLinkResolver localLinkResolver = new LocalLinkResolver(alexandriaResolver);
+        assertThat(localLinkResolver.resolveLink(node, linkResolverContext, fallback)).isEqualTo(fallback);
     }
 }

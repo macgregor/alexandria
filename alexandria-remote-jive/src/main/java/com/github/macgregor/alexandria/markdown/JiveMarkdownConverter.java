@@ -5,7 +5,7 @@ import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.Resources;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.flexmark.AlexandriaFlexmark;
-import com.github.macgregor.alexandria.flexmark.links.RelativeLinkExtension;
+import com.github.macgregor.alexandria.flexmark.links.LocalLinkExtension;
 import com.vladsch.flexmark.util.ast.Document;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,16 +26,11 @@ public class JiveMarkdownConverter implements MarkdownConverter, Context.Context
 
     private Context context;
     private JiveFlexmarkExtension jiveFlexmarkExtension;
-    private JivaRelativeLinkResolver relativeLinkResolver;
-    private RelativeLinkExtension relativeLinkExtension;
     private AlexandriaFlexmark flexmark = new AlexandriaFlexmark();
 
     public JiveMarkdownConverter(){
         jiveFlexmarkExtension = new JiveFlexmarkExtension();
-        relativeLinkResolver = new JivaRelativeLinkResolver();
-        relativeLinkExtension = new RelativeLinkExtension(relativeLinkResolver);
         flexmark.registerExtension(jiveFlexmarkExtension);
-        flexmark.registerExtension(relativeLinkExtension);
     }
 
     /**
@@ -43,7 +38,6 @@ public class JiveMarkdownConverter implements MarkdownConverter, Context.Context
      *
      * @see {@link AlexandriaFlexmark}
      * @see {@link JiveFlexmarkExtension}
-     * @see {@link JivaRelativeLinkResolver}
      *
      * @param metadata  metadata details about the document being converted
      * @param source  absolute path to the markdown source document that is being converted
@@ -52,7 +46,7 @@ public class JiveMarkdownConverter implements MarkdownConverter, Context.Context
      */
     @Override
     public void convert(Config.DocumentMetadata metadata, Path source, Path converted) throws AlexandriaException {
-        if(context == null || relativeLinkResolver.alexandriaContext() == null){
+        if(context == null || flexmark.alexandriaContext() == null){
             throw new AlexandriaException.Builder()
                     .withMessage("Tried to convert documents without setting Alexandria context. JiveMarkdownConverter requires context to function properly.")
                     .metadataContext(metadata)
@@ -84,7 +78,7 @@ public class JiveMarkdownConverter implements MarkdownConverter, Context.Context
     @Override
     public void alexandriaContext(Context context) {
         this.context = context;
-        this.relativeLinkResolver.alexandriaContext(context);
+        this.flexmark.alexandriaContext(context);
     }
 
     /**

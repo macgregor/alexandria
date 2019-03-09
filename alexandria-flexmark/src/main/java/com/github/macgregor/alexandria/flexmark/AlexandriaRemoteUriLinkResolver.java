@@ -1,14 +1,23 @@
-package com.github.macgregor.alexandria.markdown;
+package com.github.macgregor.alexandria.flexmark;
 
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
+import com.github.macgregor.alexandria.flexmark.links.LocalLinkExtension;
+import com.github.macgregor.alexandria.markdown.LinkResolver;
+import com.vladsch.flexmark.util.sequence.Range;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Resolves relative links to their remote URI's if they exist.
@@ -17,16 +26,40 @@ import java.nio.file.Paths;
  * relative URL in the final href tag. Web urls are also left alone.
  */
 @Slf4j
-public class JivaRelativeLinkResolver implements LinkResolver, Context.ContextAware {
+public class AlexandriaRemoteUriLinkResolver implements LinkResolver, Context.ContextAware {
+
+    public static final String GITHUB_BASIC_LINK_REGEX = "(\\[)(.*?)(\\])(\\()(.+?)(\\))";
+    public static final Pattern GITHUB_BASIC_LINK_PATTERN = Pattern.compile(GITHUB_BASIC_LINK_REGEX);
 
     private Context context;
+
+    @Override
+    public boolean wants(String rawLink) {
+        if(StringUtils.isBlank(rawLink)){
+            return false;
+        }
+
+        Matcher matcher = GITHUB_BASIC_LINK_PATTERN.matcher(rawLink);
+        if(matcher.matches()){
+            Range r = FlexmarkUtils.range(rawLink, matcher.group(5));
+            String link = (String) rawLink.subSequence(r.getStart(), r.getEnd());
+            if(FlexmarkUtils.isUrl(link)){
+                return false;
+            }
+            if(FlexmarkUtils.isAbsolute(link)){
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
 
     /**
      * A valid relative link is:
      *      - a valid file system path
      *      - a file that exists
      *      - is not a directory
-     *      - exists in the {@link Config#metadata}
+     *      - exists in the {@link Config#metadata()}
      *
      * This also means it needs the Alexandria {@link Context} to determine any of this. If called before
      * {@link Context} is set, it will return false.
@@ -50,15 +83,15 @@ public class JivaRelativeLinkResolver implements LinkResolver, Context.ContextAw
     }
 
     /**
-     * Resolves a relative file system link to a {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
+     * Resolves a relative file system link to a {@link Config.DocumentMetadata#remoteUri()}
      * if possible, otherwise the link is left alone.
      *
-     * Assumes that {@link JivaRelativeLinkResolver#isValid(String, String)} has been called and returns true.
+     * Assumes that {@link AlexandriaRemoteUriLinkResolver#isValid(String, String)} has been called and returns true.
      *
      * @param linkText  the text part of the parsed link e.g. "some text" in {@code [some text](./foo.md)}
      * @param link  the URL part of a parsed link, e.g. "./foo.md" in {@code [some text](./foo.md)}
-     * @return  URI of the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri} or the original link
-     * @throws AlexandriaException {@link Context} hasnt been set, or the {@link com.github.macgregor.alexandria.Config.DocumentMetadata#remoteUri}
+     * @return  URI of the {@link Config.DocumentMetadata#remoteUri()} or the original link
+     * @throws AlexandriaException {@link Context} hasnt been set, or the {@link Config.DocumentMetadata#remoteUri()}
      *      is malformed
      */
     @Override
@@ -103,3 +136,4 @@ public class JivaRelativeLinkResolver implements LinkResolver, Context.ContextAw
         return context;
     }
 }
+

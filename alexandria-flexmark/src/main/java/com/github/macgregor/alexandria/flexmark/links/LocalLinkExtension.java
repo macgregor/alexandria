@@ -1,5 +1,6 @@
 package com.github.macgregor.alexandria.flexmark.links;
 
+import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.markdown.LinkResolver;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.html.renderer.LinkType;
@@ -8,6 +9,7 @@ import com.vladsch.flexmark.util.options.DataKey;
 import com.vladsch.flexmark.util.options.MutableDataHolder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.regex.Pattern;
 
@@ -16,21 +18,18 @@ import java.util.regex.Pattern;
  */
 @Getter
 @EqualsAndHashCode
-public class RelativeLinkExtension implements Parser.ParserExtension, HtmlRenderer.HtmlRendererExtension {
-    public static final DataKey<Boolean> DISABLE_RENDERING = new DataKey<>("DISABLE_RENDERING", false);
-
-    public static final String GITHUB_BASIC_LINK_REGEX = "(\\[)(.*?)(\\])(\\()(.+?)(\\))";
-    public static final Pattern GITHUB_BASIC_LINK_PATTERN = Pattern.compile(GITHUB_BASIC_LINK_REGEX);
+@NoArgsConstructor
+public class LocalLinkExtension implements Parser.ParserExtension, HtmlRenderer.HtmlRendererExtension, Context.ContextAware {
 
     public static final LinkType RELATIVE_LINK = new LinkType("RELATIVE");
 
     private LinkResolver alexandriaFlexmarkLinkResolver;
-    private RelativeLinkNodeRenderer.Factory relativeLinkNodeRendererFactory;
-    private RelativeLinkResolver.Factory relativeLinkResolverFactory;
-    private RelativeLinkRefProcessor.Factory relativeLinkRefProcessorFactory;
+    private Context context;
+    private LocalLinkNodeRenderer.Factory relativeLinkNodeRendererFactory;
+    private LocalLinkResolver.Factory relativeLinkResolverFactory;
+    private LocalLinkRefProcessor.Factory relativeLinkRefProcessorFactory;
 
-
-    public RelativeLinkExtension(LinkResolver alexandriaFlexmarkLinkResolver){
+    public LocalLinkExtension(LinkResolver alexandriaFlexmarkLinkResolver){
         this.alexandriaFlexmarkLinkResolver = alexandriaFlexmarkLinkResolver;
     }
 
@@ -42,8 +41,8 @@ public class RelativeLinkExtension implements Parser.ParserExtension, HtmlRender
     @Override
     public void extend(HtmlRenderer.Builder rendererBuilder, String rendererType) {
         if (rendererBuilder.isRendererType("HTML")) {
-            relativeLinkNodeRendererFactory = new RelativeLinkNodeRenderer.Factory();
-            relativeLinkResolverFactory = new RelativeLinkResolver.Factory(alexandriaFlexmarkLinkResolver);
+            relativeLinkNodeRendererFactory = new LocalLinkNodeRenderer.Factory();
+            relativeLinkResolverFactory = new LocalLinkResolver.Factory(alexandriaFlexmarkLinkResolver);
             rendererBuilder.nodeRendererFactory(relativeLinkNodeRendererFactory);
             rendererBuilder.linkResolverFactory(relativeLinkResolverFactory);
         }
@@ -56,7 +55,24 @@ public class RelativeLinkExtension implements Parser.ParserExtension, HtmlRender
 
     @Override
     public void extend(Parser.Builder parserBuilder) {
-        relativeLinkRefProcessorFactory = new RelativeLinkRefProcessor.Factory();
+        relativeLinkRefProcessorFactory = new LocalLinkRefProcessor.Factory(alexandriaFlexmarkLinkResolver);
         parserBuilder.linkRefProcessorFactory(relativeLinkRefProcessorFactory);
+    }
+
+    @Override
+    public void alexandriaContext(Context context) {
+        this.context = context;
+        if(alexandriaFlexmarkLinkResolver instanceof Context.ContextAware){
+            ((Context.ContextAware)alexandriaFlexmarkLinkResolver).alexandriaContext(context);
+        }
+    }
+
+    @Override
+    public Context alexandriaContext() {
+        return this.context;
+    }
+
+    public static LocalLinkExtension create(LinkResolver linkResolver){
+        return new LocalLinkExtension(linkResolver);
     }
 }

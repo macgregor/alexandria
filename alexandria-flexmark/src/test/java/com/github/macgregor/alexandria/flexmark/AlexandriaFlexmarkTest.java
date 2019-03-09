@@ -1,5 +1,6 @@
 package com.github.macgregor.alexandria.flexmark;
 
+import com.github.macgregor.alexandria.Context;
 import com.vladsch.flexmark.Extension;
 import com.vladsch.flexmark.parser.Parser;
 import org.junit.Before;
@@ -87,5 +88,19 @@ public class AlexandriaFlexmarkTest {
         flexmark.renderer();
         flexmark.reset();
         assertThat(flexmark.htmlRenderer).isNull();
+    }
+
+    @Test
+    public void testAlexandriaFlexmarkSetsAlexandriaContextOnExtensions(){
+        Context context = mock(Context.class);
+        flexmark.alexandriaContext(context);
+        for(Extension e : flexmark.registeredExtensions()){
+            if(e instanceof Context.ContextAware){
+                assertThat(((Context.ContextAware) e).alexandriaContext()).isNotNull();
+                assertThat(((Context.ContextAware) e).alexandriaContext()).isEqualTo(context);
+
+            }
+        }
+
     }
 }
