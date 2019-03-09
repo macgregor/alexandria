@@ -3,10 +3,7 @@ package com.github.macgregor.alexandria.exceptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.macgregor.alexandria.Config;
 import com.github.macgregor.alexandria.Jackson;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -23,6 +20,7 @@ import java.util.Optional;
 @Slf4j
 @NoArgsConstructor @AllArgsConstructor
 @Getter @Setter @Accessors(fluent = true)
+@EqualsAndHashCode
 public class AlexandriaException extends IOException {
     /** Contextual metadata when error ocurred. Default: none. */
     private Optional<Config.DocumentMetadata> metadata = Optional.empty();

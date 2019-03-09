@@ -1,9 +1,6 @@
 package com.github.macgregor.alexandria.maven;
 
-import com.github.macgregor.alexandria.Alexandria;
-import com.github.macgregor.alexandria.Config;
-import com.github.macgregor.alexandria.Context;
-import com.github.macgregor.alexandria.PathFinder;
+import com.github.macgregor.alexandria.*;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -119,6 +116,27 @@ public abstract class AlexandriaMojo extends AbstractMojo {
     @Parameter( property = "alexandria.failBuild", defaultValue = "false")
     protected boolean failBuild = false;
 
+    /**
+     * Whether Alexandria should add a footer to all converted files warning readers they are not reading the
+     * source document.
+     *
+     * Maven Property: alexandria.disclaimerFooterEnabled
+     * Maps to: {@link Context#disclaimerFooterEnabled}
+     * Defaults to: true
+     */
+    @Parameter( property = "alexandria.disclaimerFooterEnabled", defaultValue = "true")
+    protected boolean disclaimerFooterEnabled = true;
+
+    /**
+     * Optional path to a custom (markdown) file to use as the footer added to documents.
+     *
+     * Maven Property: alexandria.disclaimerFooterPath
+     * Maps to: {@link Context#disclaimerFooterPath}
+     * Defaults to: null (use Alexandria default)
+     */
+    @Parameter( property = "alexandria.disclaimerFooterPath")
+    protected String disclaimerFooterPath;
+
     private Alexandria alexandria = new Alexandria();
 
     /**
@@ -128,7 +146,8 @@ public abstract class AlexandriaMojo extends AbstractMojo {
      * @throws IOException Alexandria metadata file cannot be loaded properly, (see {@link Context#load(String)}
      */
     public Alexandria init() throws IOException {
-        if(inputs == null || inputs.size() < 1){
+        if(inputs == null || inputs.isEmpty()){
+            inputs = new ArrayList<>();
             inputs.add(rootDir());
         }
         if(configPath == null){
@@ -138,6 +157,10 @@ public abstract class AlexandriaMojo extends AbstractMojo {
         alexandria.context().searchPath(inputs.stream().map(Paths::get).collect(Collectors.toList()));
         alexandria.context().outputPath(Optional.of(Paths.get(outputPath)));
         alexandria.context().config().remote().requestTimeout(timeout);
+        alexandria.context().disclaimerFooterEnabled(disclaimerFooterEnabled);
+        if(disclaimerFooterPath != null){
+            alexandria.context().disclaimerFooterPath(Optional.of(Paths.get(disclaimerFooterPath)));
+        }
         if(includes.size() > 0) {
             alexandria.context().include(includes);
         }
@@ -155,6 +178,11 @@ public abstract class AlexandriaMojo extends AbstractMojo {
         getLog().debug("Alexandria - project base dir: " + alexandria.context().projectBase());
         getLog().debug("Alexandria - inputs directories: " + alexandria.context().searchPath());
         getLog().debug("Alexandria - outputPath directory: " + alexandria.context().outputPath());
+        getLog().debug("Alexandria - disclaimer footer enabled : " + alexandria.context().disclaimerFooterEnabled());
+        getLog().debug("Alexandria - disclaimer footer path : " +
+                (alexandria.context().disclaimerFooterPath().isPresent() ?
+                        alexandria.context().disclaimerFooterPath().get().toString() :
+                        "default Alexandria disclaimer"));
         getLog().debug("Alexandria - includes files: " + alexandria.context().include());
         getLog().debug("Alexandria - excludes files: " + alexandria.context().exclude());
     }

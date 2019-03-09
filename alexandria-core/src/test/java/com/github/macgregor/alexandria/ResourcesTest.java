@@ -8,14 +8,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.*;
 
 public class ResourcesTest {
     @Rule
@@ -113,6 +115,32 @@ public class ResourcesTest {
         assertThat(Resources.interpolate("${env.bar}")).isEqualTo("baz");
     }
 
+    @Test
+    public void loadFileFromClassPath() throws Exception {
+        String contents = Resources.loadFromClasspath("test_footer.md");
+        assertThat(contents).isNotNull();
+        assertThat(contents).isEqualTo("Hello World");
+    }
+
+    @Test
+    public void loadFileFromClassPathThrowsIOExceptionNonExistantFile() throws Exception {
+        assertThatThrownBy(() -> Resources.loadFromClasspath("nope")).isInstanceOf(IOException.class);
+    }
+
+    @Test
+    public void pathRelativeToWithNonAbsolutePaths(){
+        Path rel = Paths.get(folder.getRoot().toPath().toString(), "foo");
+        Path actual = Resources.relativeTo(folder.getRoot().toPath(), rel);
+        assertThat(actual).isEqualTo(Paths.get("foo"));
+    }
+
+    @Test
+    public void pathRelativeToWithAbsolutePaths(){
+        Path rel = Paths.get(folder.getRoot().getAbsolutePath().toString(), "foo");
+        Path actual = Resources.relativeTo(folder.getRoot().toPath(), rel);
+        assertThat(actual).isEqualTo(Paths.get("foo"));
+    }
+
     public static void addEnvVariable(String key, String value) throws Exception {
         Class[] classes = Collections.class.getDeclaredClasses();
         Map<String, String> env = System.getenv();
@@ -139,5 +167,11 @@ public class ResourcesTest {
                 map.remove(key);
             }
         }
+    }
+
+    public static void addFileToClasspath(File file) throws Exception {
+        Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
+        method.setAccessible(true);
+        method.invoke(ClassLoader.getSystemClassLoader(), new Object[]{file.toURI().toURL()});
     }
 }

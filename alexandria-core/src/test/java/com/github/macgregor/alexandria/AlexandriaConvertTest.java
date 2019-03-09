@@ -3,6 +3,7 @@ package com.github.macgregor.alexandria;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
 import com.github.macgregor.alexandria.markdown.MarkdownConverter;
+import com.github.macgregor.alexandria.markdown.NoopMarkdownConverter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.Rule;
@@ -39,7 +40,7 @@ public class AlexandriaConvertTest {
         AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
         alexandriaConvert.convert();
 
-        String convertedFileName = String.format("%s-%s.md", FilenameUtils.getBaseName(metadata.sourceFileName()), metadata.sourcePath().getParent().toAbsolutePath().toString().hashCode());
+        String convertedFileName = String.format("%s-%s-fin.md", FilenameUtils.getBaseName(metadata.sourceFileName()), metadata.sourcePath().getParent().toAbsolutePath().toString().hashCode());
         assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(subdir.getPath(), convertedFileName));
         assertThat(Paths.get(subdir.getPath(), convertedFileName)).exists();
     }
@@ -51,7 +52,7 @@ public class AlexandriaConvertTest {
         AlexandriaConvert alexandriaConvert = new AlexandriaConvert(context);
         alexandriaConvert.convert();
 
-        String convertedFileName = String.format("%s-%s.md", FilenameUtils.getBaseName(metadata.sourceFileName()), folder.getRoot().toString().hashCode());
+        String convertedFileName = String.format("%s-%s-fin.md", FilenameUtils.getBaseName(metadata.sourceFileName()), folder.getRoot().toString().hashCode());
         assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get(folder.getRoot().toString(), convertedFileName));
         assertThat(Paths.get(folder.getRoot().toString(), convertedFileName)).exists();
     }
@@ -95,6 +96,7 @@ public class AlexandriaConvertTest {
     @Test
     public void testConvertRethrowsAlexandriaExceptionFromMarkdownConverterDelegate() throws IOException, URISyntaxException {
         Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterEnabled(false);
         context.config().metadata(Optional.of(new ArrayList<>()));
         Config.DocumentMetadata metadata = TestData.documentForDelete(context, folder);
         MarkdownConverter markdownConverter = spy(context.remote.get().markdownConverter());
@@ -130,6 +132,85 @@ public class AlexandriaConvertTest {
 
         PathFinder pathFinder = new PathFinder();
         pathFinder.startingInPath(out.toPath());
-        assertThat(pathFinder.files()).hasSize(2);
+        assertThat(pathFinder.files()).hasSize(4);
+    }
+
+    @Test
+    public void convertedAddDisclaimerSetsIntermediateFilepath() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterEnabled(true);
+        Config.DocumentMetadata documentMetadata = TestData.completeDocumentMetadata(context, folder);
+        Path expected = documentMetadata.intermediateConvertedPath().get();
+        documentMetadata.intermediateConvertedPath(Optional.empty());
+        AlexandriaConvert.addDisclaimer(context, documentMetadata);
+        assertThat(documentMetadata.intermediateConvertedPath()).isPresent();
+        assertThat(documentMetadata.intermediateConvertedPath().get()).isEqualTo(expected);
+    }
+
+    @Test
+    public void convertedAddDisclaimerDefaultFooterMergesSourceAndFooter() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterEnabled(true);
+
+        Config.DocumentMetadata documentMetadata = TestData.completeDocumentMetadata(context, folder);
+        documentMetadata.intermediateConvertedPath(Optional.empty());
+        AlexandriaConvert.addDisclaimer(context, documentMetadata);
+
+        String expected = Resources.load(documentMetadata.sourcePath().toString()) +
+                AlexandriaConvert.FOOTER_SEPARATOR +
+                AlexandriaConvert.DEFAULT_FOOTER;
+        String actual = Resources.load(documentMetadata.intermediateConvertedPath().get().toString());
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void convertedAddDisclaimerOverriddenFooterMergesSourceAndFooter() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterEnabled(true);
+        Path disclaimerPath = folder.newFile("custom_footer").getAbsoluteFile().toPath();
+        Resources.save(disclaimerPath.toString(), "Custom Footer");
+        context.disclaimerFooterPath(Optional.of(disclaimerPath));
+
+        Config.DocumentMetadata documentMetadata = TestData.completeDocumentMetadata(context, folder);
+        documentMetadata.intermediateConvertedPath(Optional.empty());
+        AlexandriaConvert.addDisclaimer(context, documentMetadata);
+
+        String expected = Resources.load(documentMetadata.sourcePath().toString())+
+                AlexandriaConvert.FOOTER_SEPARATOR + "Custom Footer";
+        String actual = Resources.load(documentMetadata.intermediateConvertedPath().get().toString());
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void convertAddDisclaimerWrapsErrorsInAlexandriaException() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterEnabled(true);
+        context.disclaimerFooterPath(Optional.of(Paths.get("nope")));
+        Config.DocumentMetadata documentMetadata = TestData.completeDocumentMetadata(context, folder);
+        documentMetadata.intermediateConvertedPath(Optional.empty());
+
+        assertThatThrownBy(() -> AlexandriaConvert.addDisclaimer(context, documentMetadata)).isInstanceOf(AlexandriaException.class);
+    }
+
+    @Test
+    public void convertDoesntAddFooterWhenDisabled() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterEnabled(false);
+        Config.DocumentMetadata documentMetadata = TestData.completeDocumentMetadata(context, folder);
+        AlexandriaConvert.convert(context, documentMetadata, new NoopMarkdownConverter());
+        String intContents = Resources.load(documentMetadata.sourcePath().toString());
+        String finContents = Resources.load(documentMetadata.convertedPath().get().toString());
+        assertThat(finContents).isEqualTo(intContents);
+    }
+
+    @Test
+    public void convertAddFooterWhenEnabled() throws IOException, URISyntaxException {
+        Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterEnabled(true);
+        Config.DocumentMetadata documentMetadata = TestData.completeDocumentMetadata(context, folder);
+        AlexandriaConvert.convert(context, documentMetadata, new NoopMarkdownConverter());
+        String intContents = Resources.load(documentMetadata.intermediateConvertedPath().get().toString());
+        String finContents = Resources.load(documentMetadata.convertedPath().get().toString());
+        assertThat(finContents).isEqualTo(intContents);
     }
 }

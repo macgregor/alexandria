@@ -143,7 +143,7 @@ public class BatchProcess<T> {
      * @param message  optional error message
      * @return  new exception ready to be thrown
      */
-    protected AlexandriaException buildAlexandriaException(Throwable cause, Optional<T> t, Optional<String> message){
+    protected static <T> AlexandriaException buildAlexandriaException(Throwable cause, Optional<T> t, Optional<String> message){
         AlexandriaException.Builder exceptionBuilder = new AlexandriaException.Builder()
                 .causedBy(cause);
         if(message.isPresent()){

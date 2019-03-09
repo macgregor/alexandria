@@ -47,15 +47,22 @@ public class Context {
     /** File exclude patterns to use when searching for documents to index. See {@link PathFinder}. Default: none */
     protected List<String> exclude = new ArrayList<>();
 
-    /** Aleandria config containing document index and remote config. */
+    /** Enables adding a footer to converted documents warning readers edits to files on the remote will be overridden. Default: true */
+    protected boolean disclaimerFooterEnabled = true;
+
+    /** Path to a custom footer (markdown) file. If not set, a standard template is used. */
+    protected Optional<Path> disclaimerFooterPath = Optional.empty();
+
+    /** Working Aleandria config containing document index and remote config. */
     @NonNull protected Config config = new Config();
 
-    /** Alexandria config originally loaded from the file system. */
+    /** Alexandria config originally loaded from the file system, kept in case of failures saving back to the filesystem. */
     @NonNull protected Config originalConfig = new Config();
 
     /** Cache for tracking absolute converted file paths for indexed metadata. Default: empty map. */
     protected Map<Config.DocumentMetadata, Path> convertedPaths = new HashMap<>();
 
+    /** Remote that has been configured and initialized, can be used to retrieve the remote for any class or method that has the context */
     protected Optional<Remote> remote = Optional.empty();
 
     /**
@@ -171,6 +178,9 @@ public class Context {
             projectBase = Resources.absolutePath(configPath.getParent(), projectBase);
             outputPath = Optional.ofNullable(Resources.absolutePath(configPath.getParent(), outputPath.orElse(null)));
             searchPath = (List<Path>) Resources.absolutePath(configPath.getParent(), searchPath);
+            if(disclaimerFooterPath.isPresent()){
+                disclaimerFooterPath = Optional.of(Resources.absolutePath(configPath.getParent(), disclaimerFooterPath.get()));
+            }
             if(config.metadata().isPresent()){
                 config.metadata().get()
                         .stream()
@@ -192,6 +202,9 @@ public class Context {
             projectBase = Resources.relativeTo(configPath.getParent(), projectBase);
             outputPath = Optional.ofNullable(Resources.relativeTo(configPath.getParent(), outputPath.orElse(null)));
             searchPath = (List<Path>) Resources.relativeTo(configPath.getParent(), searchPath);
+            if(disclaimerFooterPath.isPresent()){
+                disclaimerFooterPath = Optional.of(Resources.relativeTo(configPath.getParent(), disclaimerFooterPath.get()));
+            }
             if(config.metadata().isPresent()){
                 config.metadata().get()
                         .stream()

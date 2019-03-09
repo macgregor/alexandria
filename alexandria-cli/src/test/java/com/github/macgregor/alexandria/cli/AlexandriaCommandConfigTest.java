@@ -219,4 +219,30 @@ public class AlexandriaCommandConfigTest {
         TestCommand command = CommandLine.populateCommand(new TestCommand(), args);
         assertThat(command.timeout()).isEqualTo(45);
     }
+
+    @Test
+    public void testDisclaimerFooterDisabledDefaultsToFalse(){
+        TestCommand command = CommandLine.populateCommand(new TestCommand(), new String[]{});
+        assertThat(command.disclaimerFooterDisabled()).isEqualTo(false);
+    }
+
+    @Test
+    public void testDisclaimerFooterDisabledOverride(){
+        String[] args = {"--disclaimerFooterDisabled"};
+        TestCommand command = CommandLine.populateCommand(new TestCommand(), args);
+        assertThat(command.disclaimerFooterDisabled()).isEqualTo(true);
+    }
+
+    @Test
+    public void testDisclaimerFooterPathDefaultsToNull(){
+        TestCommand command = CommandLine.populateCommand(new TestCommand(), new String[]{});
+        assertThat(command.disclaimerFooterPath()).isNull();
+    }
+
+    @Test
+    public void testDisclaimerFooterPathOverride(){
+        String[] args = {"--disclaimerFooterPath", "foo"};
+        TestCommand command = CommandLine.populateCommand(new TestCommand(), args);
+        assertThat(command.disclaimerFooterPath()).isEqualTo("foo");
+    }
 }

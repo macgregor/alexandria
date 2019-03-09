@@ -1,6 +1,5 @@
 package com.github.macgregor.alexandria;
 
-import com.github.macgregor.alexandria.markdown.MarkdownConverter;
 import com.github.macgregor.alexandria.markdown.NoopMarkdownConverter;
 import com.github.macgregor.alexandria.remotes.NoopRemote;
 import com.github.macgregor.alexandria.remotes.Remote;
@@ -15,7 +14,10 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.UUID;
 
 public class TestData {
     public static final String EXCLUDE = "*.ignore";
@@ -165,42 +167,45 @@ public class TestData {
         if(!path.toFile().exists()){
             path.toFile().createNewFile();
         }
-        String fileName = path.toFile().getName();
-        String convertedFileName = String.format("%s-%s.md", FilenameUtils.getBaseName(fileName), path.getParent().toString().hashCode());
-        Path converted = Paths.get(context.outputPath().orElse(path.getParent()).toString(), convertedFileName);
-        Resources.save(path.toString(), String.format("# %s\n\nHello", fileName));
-        long sourceCheckSum = FileUtils.checksumCRC32(path.toFile());
-
         Config.DocumentMetadata metadata = new Config.DocumentMetadata();
+
+        String fileName = path.toFile().getName();
+        long sourceCheckSum = FileUtils.checksumCRC32(path.toFile());
         metadata.sourcePath(path);
+        metadata.sourceChecksum(Optional.of(sourceCheckSum));
+
+        String intermediateConvertedFileName = String.format("%s-%s-int.md", FilenameUtils.getBaseName(fileName), path.getParent().toString().hashCode());
+        Path intermediate = Paths.get(context.outputPath().orElse(path.getParent()).toString(), intermediateConvertedFileName);
+        Resources.save(intermediate.toString(), String.format("# %s\n\nIntermediate%s%s", fileName,
+                AlexandriaConvert.FOOTER_SEPARATOR,
+                AlexandriaConvert.DEFAULT_FOOTER));
+        metadata.intermediateConvertedPath(Optional.of(intermediate));
+
+        String convertedFileName = String.format("%s-%s-fin.md", FilenameUtils.getBaseName(fileName), path.getParent().toString().hashCode());
+        Path converted = Paths.get(context.outputPath().orElse(path.getParent()).toString(), convertedFileName);
+        Resources.save(converted.toString(), String.format("# %s\n\nConverted%s%s", fileName,
+                AlexandriaConvert.FOOTER_SEPARATOR,
+                AlexandriaConvert.DEFAULT_FOOTER));
+        long convertedCheckSum = FileUtils.checksumCRC32(converted.toFile());
+        metadata.convertedPath(Optional.of(converted));
+        metadata.convertedChecksum(Optional.of(convertedCheckSum));
+        context.convertedPath(metadata, converted);
+
         metadata.title(fileName);
         metadata.remoteUri(Optional.of(new URI("https://jive.com/api/core/v3/contents/DOC-1234")));
-        metadata.sourceChecksum(Optional.of(sourceCheckSum));
         metadata.tags(Optional.of(Collections.singletonList("complete")));
         metadata.createdOn(Optional.of(ZonedDateTime.now()));
         metadata.lastUpdated(Optional.of(ZonedDateTime.now()));
         metadata.deletedOn(Optional.of(ZonedDateTime.now()));
 
-        MarkdownConverter markdownConverter = new NoopMarkdownConverter();
-        markdownConverter.convert(metadata, path, converted);
-        long convertedCheckSum = FileUtils.checksumCRC32(converted.toFile());
-        metadata.convertedChecksum(Optional.of(convertedCheckSum));
-
-        Map<String, String> extraProps = new HashMap<>();
-        extraProps.put("convertedPath", converted.toString());
-        metadata.extraProps(Optional.of(extraProps));
-        metadata.convertedPath(Optional.of(converted));
-
-        context.convertedPath(metadata, converted);
-
         context.addMetadata(metadata);
-
         return metadata;
     }
 
     public static Config.DocumentMetadata completeDocumentMetadata(Context context, TemporaryFolder temporaryFolder) throws IOException, URISyntaxException {
         String fileName = UUID.randomUUID().toString() + ".md";
         Path path = temporaryFolder.newFile(fileName).toPath().toAbsolutePath();
+        Resources.save(path.toString(),  String.format("# %s\n\nSource file", fileName));
         return completeDocumentMetadata(context, path);
     }
 

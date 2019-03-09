@@ -4,7 +4,6 @@ import com.github.macgregor.alexandria.Alexandria;
 import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
-import com.github.macgregor.alexandria.maven.SyncMojo;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -99,5 +98,6 @@ public class SyncMojoTest {
         syncMojo.project(parentProject);
         doThrow(BatchProcessException.class).when(alexandria).syncWithRemote();
         syncMojo.execute();
+        verify(log, times(1)).warn(any(Exception.class));
     }
 }

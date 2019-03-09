@@ -2,7 +2,6 @@ package com.github.macgregor.alexandria.maven;
 
 import com.github.macgregor.alexandria.Alexandria;
 import com.github.macgregor.alexandria.Context;
-import com.github.macgregor.alexandria.maven.AlexandriaMojo;
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -85,7 +84,7 @@ public class AlexandriaMojoTest {
     public void testLogConfigPathAtDebug(){
         testAlexandriaMojo.logContext();
         verify(context, times(1)).configPath();
-        verify(log, times(6)).debug(anyString());
+        verify(log, times(8)).debug(anyString());
         verify(log, times(0)).info(anyString());
     }
 
@@ -93,7 +92,7 @@ public class AlexandriaMojoTest {
     public void testLogProjectBaseAtDebug(){
         testAlexandriaMojo.logContext();
         verify(context, times(1)).projectBase();
-        verify(log, times(6)).debug(anyString());
+        verify(log, times(8)).debug(anyString());
         verify(log, times(0)).info(anyString());
     }
 
@@ -101,7 +100,7 @@ public class AlexandriaMojoTest {
     public void testLogSearchPathAtDebug(){
         testAlexandriaMojo.logContext();
         verify(context, times(1)).searchPath();
-        verify(log, times(6)).debug(anyString());
+        verify(log, times(8)).debug(anyString());
         verify(log, times(0)).info(anyString());
     }
 
@@ -109,7 +108,7 @@ public class AlexandriaMojoTest {
     public void testLogOutputPathAtDebug(){
         testAlexandriaMojo.logContext();
         verify(context, times(1)).outputPath();
-        verify(log, times(6)).debug(anyString());
+        verify(log, times(8)).debug(anyString());
         verify(log, times(0)).info(anyString());
     }
 
@@ -117,7 +116,7 @@ public class AlexandriaMojoTest {
     public void testLogIncludeAtDebug(){
         testAlexandriaMojo.logContext();
         verify(context, times(1)).include();
-        verify(log, times(6)).debug(anyString());
+        verify(log, times(8)).debug(anyString());
         verify(log, times(0)).info(anyString());
     }
 
@@ -125,7 +124,23 @@ public class AlexandriaMojoTest {
     public void testLogExcludeAtDebug(){
         testAlexandriaMojo.logContext();
         verify(context, times(1)).exclude();
-        verify(log, times(6)).debug(anyString());
+        verify(log, times(8)).debug(anyString());
+        verify(log, times(0)).info(anyString());
+    }
+
+    @Test
+    public void testLogDisclaimerFooterEnabledAtDebug(){
+        testAlexandriaMojo.logContext();
+        verify(context, times(1)).disclaimerFooterEnabled();
+        verify(log, times(8)).debug(anyString());
+        verify(log, times(0)).info(anyString());
+    }
+
+    @Test
+    public void testLogDisclaimerFooterPathAtDebug(){
+        testAlexandriaMojo.logContext();
+        verify(context, times(1)).disclaimerFooterPath();
+        verify(log, times(8)).debug(anyString());
         verify(log, times(0)).info(anyString());
     }
 
@@ -139,6 +154,14 @@ public class AlexandriaMojoTest {
 
     @Test
     public void testInitInputDirDefaultsToRootDir() throws IOException {
+        testAlexandriaMojo.init();
+        assertThat(testAlexandriaMojo.inputs()).containsExactlyInAnyOrder(parentProject.getBasedir().toString());
+        assertThat(context.searchPath()).containsExactlyInAnyOrder(parentProject.getBasedir().toPath());
+    }
+
+    @Test
+    public void testInitInputNullDirDefaultsToRootDir() throws IOException {
+        testAlexandriaMojo.inputs = null;
         testAlexandriaMojo.init();
         assertThat(testAlexandriaMojo.inputs()).containsExactlyInAnyOrder(parentProject.getBasedir().toString());
         assertThat(context.searchPath()).containsExactlyInAnyOrder(parentProject.getBasedir().toPath());
@@ -216,5 +239,32 @@ public class AlexandriaMojoTest {
     @Test
     public void testFailBuildDefaultsToFalse(){
         assertThat(testAlexandriaMojo.failBuild()).isFalse();
+    }
+
+    @Test
+    public void testDisclaimerFooterEnabledDefaultsToTrue() throws IOException {
+        testAlexandriaMojo.init();
+        assertThat(context.disclaimerFooterEnabled()).isTrue();
+    }
+
+    @Test
+    public void testDisclaimerFooterEnabledOverride() throws IOException {
+        testAlexandriaMojo.disclaimerFooterEnabled = false;
+        testAlexandriaMojo.init();
+        assertThat(context.disclaimerFooterEnabled()).isFalse();
+    }
+
+    @Test
+    public void testDisclaimerFooterPathDefaultsToNull() throws IOException {
+        testAlexandriaMojo.init();
+        assertThat(context.disclaimerFooterPath()).isEmpty();
+    }
+
+    @Test
+    public void testDisclaimerFooterPathOverride() throws IOException {
+        testAlexandriaMojo.disclaimerFooterPath("foo");
+        testAlexandriaMojo.init();
+        assertThat(context.disclaimerFooterPath()).isPresent();
+        assertThat(context.disclaimerFooterPath().get()).isEqualTo(Paths.get("foo"));
     }
 }

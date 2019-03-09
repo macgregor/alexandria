@@ -1,11 +1,11 @@
 package com.github.macgregor.alexandria;
 
-import com.github.macgregor.alexandria.markdown.NoopMarkdownConverter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -69,5 +69,42 @@ public class ContextTest {
         context.convertedPath(metadata, Paths.get("foo"));
         assertThat(context.convertedPath(metadata)).isPresent();
         assertThat(context.convertedPath(metadata).get()).isEqualTo(Paths.get("foo"));
+    }
+
+    @Test
+    public void contextMakesDisclaimerPathAbsoluteIfItExists() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterPath(Optional.of(Paths.get("footer.md")));
+        context.makePathsAbsolute();
+        assertThat(context.disclaimerFooterPath()).isPresent();
+        assertThat(context.disclaimerFooterPath().get()).isAbsolute();
+        assertThat(context.disclaimerFooterPath().get()).isEqualTo(Paths.get(folder.getRoot().getAbsolutePath(), "footer.md"));
+    }
+
+    @Test
+    public void contextMakeAbsoluteIgnoresEmptyDisclaimerPath() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterPath(Optional.empty());
+        context.makePathsAbsolute();
+        assertThat(context.disclaimerFooterPath()).isEmpty();
+    }
+
+    @Test
+    public void contextMakesDisclaimerPathRelativeIfItExists() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        Path absPath = Paths.get(folder.getRoot().getAbsolutePath(), "footer.md");
+        context.disclaimerFooterPath(Optional.of(absPath));
+        context.makePathsRelative();
+        assertThat(context.disclaimerFooterPath()).isPresent();
+        assertThat(context.disclaimerFooterPath().get()).isRelative();
+        assertThat(context.disclaimerFooterPath().get()).isEqualTo(Paths.get("footer.md"));
+    }
+
+    @Test
+    public void contextMakeRelativeIgnoresEmptyDisclaimerPath() throws IOException {
+        Context context = TestData.minimalContext(folder);
+        context.disclaimerFooterPath(Optional.empty());
+        context.makePathsRelative();
+        assertThat(context.disclaimerFooterPath()).isEmpty();
     }
 }

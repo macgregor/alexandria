@@ -4,7 +4,6 @@ import com.github.macgregor.alexandria.Alexandria;
 import com.github.macgregor.alexandria.Context;
 import com.github.macgregor.alexandria.exceptions.AlexandriaException;
 import com.github.macgregor.alexandria.exceptions.BatchProcessException;
-import com.github.macgregor.alexandria.maven.IndexMojo;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -94,10 +93,12 @@ public class IndexMojoTest {
     }
 
     @Test
-    public void testSyncDoesntThrowErrorWhenFailBuildsSetToFalse() throws AlexandriaException, MojoFailureException, MojoExecutionException {
+    public void testIndexDoesntThrowErrorWhenFailBuildsSetToFalse() throws AlexandriaException, MojoFailureException, MojoExecutionException {
         indexMojo.failBuild(false);
         indexMojo.project(parentProject);
-        doThrow(BatchProcessException.class).when(alexandria).syncWithRemote();
+        doThrow(BatchProcessException.class).when(alexandria).index();
         indexMojo.execute();
+        verify(log, times(1)).warn(any(Exception.class));
     }
+
 }
